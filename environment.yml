@@ -1,0 +1,19 @@
+name: dl2
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - requests
+  - pytorch
+  - torchvision
+  - matplotlib
+  - numpy
+  - openai
+  - pillow
+  - ffmpeg
+  - ruamel.yaml
+  - pip:
+      - clip
+      - opencv-python-headless
+      - profanity-filter
+      - notebook
