@@ -9,9 +9,9 @@ import clip
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import openai
+# import openai
 from PIL import Image
-# from profanity_filter import ProfanityFilter
+from profanity_filter import ProfanityFilter
 import torch
 # requests, clip, cv2, matplotlib, numpy, openai, PIL, profanity_filter, torch
 
@@ -80,10 +80,11 @@ def get_nn_text(raw_texts, text_feats, img_feats):
     return high_to_low_texts, high_to_low_scores
 
 
-def prompt_llm(prompt, max_tokens=64, temperature=0, stop=None):
-    response = openai.Completion.create(engine=gpt_version, prompt=prompt, max_tokens=max_tokens,
-                                        temperature=temperature, stop=stop)
-    return response["choices"][0]["text"].strip()
+# TODO: We have a different LLM now, change this code accordingly
+# def prompt_llm(prompt, max_tokens=64, temperature=0, stop=None):
+#     response = openai.Completion.create(engine=gpt_version, prompt=prompt, max_tokens=max_tokens,
+#                                         temperature=temperature, stop=stop)
+#     return response["choices"][0]["text"].strip()
 
 
 # Load scene categories from Places365.

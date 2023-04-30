@@ -11,9 +11,9 @@ dependencies:
   - openai
   - pillow
   - ffmpeg
-  - ruamel.yaml
   - pip:
       - clip
       - opencv-python-headless
       - profanity-filter
       - notebook
+      - transformers
