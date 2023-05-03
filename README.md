@@ -6,7 +6,7 @@ Project website: https://socraticmodels.github.io/
 
 ## Instructions
 
-This repository provides self-contained colabs with prototype implementations of Socratic Models for various applications.
+This repository provides scripts for CLIP with FLAN-T5 prompting, and self-contained colabs with prototype implementations of Socratic Models for various applications.
 
 ## Colab notebooks
 
