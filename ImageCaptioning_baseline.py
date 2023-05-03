@@ -8,8 +8,8 @@ import numpy as np
 from PIL import Image
 from profanity_filter import ProfanityFilter
 import torch
-import time
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from utils import print_time_dec
 
 
 class ImageManager:
@@ -34,14 +34,7 @@ class VocabManager:
     def __init__(self):
         self.download_data()
         self.place_list = self.load_places()
-        s = time.time()
         self.object_list = self.load_objects(remove_profanity=True)
-        print(f'new object took: {time.time()-s}')
-        s = time.time()
-        self.object_list2 = self.original_load_objects()
-        print(f'old object took: {time.time()-s}')
-        print(f'equality: {set(self.object_list) == set(self.object_list2)}')
-
 
     @staticmethod
     def download_data():
@@ -59,6 +52,7 @@ class VocabManager:
                 f.write(response.content)
 
     @staticmethod
+    @print_time_dec
     def load_places():
         place_categories = np.loadtxt('categories_places365.txt', dtype=str)
         place_texts = []
@@ -72,6 +66,7 @@ class VocabManager:
             place_texts.append(place)
         return place_texts
 
+    @print_time_dec
     def load_objects(self, remove_profanity=False):
         with open('dictionary_and_semantic_hierarchy.txt') as fid:
             object_categories = fid.readlines()
@@ -108,6 +103,7 @@ class ClipManager:
         self.model.to(self.device)
         self.model.eval()
 
+    @print_time_dec
     def get_text_feats(self, in_text, batch_size=64):
         text_tokens = clip.tokenize(in_text).to(self.device)
         text_id = 0
@@ -273,6 +269,7 @@ def main(img_path='demo_img.png', verbose=True):
         print(f'\nLM generated captions ranked by VLM scores:')
         for caption, score in zip(sorted_captions, caption_scores):
             print(f'{score:.4f} {caption}')
+
 
 if __name__ == '__main__':
     main()
