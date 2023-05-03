@@ -238,11 +238,8 @@ def main(img_path='demo_img.png', verbose=True):
     I think there might be a {object_list} in this {img_type}.
     A creative short caption I can generate to describe this image is:'''
 
-
-    caption_texts = [
-        flan_manager.generate_response(prompt, model_params={'temperature': 0.9, 'do_sample': True})
-        for _ in range(num_captions)
-    ]
+    model_params = {'temperature': 0.9, 'max_length': 40, 'do_sample': True}
+    caption_texts = [flan_manager.generate_response(prompt, model_params) for _ in range(num_captions)]
 
     # Zero-shot VLM: rank captions.
     caption_feats = clip_manager.get_text_feats(caption_texts)
