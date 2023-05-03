@@ -273,3 +273,6 @@ def main(img_path='demo_img.png', verbose=True):
         print(f'\nLM generated captions ranked by VLM scores:')
         for caption, score in zip(sorted_captions, caption_scores):
             print(f'{score:.4f} {caption}')
+
+if __name__ == '__main__':
+    main()
