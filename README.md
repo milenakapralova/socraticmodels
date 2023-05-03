@@ -7,3 +7,7 @@ Project website: https://socraticmodels.github.io/
 ## Instructions
 
 This repository provides self-contained colabs with prototype implementations of Socratic Models for various applications.
+
+## Colab notebooks
+
+There are a couple of Colab notebooks with the [T5 prompting pipeline](https://colab.research.google.com/drive/1o-q4QQYfdYIXq10e3BctO2h_980aLt3t#scrollTo=29352228) and [CLIP embedding space visualisations](https://colab.research.google.com/drive/1PG6BXF-I89mvqAjl17Ms2WSAvQUI_w8d#scrollTo=bkwvovEQQz5H).
