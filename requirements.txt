@@ -1,0 +1,10 @@
+numpy
+requests
+tqdm
+ipykernel
+matplotlib
+clip
+opencv-python
+Pillow
+torch
+profanity_filter
