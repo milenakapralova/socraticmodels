@@ -1,4 +1,5 @@
 import time
+import torch
 import numpy as np
 
 
@@ -11,3 +12,13 @@ def print_time_dec(func):
         print(f'{func.__name__} took {np.round(end - start, 1)}s!')
         return result
     return wrap
+
+
+def get_device():
+    # Set the device to use
+    if getattr(torch, 'has_mps', False):
+        return 'mps'
+    elif torch.cuda.is_available():
+        return 'gpu'
+    else:
+        return 'cpu'
