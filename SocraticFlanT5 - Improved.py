@@ -11,7 +11,7 @@ from utils import get_device
 # def main(img_path='demo_img.png', verbose=True):
 
 
-img_path = 'monkey_with_gun.jpg'
+img_path = 'astronaut_with_beer.jpg'
 verbose = True
 
 # Set HuggingFace seed

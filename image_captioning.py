@@ -1,5 +1,7 @@
 # Package loading
 import os
+from typing import List, Union
+
 import requests
 import clip
 import cv2
@@ -11,8 +13,12 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from utils import print_time_dec
 
 
+
 class ImageManager:
     def __init__(self):
+        """
+        images_to_download: image_path to download_url map
+        """
         self.images_to_download = {
             'demo_img.png': 'https://github.com/rmokady/CLIP_prefix_caption/raw/main/Images/COCO_val2014_000000165547.jpg',
             'monkey_with_gun.jpg': 'https://drive.google.com/uc?export=download&id=1iG0TJTZ0yRJEC8dA-WwS7X-GhuX8sfy8',
@@ -22,18 +28,34 @@ class ImageManager:
         self.download_data()
 
     def download_data(self):
+        """
+        Downloads the images of self.images_to_download if the file does not exist.
+        :return:
+        """
         # Download images
         for img_path, img_url in self.images_to_download.items():
             if not os.path.exists(img_path):
                 self.download_image_from_url(img_path, img_url)
 
     @staticmethod
-    def download_image_from_url(img_path, img_url):
+    def download_image_from_url(img_path: str, img_url: str):
+        """
+        Downloads an image from an url.
+
+        :param img_path: Output path.
+        :param img_url: Download url.
+        :return:
+        """
         with open(img_path, 'wb') as f:
             f.write(requests.get(img_url).content)
 
     @staticmethod
-    def load_image(image_path):
+    def load_image(image_path: str) -> np.ndarray:
+        """
+
+        :param image_path:
+        :return:
+        """
         return cv2.cvtColor(cv2.imread(image_path), cv2.COLOR_BGR2RGB)
 
 
@@ -61,7 +83,7 @@ class VocabManager:
 
     @staticmethod
     @print_time_dec
-    def load_places():
+    def load_places() -> List[str]:
         place_categories = np.loadtxt('categories_places365.txt', dtype=str)
         place_texts = []
         for place in place_categories[:, 0]:
@@ -75,7 +97,7 @@ class VocabManager:
         return place_texts
 
     @print_time_dec
-    def load_objects(self, remove_profanity=False):
+    def load_objects(self, remove_profanity: bool = False) -> List[str]:
         with open('dictionary_and_semantic_hierarchy.txt') as fid:
             object_categories = fid.readlines()
         object_texts = []
@@ -99,20 +121,34 @@ class VocabManager:
 
 
 class ClipManager:
-    def __init__(self, device):
+    def __init__(self, device: str, version: str = "ViT-L/14"):
+        """
+
+
+        :param device: The device to use ('gpu', 'mps', 'cpu').
+        :param version: The CLIP model version.
+        """
         self.device = device
         self.feat_dim_map = {
             'RN50': 1024, 'RN101': 512, 'RN50x4': 640, 'RN50x16': 768, 'RN50x64': 1024, 'ViT-B/32': 512,
             'ViT-B/16': 512,'ViT-L/14': 768
         }
-        self.version = "ViT-L/14"
-        self.feat_dim = self.feat_dim_map[self.version]
-        self.model, self.preprocess = clip.load(self.version)
+        self.version = version
+        self.feat_dim = self.feat_dim_map[version]
+        self.model, self.preprocess = clip.load(version)
         self.model.to(self.device)
         self.model.eval()
 
     @print_time_dec
-    def get_text_feats(self, in_text, batch_size=64):
+    def get_text_feats(self, in_text: List[str], batch_size: int = 64) -> np.ndarray:
+        """
+        Creates a numpy array of text features with the columns containing the features and the rows containing the
+        representations for each of the strings in the input in_text list.
+
+        :param in_text: List of prompts
+        :param batch_size: The batch size
+        :return: Array with n_features columns and len(in_text) rows
+        """
         text_tokens = clip.tokenize(in_text).to(self.device)
         text_id = 0
         text_feats = np.zeros((len(in_text), self.feat_dim), dtype=np.float32)
@@ -158,7 +194,9 @@ class FlanT5Manager:
         self.tokenizer = AutoTokenizer.from_pretrained(version)
 
     @print_time_dec
-    def generate_response(self, prompt, model_params=None):
+    def generate_response(
+            self, prompt: Union[List[str], str], model_params: Union[dict, None] = None
+    ) -> Union[List[str], str]:
         """
         :param prompt: Prompt(s) as list or str
         :param model_params: Model parameters
@@ -175,6 +213,12 @@ class FlanT5Manager:
 
 
 def num_params(model):
+    """
+    Calculates the number of parameters in the model.
+
+    :param model:
+    :return: Int
+    """
     return np.sum([int(np.prod(p.shape)) for p in model.parameters()])
 
 
