@@ -31,48 +31,56 @@ from utils import get_device
 # outputs = model(**inputs)
 # print(outputs)
 #
-# # Example 2
-#
-# from transformers import AutoProcessor, Blip2ForConditionalGeneration
-# import torch
-#
-# processor = AutoProcessor.from_pretrained("Salesforce/blip2-opt-2.7b")
-# model = Blip2ForConditionalGeneration.from_pretrained("Salesforce/blip2-opt-2.7b", torch_dtype=torch.float16)
-#
-# # Set the device to use
-# device = get_device()
-#
-# model.to(device)
-#
-# inputs = processor(img, return_tensors="pt").to(device, torch.float16)
-#
-# generated_ids = model.generate(**inputs, max_new_tokens=20)
-# generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
-# print(generated_text)
+# Example 2
 
-
-# Example 3
-
-from PIL import Image
-import requests
-from transformers import Blip2Processor, Blip2Model
+from transformers import AutoProcessor, Blip2ForConditionalGeneration
 import torch
 
-# Set the device to use
-device = get_device()
-
-processor = Blip2Processor.from_pretrained("Salesforce/blip2-opt-2.7b")
-model = Blip2Model.from_pretrained("Salesforce/blip2-opt-2.7b", torch_dtype=torch.float16)
-model.to(device)
-
+processor = AutoProcessor.from_pretrained("Salesforce/blip2-opt-2.7b")
+model = Blip2ForConditionalGeneration.from_pretrained("Salesforce/blip2-opt-2.7b", torch_dtype=torch.float16)
 
 # Instantiate the image manager
 image_manager = ImageManager()
 
 img_path = 'astronaut_with_beer.jpg'
-image = image_manager.load_image(img_path)
+img = image_manager.load_image(img_path)
 
-prompt = "Question: where is the picture taken? Answer:"
-inputs = processor(images=image, text=prompt, return_tensors="pt").to(device, torch.float16)
+# Set the device to use
+device = get_device()
 
-outputs = model(**inputs)
+model.to(device)
+
+inputs = processor(img, return_tensors="pt").to(device, torch.float16)
+
+generated_ids = model.generate(**inputs, max_new_tokens=20)
+generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
+print(generated_text)
+
+#
+# # Example 3
+#
+# from PIL import Image
+# import requests
+# from transformers import Blip2Processor, Blip2Model
+# import torch
+#
+# # Set the device to use
+# device = get_device()
+#
+# processor = Blip2Processor.from_pretrained("Salesforce/blip2-opt-2.7b")
+# model = Blip2Model.from_pretrained("Salesforce/blip2-opt-2.7b", torch_dtype=torch.float16)
+# model.to(device)
+#
+#
+# # Instantiate the image manager
+# image_manager = ImageManager()
+#
+# img_path = 'astronaut_with_beer.jpg'
+# image = image_manager.load_image(img_path)
+#
+# prompt = "Question: where is the picture taken? Answer:"
+# inputs = processor(images=image, text=prompt, return_tensors="pt").to(device, torch.float16)
+#
+# outputs = model(**inputs)
+#
+# print(outputs)
