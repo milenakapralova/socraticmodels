@@ -75,8 +75,10 @@ class VocabManager:
                 f.write(response.content)
         # Download object categories from Tencent ML Images.
         if not os.path.exists('dictionary_and_semantic_hierarchy.txt'):
-            url = "https://raw.githubusercontent.com/Tencent/tencent-ml-images/master/data/dictionary_and_semantic_hier"
-            "archy.txt"
+            url = (
+                "https://raw.githubusercontent.com/Tencent/tencent-ml-images/master/data/dictionary_and_semantic_hierar"
+                "chy.txt"
+            )
             response = requests.get(url)
             with open("dictionary_and_semantic_hierarchy.txt", "wb") as f:
                 f.write(response.content)
@@ -187,14 +189,40 @@ class ClipManager:
 
 
 class FlanT5Manager:
-    def __init__(self, version="google/flan-t5-xl"):
-        # Instantiate the model
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(version)
-        # Instantiate the tokenizer
-        self.tokenizer = AutoTokenizer.from_pretrained(version)
+    def __init__(self, version="google/flan-t5-xl", use_api=False):
+        self.model = None
+        self.tokenizer = None
+        self.api_url = None
+        self.headers = None
+        self.use_api = use_api
+        if use_api:
+            if 'HUGGINGFACE_API' in os.environ:
+                hf_api = os.environ['HUGGINGFACE_API']
+            else:
+                raise ValueError(
+                    "You need to store your huggingface api key in your environment under "
+                    "'HUGGINGFACE_API' if you want to use the API. Otherwise, set 'use_api' to False."
+                )
+            self.api_url = f"https://api-inference.huggingface.co/models/{version}"
+            self.headers = {"Authorization": f"Bearer {hf_api}"}
+        else:
+            # Instantiate the model
+            self.model = AutoModelForSeq2SeqLM.from_pretrained(version)
+            # Instantiate the tokenizer
+            self.tokenizer = AutoTokenizer.from_pretrained(version)
 
-    @print_time_dec
     def generate_response(
+            self, prompt: Union[List[str], str], model_params: Union[dict, None] = None
+    ) -> Union[List[str], str]:
+        if self.use_api:
+            if isinstance(prompt, str):
+                return self.generate_response_api(prompt, model_params)
+            else:
+                return [self.generate_response_api(p, model_params) for p in prompt]
+        else:
+            return self.generate_response_local(prompt, model_params)
+
+    def generate_response_local(
             self, prompt: Union[List[str], str], model_params: Union[dict, None] = None
     ) -> Union[List[str], str]:
         """
@@ -210,6 +238,28 @@ class FlanT5Manager:
         if len(decoded) == 1:
             return decoded[0]
         return decoded
+
+    def generate_response_api(
+            self, prompt: Union[List[str], str], model_params: Union[dict, None] = None
+    ) -> Union[List[str], str]:
+        """
+        :param prompt: Prompt(s) as list or str
+        :param model_params: Model parameters
+        :return: str if 1 else list
+        """
+        if model_params is None:
+            model_params = {}
+        outputs = self.query({
+            "inputs": prompt,
+            "parameters": model_params,
+            "options": {"use_cache": False, "wait_for_model": True}
+        })
+        decoded = [output['generated_text'] for output in outputs][0]
+        return decoded
+
+    def query(self, payload):
+        response = requests.post(self.api_url, headers=self.headers, json=payload)
+        return response.json()
 
 
 def num_params(model):
