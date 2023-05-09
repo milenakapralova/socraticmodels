@@ -6,4 +6,5 @@ opencv-python
 Pillow
 torch
 transformers
+python-dotenv
 # profanity_filter
