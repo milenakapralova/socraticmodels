@@ -67,8 +67,8 @@ import torch
 # Set the device to use
 device = get_device()
 
-processor = Blip2Processor.from_pretrained("Salesforce/blip2-opt-2.7b")
-model = Blip2Model.from_pretrained("Salesforce/blip2-opt-2.7b", torch_dtype=torch.float16)
+processor = Blip2Processor.from_pretrained('Salesforce/blip2-flan-t5-xl')
+model = Blip2Model.from_pretrained('Salesforce/blip2-flan-t5-xl', torch_dtype=torch.float16)
 model.to(device)
 
 
