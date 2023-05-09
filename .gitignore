@@ -5,3 +5,12 @@
 /demo_img.png
 /astronaut_with_beer.jpg
 /monkey_with_gun.jpg
+/annotations/captions_train2014.json
+/annotations/captions_val2014.json
+/captions_val2014_fakecap_results.json
+/fruit_bowl.jpg
+/annotations/instances_train2014.json
+/annotations/instances_val2014.json
+/annotations/person_keypoints_train2014.json
+/annotations/person_keypoints_val2014.json
+/captions_val2014.json
