@@ -211,6 +211,7 @@ class FlanT5Manager:
             # Instantiate the tokenizer
             self.tokenizer = AutoTokenizer.from_pretrained(version)
 
+    @print_time_dec
     def generate_response(
             self, prompt: Union[List[str], str], model_params: Union[dict, None] = None
     ) -> Union[List[str], str]:
