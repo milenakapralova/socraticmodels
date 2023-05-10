@@ -19,25 +19,22 @@ class COCOManager:
         """
         dataset: dataset to download
         """
-        self.img_url = 'http://images.cocodataset.org/zips/val2017.zip'
-        self.annotations_url = 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
-        # self.dataset_to_download = {'imgs': 'http://images.cocodataset.org/zips/val2017.zip',
-        #                             'annotations': 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
-        # }
+        # self.img_url = 'http://images.cocodataset.org/zips/val2017.zip'
+        # self.annotations_url = 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
+        self.dataset_to_download = {'imgs': 'http://images.cocodataset.org/zips/val2017.zip',
+                                    'annotations': 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
+        }
         self.download_data()
 
-    def download_unzip_delete(self, type):
-        if type == 'imgs':
-            url = self.img_url
-        else:
-            url = self.annotations_url
-        if not os.path.exists(type + '/'):
+    def download_unzip_delete(self, part):
+        url = self.dataset_to_download[part]
+        if not os.path.exists(part + '/'):
             response = requests.get(url)
-            with open(type + '.zip', "wb") as f:
+            with open(part + '.zip', "wb") as f:
                 f.write(response.content)
-            with zipfile.ZipFile(type + '.zip',"r") as zip_ref:
-                zip_ref.extractall(type)
-                os.remove(type + '.zip')
+            with zipfile.ZipFile(part + '.zip',"r") as zip_ref:
+                zip_ref.extractall(part)
+                os.remove(part + '.zip')
 
     def download_data(self):
         """
