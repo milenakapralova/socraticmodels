@@ -11,6 +11,50 @@ from profanity_filter import ProfanityFilter
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from utils import print_time_dec
+import zipfile
+
+
+class COCOManager:
+    def __init__(self):
+        """
+        dataset: dataset to download
+        """
+        self.img_url = 'http://images.cocodataset.org/zips/val2017.zip'
+        self.annotations_url = 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
+        # self.dataset_to_download = {'imgs': 'http://images.cocodataset.org/zips/val2017.zip',
+        #                             'annotations': 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
+        # }
+        self.download_dataset()
+
+    @staticmethod
+    def download_dataset(self):
+        """
+        Downloads the images of self.dataset_to_download if the file does not exist.
+        """
+        # Download images
+        if not os.path.exists('imgs.zip'):
+            # (filename, url) = self.dataset_to_download.items()
+            # url = 'http://images.cocodataset.org/zips/val2017.zip'
+            response = requests.get(self.img_url)
+            with open("imgs.zip", "wb") as f:
+                f.write(response.content)
+            with zipfile.ZipFile("imgs.zip","r") as zip_ref:
+                zip_ref.extractall('imgs')
+            if os.path.exists('imgs/'):
+                os.remove('imgs.zip')
+
+        # Download annotations
+        if not os.path.exists('annotations.zip'):
+            # url = 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
+            response = requests.get(self.annotations_url)
+            with open("annotations.zip", "wb") as f:
+                f.write(response.content)
+            with zipfile.ZipFile("annotations.zip","r") as zip_ref:
+                zip_ref.extractall('annotations')
+            if os.path.exists('annotations/'):
+                os.remove('annotations.zip')
+
+
 
 
 
