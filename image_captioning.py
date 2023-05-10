@@ -24,38 +24,30 @@ class COCOManager:
         # self.dataset_to_download = {'imgs': 'http://images.cocodataset.org/zips/val2017.zip',
         #                             'annotations': 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
         # }
-        self.download_dataset()
+        self.download_data()
 
-    @staticmethod
-    def download_dataset(self):
+    def download_unzip_delete(self, type):
+        if type == 'imgs':
+            url = self.img_url
+        else:
+            url = self.annotations_url
+        if not os.path.exists(type + '/'):
+            response = requests.get(url)
+            with open(type + '.zip', "wb") as f:
+                f.write(response.content)
+            with zipfile.ZipFile(type + '.zip',"r") as zip_ref:
+                zip_ref.extractall(type)
+                os.remove(type + '.zip')
+
+    def download_data(self):
         """
-        Downloads the images of self.dataset_to_download if the file does not exist.
+        Downloads the images and annotations of the COCO dataset of interest if the file does not exist.
         """
         # Download images
-        if not os.path.exists('imgs/'):
-            # (filename, url) = self.dataset_to_download.items()
-            # url = 'http://images.cocodataset.org/zips/val2017.zip'
-            response = requests.get(self.img_url)
-            with open("imgs.zip", "wb") as f:
-                f.write(response.content)
-            with zipfile.ZipFile("imgs.zip","r") as zip_ref:
-                zip_ref.extractall('imgs')
-            if os.path.exists('imgs/'):
-                os.remove('imgs.zip')
+        self.download_unzip_delete('imgs')
 
         # Download annotations
-        if not os.path.exists('annotations/'):
-            # url = 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
-            response = requests.get(self.annotations_url)
-            with open("annotations.zip", "wb") as f:
-                f.write(response.content)
-            with zipfile.ZipFile("annotations.zip","r") as zip_ref:
-                zip_ref.extractall('annotations')
-            if os.path.exists('annotations/'):
-                os.remove('annotations.zip')
-
-
-
+        self.download_unzip_delete('annotations')
 
 
 class ImageManager:
