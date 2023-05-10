@@ -21,3 +21,8 @@
 /Quantitative_evaluation_local.py
 /annotations/
 /test.py
+/object_feats.npy
+/object_texts.txt
+/place_feats.npy
+/place_texts.txt
+/res.txt

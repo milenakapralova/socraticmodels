@@ -40,12 +40,20 @@ def main():
     flan_manager = FlanT5Manager()
 
     ## Calculate the place features
-    # place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
-    place_feats = np.load('place_feats.npy')
+    if not os.path.exists('place_feats.npy'):
+        # Calculate the place features
+        place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
+        np.save('place_feats.npy', place_feats)
+    else:
+        place_feats = np.load('place_feats.npy')
 
     ## Calculate the object features
-    # object_feats = clip_manager.get_text_feats([f'Photo of a {o}.' for o in vocab_manager.object_list])
-    object_feats = np.load('object_feats.npy')
+    if not os.path.exists('object_feats.npy'):
+        # Calculate the object features
+        object_feats = clip_manager.get_text_feats([f'Photo of a {o}.' for o in vocab_manager.object_list])
+        np.save('object_feats.npy', object_feats)
+    else:
+        object_feats = np.load('object_feats.npy')
 
     ## Defining parameters regarding the template prompt
     ### Zero-shot VLM: classify image type.
@@ -63,73 +71,83 @@ def main():
     obj_topk = 10
 
     ### Zero-shot LM: generate captions.
-    num_captions = 10
+    num_captions = 2
 
     ## Generating captions for images
-    res = []
-    N = 5
+    if not os.path.exists('res.txt'):
+        res = []
+        N = 2
 
-    for ix, file_name in enumerate(os.listdir(imgs_folder)):
-        if ix >= N:  # iterate only the first N images
-            break
-        if file_name.endswith(".jpg"):  # consider only image files
-            img_path = os.path.join(imgs_folder, file_name)
-            img = image_manager.load_image(img_path)
-            img_feats = clip_manager.get_img_feats(img)
+        for ix, file_name in enumerate(os.listdir(imgs_folder)):
+            if ix >= N:  # iterate only the first N images
+                break
+            if file_name.endswith(".jpg"):  # consider only image files
+                img_path = os.path.join(imgs_folder, file_name)
+                img = image_manager.load_image(img_path)
+                img_feats = clip_manager.get_img_feats(img)
 
-            # Zero-shot VLM: classify image type.
-            sorted_img_types, img_type_scores = clip_manager.get_nn_text(img_types, img_types_feats, img_feats)
-            img_type = sorted_img_types[0]
+                # Zero-shot VLM: classify image type.
+                sorted_img_types, img_type_scores = clip_manager.get_nn_text(img_types, img_types_feats, img_feats)
+                img_type = sorted_img_types[0]
 
-            # Zero-shot VLM: classify number of people.
-            sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts, ppl_feats, img_feats)
-            ppl_result = sorted_ppl_texts[0]
-            if ppl_result == 'people':
-                ppl_texts = ['is one person', 'are two people', 'are three people', 'are several people', 'are many people']
-                ppl_feats = clip_manager.get_text_feats([f'There {p} in this photo.' for p in ppl_texts])
+                # Zero-shot VLM: classify number of people.
                 sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts, ppl_feats, img_feats)
                 ppl_result = sorted_ppl_texts[0]
-            else:
-                ppl_result = f'are {ppl_result}'
+                if ppl_result == 'people':
+                    ppl_texts = ['is one person', 'are two people', 'are three people', 'are several people', 'are many people']
+                    ppl_feats = clip_manager.get_text_feats([f'There {p} in this photo.' for p in ppl_texts])
+                    sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts, ppl_feats, img_feats)
+                    ppl_result = sorted_ppl_texts[0]
+                else:
+                    ppl_result = f'are {ppl_result}'
 
-            # Zero-shot VLM: classify places.
-            sorted_places, places_scores = clip_manager.get_nn_text(vocab_manager.place_list, place_feats, img_feats)
+                # Zero-shot VLM: classify places.
+                sorted_places, places_scores = clip_manager.get_nn_text(vocab_manager.place_list, place_feats, img_feats)
 
-            # Zero-shot VLM: classify objects.
-            sorted_obj_texts, obj_scores = clip_manager.get_nn_text(vocab_manager.object_list, object_feats, img_feats)
-            object_list = ''
-            for i in range(obj_topk):
-                object_list += f'{sorted_obj_texts[i]}, '
-            object_list = object_list[:-2]
+                # Zero-shot VLM: classify objects.
+                sorted_obj_texts, obj_scores = clip_manager.get_nn_text(vocab_manager.object_list, object_feats, img_feats)
+                object_list = ''
+                for i in range(obj_topk):
+                    object_list += f'{sorted_obj_texts[i]}, '
+                object_list = object_list[:-2]
 
-            # Zero-shot LM: generate captions.
-            prompt = f'''I am an intelligent image captioning bot.
-            This image is a {img_type}. There {ppl_result}.
-            I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
-            I think there might be a {object_list} in this {img_type}.
-            A creative short caption I can generate to describe this image is:'''
+                # Zero-shot LM: generate captions.
+                prompt = f'''I am an intelligent image captioning bot.
+                This image is a {img_type}. There {ppl_result}.
+                I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
+                I think there might be a {object_list} in this {img_type}.
+                A creative short caption I can generate to describe this image is:'''
 
-            # Generate multiple captions
-            model_params = {'temperature': 0.9, 'max_length': 40, 'do_sample': True}
-            caption_texts = flan_manager.generate_response(num_captions * [prompt], model_params)
+                # Generate multiple captions
+                model_params = {'temperature': 0.9, 'max_length': 40, 'do_sample': True}
+                caption_texts = flan_manager.generate_response(num_captions * [prompt], model_params)
 
-            # Zero-shot VLM: rank captions.
-            caption_feats = clip_manager.get_text_feats(caption_texts)
-            sorted_captions, caption_scores = clip_manager.get_nn_text(caption_texts, caption_feats, img_feats)
-            best_caption = sorted_captions[0]
+                # Zero-shot VLM: rank captions.
+                caption_feats = clip_manager.get_text_feats(caption_texts)
+                sorted_captions, caption_scores = clip_manager.get_nn_text(caption_texts, caption_feats, img_feats)
+                best_caption = sorted_captions[0]
 
-            # Getting image id
-            ## Image_id
-            file_name = file_name.strip('.jpg')
-            match = re.search('^0+', file_name)
-            sequence = match.group(0)
-            image_id = file_name[len(sequence):]
+                # Getting image id
+                ## Image_id
+                file_name = file_name.strip('.jpg')
+                match = re.search('^0+', file_name)
+                sequence = match.group(0)
+                image_id = file_name[len(sequence):]
 
-            current_caption = {'image_id': image_id,
-                               'id': image_id,
-                               'caption': best_caption
-            }
-            res.append(current_caption)
+                current_caption = {
+                    'image_id': image_id,
+                    'id': image_id,
+                    'caption': best_caption
+                }
+                res.append(current_caption)
+
+        with open('res.txt', 'w') as f:
+            for cpt in res:
+                f.write(f"{cpt}\n")
+    else:
+        with open('res.txt') as f:
+            res = f.read().splitlines()
+
 
     # Step 3: Evaluating the resulting captions against ground truth COCO annotations
     ## Load the ground truth annotations
@@ -142,7 +160,6 @@ def main():
     ## Print output evaluation scores
     for metric, score in socratic_eval.eval.items():
         print(f'{metric}: {score:.3f}')
-
 
 
 if __name__ == '__main__':

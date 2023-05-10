@@ -117,39 +117,54 @@ class VocabManager:
     @staticmethod
     @print_time_dec
     def load_places() -> List[str]:
-        place_categories = np.loadtxt('categories_places365.txt', dtype=str)
-        place_texts = []
-        for place in place_categories[:, 0]:
-            place = place.split('/')[2:]
-            if len(place) > 1:
-                place = place[1] + ' ' + place[0]
-            else:
-                place = place[0]
-            place = place.replace('_', ' ')
-            place_texts.append(place)
+        if not os.path.exists('place_texts.txt'):
+            place_categories = np.loadtxt('categories_places365.txt', dtype=str)
+            place_texts = []
+            for place in place_categories[:, 0]:
+                place = place.split('/')[2:]
+                if len(place) > 1:
+                    place = place[1] + ' ' + place[0]
+                else:
+                    place = place[0]
+                place = place.replace('_', ' ')
+                place_texts.append(place)
+            with open('place_texts.txt', 'w') as f:
+                for place in place_texts:
+                    f.write(f"{place}\n")
+
+        else:
+            with open('place_texts.txt') as f:
+                place_texts = f.read().splitlines()
         return place_texts
 
     @print_time_dec
     def load_objects(self, remove_profanity: bool = False) -> List[str]:
-        with open('dictionary_and_semantic_hierarchy.txt') as fid:
-            object_categories = fid.readlines()
-        object_texts = []
-        pf = ProfanityFilter()
-        for object_text in object_categories[1:]:
-            object_text = object_text.strip()
-            object_text = object_text.split('\t')[3]
-            if remove_profanity:
-                safe_list = ''
-                for variant in object_text.split(','):
-                    text = variant.strip()
-                    if pf.is_clean(text):
-                        safe_list += f'{text}, '
+        if not os.path.exists('object_texts.txt'):
+            with open('dictionary_and_semantic_hierarchy.txt') as fid:
+                object_categories = fid.readlines()
+            object_texts = []
+            pf = ProfanityFilter()
+            for object_text in object_categories[1:]:
+                object_text = object_text.strip()
+                object_text = object_text.split('\t')[3]
+                if remove_profanity:
+                    safe_list = ''
+                    for variant in object_text.split(','):
+                        text = variant.strip()
+                        if pf.is_clean(text):
+                            safe_list += f'{text}, '
 
-                safe_list = safe_list[:-2]
-                if len(safe_list) > 0:
-                    object_texts.append(safe_list)
-            else:
-                object_texts.append(object_text)
+                    safe_list = safe_list[:-2]
+                    if len(safe_list) > 0:
+                        object_texts.append(safe_list)
+                else:
+                    object_texts.append(object_text)
+            with open('object_texts.txt', 'w') as f:
+                for obj in object_texts:
+                    f.write(f"{obj}\n")
+        else:
+            with open('object_texts.txt') as f:
+                object_texts = f.read().splitlines()
         return [o for o in list(set(object_texts)) if o not in self.place_list]
 
 
