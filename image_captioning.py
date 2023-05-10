@@ -32,7 +32,7 @@ class COCOManager:
         Downloads the images of self.dataset_to_download if the file does not exist.
         """
         # Download images
-        if not os.path.exists('imgs.zip'):
+        if not os.path.exists('imgs/'):
             # (filename, url) = self.dataset_to_download.items()
             # url = 'http://images.cocodataset.org/zips/val2017.zip'
             response = requests.get(self.img_url)
@@ -44,7 +44,7 @@ class COCOManager:
                 os.remove('imgs.zip')
 
         # Download annotations
-        if not os.path.exists('annotations.zip'):
+        if not os.path.exists('annotations/'):
             # url = 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
             response = requests.get(self.annotations_url)
             with open("annotations.zip", "wb") as f:
