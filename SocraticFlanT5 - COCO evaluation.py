@@ -1,16 +1,20 @@
 '''
 The following script:
 - Downloads the COCO images and annotations
-- Passes the COCO images through the Socratic model pipeline
-- Gets the resulting captions for the COCO images
-- Evaluates the resulting captions afainst ground truth COCO annotations
+- Passes the COCO images through the Socratic model pipeline and gets the resulting captions for the COCO images
+- Evaluates the resulting captions against ground truth COCO annotations
+
+Please make sure that you have the files place_feats.npy and object_feats.npy in your directory. If that is not the case, please run the generate_features.py file.
 '''
 
 # Package loading
 from image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, COCOManager
+from eval import SocraticEvalCap
 from utils import get_device
 import os
 import re
+import json
+import numpy as np
 
 
 def main():
@@ -36,10 +40,12 @@ def main():
     flan_manager = FlanT5Manager()
 
     ## Calculate the place features
-    place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
+    # place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
+    place_feats = np.load('place_feats.npy')
 
     ## Calculate the object features
-    object_feats = clip_manager.get_text_feats([f'Photo of a {o}.' for o in vocab_manager.object_list])
+    # object_feats = clip_manager.get_text_feats([f'Photo of a {o}.' for o in vocab_manager.object_list])
+    object_feats = np.load('object_feats.npy')
 
     ## Defining parameters regarding the template prompt
     ### Zero-shot VLM: classify image type.
@@ -63,12 +69,11 @@ def main():
     res = []
     N = 5
 
-    folder_path = 'imgs/val2017/'
-    for ix, file_name in enumerate(os.listdir(folder_path)):
+    for ix, file_name in enumerate(os.listdir(imgs_folder)):
         if ix >= N:  # iterate only the first N images
             break
         if file_name.endswith(".jpg"):  # consider only image files
-            img_path = os.path.join(folder_path, file_name)
+            img_path = os.path.join(imgs_folder, file_name)
             img = image_manager.load_image(img_path)
             img_feats = clip_manager.get_img_feats(img)
 
@@ -113,30 +118,30 @@ def main():
             sorted_captions, caption_scores = clip_manager.get_nn_text(caption_texts, caption_feats, img_feats)
             best_caption = sorted_captions[0]
 
-            # Getting image id's
+            # Getting image id
             ## Image_id
             file_name = file_name.strip('.jpg')
             match = re.search('^0+', file_name)
             sequence = match.group(0)
             image_id = file_name[len(sequence):]
 
-            ## Id
-            id = ...
-
             current_caption = {'image_id': image_id,
-                               'id': id,
+                               'id': image_id,
                                'caption': best_caption
             }
             res.append(current_caption)
 
-    return res
+    # Step 3: Evaluating the resulting captions against ground truth COCO annotations
+    ## Load the ground truth annotations
+    with open(annotation_file, 'r') as f:
+        gts = json.load(f)['annotations']
 
+    socratic_eval = SocraticEvalCap(gts, res)
+    socratic_eval.evaluate()
 
-
-
-
-
-
+    ## Print output evaluation scores
+    for metric, score in socratic_eval.eval.items():
+        print(f'{metric}: {score:.3f}')
 
 
 
