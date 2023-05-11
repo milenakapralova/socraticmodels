@@ -37,21 +37,21 @@ def main():
     vocab_manager = VocabManager()
 
     ## Calculate the place features
-    if not os.path.exists('place_feats.npy'):
+    if not os.path.exists('cache/place_feats.npy'):
 
         # Calculate the place features
         place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
-        np.save('place_feats.npy', place_feats)
+        np.save('cache/place_feats.npy', place_feats)
     else:
-        place_feats = np.load('place_feats.npy')
+        place_feats = np.load('cache/place_feats.npy')
 
     ## Calculate the object features
-    if not os.path.exists('object_feats.npy'):
+    if not os.path.exists('cache/object_feats.npy'):
         # Calculate the object features
         object_feats = clip_manager.get_text_feats([f'Photo of a {o}.' for o in vocab_manager.object_list])
-        np.save('object_feats.npy', object_feats)
+        np.save('cache/object_feats.npy', object_feats)
     else:
-        object_feats = np.load('object_feats.npy')
+        object_feats = np.load('cache/object_feats.npy')
 
     ## Defining parameters regarding the template prompt
     ### Zero-shot VLM: classify image type.
@@ -69,16 +69,16 @@ def main():
     obj_topk = 10
 
     ### Zero-shot LM: generate captions.
-    num_captions = 3
+    num_captions = 1
 
     ## Generating captions for images
-    if not os.path.exists('res.pickle'):
+    if not os.path.exists('cache/res.pickle'):
         ## Instantiate the Flan T5 manager
         flan_manager = FlanT5Manager(version="google/flan-t5-xl", use_api=False)
 
         res = {}
-        N = 5
-
+        # N = len(os.listdir(imgs_folder))
+        N = 1
         for ix, file_name in enumerate(os.listdir(imgs_folder)[:N]):
             if file_name.endswith(".jpg"):  # consider only image files
                 img_path = os.path.join(imgs_folder, file_name)
@@ -139,16 +139,11 @@ def main():
                     'caption': best_caption
                 }]
 
-        # with open('res.txt', 'w') as file:
-        #     file.write(json.dumps(res))
-        with open('res.pickle', 'wb') as handle:
+        with open('cache/res.pickle', 'wb') as handle:
             pickle.dump(res, handle, protocol=pickle.HIGHEST_PROTOCOL)
     else:
-        with open('res.pickle', 'rb') as handle:
+        with open('cache/res.pickle', 'rb') as handle:
             res = pickle.load(handle)
-        # res = [eval(caption_dict) for caption_dict in lines]
-        # for caption_dict in res:
-            # caption_dict['image_id'] = int(caption_dict['image_id'])
 
     # Step 3: Evaluating the resulting captions against ground truth COCO annotations
     ## Load the ground truth annotations
@@ -160,13 +155,18 @@ def main():
             gts[item['image_id']] = []
         gts[item['image_id']].append({'image_id': item['image_id'], 'caption': item['caption']})
 
-
     socratic_eval = SocraticEvalCap(gts, res)
     socratic_eval.evaluate()
 
-    ## Print output evaluation scores
+    ## Print output evaluation scores, store and save them
+    rulebased_metrics = {}
     for metric, score in socratic_eval.eval.items():
         print(f'{metric}: {score:.3f}')
+        rulebased_metrics[metric] = round(score, 5)
+
+    with open('rulebased_metrics.pickle', 'wb') as handle:
+        pickle.dump(rulebased_metrics, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 
 
 if __name__ == '__main__':

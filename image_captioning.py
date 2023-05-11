@@ -19,13 +19,13 @@ class COCOManager:
         """
         dataset: dataset to download
         """
-        self.dataset_to_download = {'imgs': 'http://images.cocodataset.org/zips/val2017.zip',
-                                    'annotations': 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
+        self.dataset_to_download = {
+            'imgs': 'http://images.cocodataset.org/zips/val2017.zip',
+            'annotations': 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
         }
         self.download_data()
 
-    def download_unzip_delete(self, part):
-        url = self.dataset_to_download[part]
+    def download_unzip_delete(self, part, url):
         if not os.path.exists(part + '/'):
             response = requests.get(url)
             with open(part + '.zip', "wb") as f:
@@ -38,11 +38,8 @@ class COCOManager:
         """
         Downloads the images and annotations of the COCO dataset of interest if the file does not exist.
         """
-        # Download images
-        self.download_unzip_delete('imgs')
-
-        # Download annotations
-        self.download_unzip_delete('annotations')
+        for folder, url in self.dataset_to_download.items():
+            self.download_unzip_delete(folder, url)
 
 
 class ImageManager:
