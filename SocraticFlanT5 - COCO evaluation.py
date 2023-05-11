@@ -69,7 +69,7 @@ def main():
     obj_topk = 10
 
     ### Zero-shot LM: generate captions.
-    num_captions = 1
+    num_captions = 10
 
     ## Generating captions for images
     if not os.path.exists('cache/res.pickle'):
@@ -78,7 +78,8 @@ def main():
 
         res = {}
         # N = len(os.listdir(imgs_folder))
-        N = 1
+        N = 10
+
         for ix, file_name in enumerate(os.listdir(imgs_folder)[:N]):
             if file_name.endswith(".jpg"):  # consider only image files
                 img_path = os.path.join(imgs_folder, file_name)
