@@ -15,11 +15,11 @@ import os
 import re
 import json
 import numpy as np
+import pickle
 
 
 def main():
     # Step 1: Downloading the COCO images and annotations
-    coco_manager = COCOManager()
     imgs_folder = 'imgs/val2017/'
     annotation_file = 'annotations/annotations/captions_val2017.json'
 
@@ -36,11 +36,9 @@ def main():
     ## Instantiate the vocab manager
     vocab_manager = VocabManager()
 
-    ## Instantiate the Flan T5 manager
-    flan_manager = FlanT5Manager()
-
     ## Calculate the place features
     if not os.path.exists('place_feats.npy'):
+
         # Calculate the place features
         place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
         np.save('place_feats.npy', place_feats)
@@ -71,16 +69,17 @@ def main():
     obj_topk = 10
 
     ### Zero-shot LM: generate captions.
-    num_captions = 2
+    num_captions = 3
 
     ## Generating captions for images
-    if not os.path.exists('res.txt'):
-        res = []
-        N = 2
+    if not os.path.exists('res.pickle'):
+        ## Instantiate the Flan T5 manager
+        flan_manager = FlanT5Manager(version="google/flan-t5-xl", use_api=False)
 
-        for ix, file_name in enumerate(os.listdir(imgs_folder)):
-            if ix >= N:  # iterate only the first N images
-                break
+        res = {}
+        N = 5
+
+        for ix, file_name in enumerate(os.listdir(imgs_folder)[:N]):
             if file_name.endswith(".jpg"):  # consider only image files
                 img_path = os.path.join(imgs_folder, file_name)
                 img = image_manager.load_image(img_path)
@@ -132,27 +131,35 @@ def main():
                 file_name = file_name.strip('.jpg')
                 match = re.search('^0+', file_name)
                 sequence = match.group(0)
-                image_id = file_name[len(sequence):]
+                image_id = int(file_name[len(sequence):])
 
-                current_caption = {
+                res[image_id] = [{
                     'image_id': image_id,
                     'id': image_id,
                     'caption': best_caption
-                }
-                res.append(current_caption)
+                }]
 
-        with open('res.txt', 'w') as f:
-            for cpt in res:
-                f.write(f"{cpt}\n")
+        # with open('res.txt', 'w') as file:
+        #     file.write(json.dumps(res))
+        with open('res.pickle', 'wb') as handle:
+            pickle.dump(res, handle, protocol=pickle.HIGHEST_PROTOCOL)
     else:
-        with open('res.txt') as f:
-            res = f.read().splitlines()
-
+        with open('res.pickle', 'rb') as handle:
+            res = pickle.load(handle)
+        # res = [eval(caption_dict) for caption_dict in lines]
+        # for caption_dict in res:
+            # caption_dict['image_id'] = int(caption_dict['image_id'])
 
     # Step 3: Evaluating the resulting captions against ground truth COCO annotations
     ## Load the ground truth annotations
     with open(annotation_file, 'r') as f:
-        gts = json.load(f)['annotations']
+        lines = json.load(f)['annotations']
+    gts = {}
+    for item in lines:
+        if item['image_id'] not in gts:
+            gts[item['image_id']] = []
+        gts[item['image_id']].append({'image_id': item['image_id'], 'caption': item['caption']})
+
 
     socratic_eval = SocraticEvalCap(gts, res)
     socratic_eval.evaluate()

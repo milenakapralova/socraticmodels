@@ -29,26 +29,29 @@ class SocraticEvalCap:
         self.eval = {}
         self.imgToEval = {}
 
-        self.img_ids = [caption_dict['image_id'] for caption_dict in res]
+        union_keys = set(gts.keys()) & set(res.keys())
+        gts = {key: gts.get(key) for key in union_keys}
+        res = {key: res.get(key) for key in union_keys}
+
         self.res = res
         self.gts = gts
+        self.img_ids = self.gts.keys()
 
     def evaluate(self):
         # imgIds = self.coco.getImgIds()
-        gts = {}
-        res = {}
-        for imgId in self.img_ids:
-            gts[imgId] = self.res[imgId]
-            res[imgId] = self.gts[imgId]
+        # gts = {}
+        # res = {}
+        # for imgId in self.img_ids:
+        #     gts[imgId] = self.gts[imgId]
+        #     res[imgId] = self.res[imgId]
 
         # =================================================
         # Set up scorers
         # =================================================
         print('tokenization...')
         tokenizer = PTBTokenizer()
-        gts = tokenizer.tokenize(gts)
-        res = tokenizer.tokenize(res)
-
+        gts_tok = tokenizer.tokenize(self.gts)
+        res_tok = tokenizer.tokenize(self.res)
         # =================================================
         # Set up scorers
         # =================================================
@@ -66,15 +69,15 @@ class SocraticEvalCap:
         # =================================================
         for scorer, method in scorers:
             print('computing %s score...'%(scorer.method()))
-            score, scores = scorer.compute_score(gts, res)
+            score, scores = scorer.compute_score(gts_tok, res_tok)
             if type(method) == list:
                 for sc, scs, m in zip(score, scores, method):
                     self.setEval(sc, m)
-                    self.setImgToEvalImgs(scs, gts.keys(), m)
+                    self.setImgToEvalImgs(scs, gts_tok.keys(), m)
                     print("%s: %0.3f"%(m, sc))
             else:
                 self.setEval(score, method)
-                self.setImgToEvalImgs(scores, gts.keys(), method)
+                self.setImgToEvalImgs(scores, gts_tok.keys(), method)
                 print("%s: %0.3f"%(method, score))
         self.setEvalImgs()
 
