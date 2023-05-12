@@ -29,3 +29,5 @@
 /imgs/
 /cache/
 /environment.yml
+/eval_cap.pickle
+/res.pickle

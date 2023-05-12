@@ -4,8 +4,9 @@ from pycocoevalcap.meteor.meteor import Meteor
 from pycocoevalcap.cider.cider import Cider
 from pycocoevalcap.spice.spice import Spice
 from pycocoevalcap.rouge.rouge import Rouge
-from image_captioning import ClipManager
-from utils import get_device
+import pickle
+import numpy as np
+import itertools
 
 class SocraticEvalCap:
     def __init__(self, gts, res):
@@ -27,25 +28,23 @@ class SocraticEvalCap:
         """
         self.evalImgs = []
         self.eval = {}
-        self.sims = {}
+        self.gts_sims = {}
+        self.res_sims = {}
+        # self.sims = {
+        #     'gts': [],
+        #     'res': []
+        # }
         self.imgToEval = {}
 
-        union_keys = set(gts.keys()) & set(res.keys())
-        gts = {key: gts.get(key) for key in union_keys}
-        res = {key: res.get(key) for key in union_keys}
+        self.union_keys = set(gts.keys()) & set(res.keys())
+        gts = {key: gts.get(key) for key in self.union_keys}
+        res = {key: res.get(key) for key in self.union_keys}
 
         self.res = res
         self.gts = gts
         self.img_ids = self.gts.keys()
 
     def evaluate_rulebased(self):
-        # imgIds = self.coco.getImgIds()
-        # gts = {}
-        # res = {}
-        # for imgId in self.img_ids:
-        #     gts[imgId] = self.gts[imgId]
-        #     res[imgId] = self.res[imgId]
-
         # =================================================
         # Set up scorers
         # =================================================
@@ -97,11 +96,30 @@ class SocraticEvalCap:
 
 
     def evaluate_cossim(self):
-        ## Set the device to use
-        device = get_device()
+        # Get the clip embeddings for images and captions
+        with open('cache/embed_imgs.pickle', 'rb') as handle:
+            embed_imgs = pickle.load(handle)
 
-        ## Instantiate the clip manager
-        clip_manager = ClipManager(device)
+        with open('cache/embed_capt_gt.pickle', 'rb') as handle:
+            embed_capt_gt = pickle.load(handle)
 
-        self.sims['gts'] = [1, 1]
-        self.sims['res'] = [1, 1]
+        with open('cache/embed_capt_res.pickle', 'rb') as handle:
+            embed_capt_res = pickle.load(handle)
+
+        # Calculate similarities between images and captions
+        for img_id in self.union_keys:
+            # GT
+            self.gts_sims[img_id] = (embed_capt_gt[img_id] @ embed_imgs[img_id].T).flatten().tolist()
+            # RES
+            self.res_sims[img_id] = float(embed_capt_res[img_id] @ embed_imgs[img_id].T)
+
+        # Calculate aggregates
+        self.sims_mean = {
+            'gts': np.mean(list(itertools.chain(*self.gts_sims.values()))),
+            'res': np.mean(list(self.res_sims.values()))
+        }
+            # self.gts_sims_mean = np.mean(self.gts_sims.values())
+            # self.gts_sims_std = np.std(self.gts_sims.values())
+            # self.res_sims_mean = np.mean(self.res_sims.values())
+            # self.res_sims_std = np.std(self.res_sims.values())
+
