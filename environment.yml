@@ -1,0 +1,24 @@
+name: dl2
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python
+  - pip
+  - pytorch-cuda
+  - pytorch
+  - torchvision
+  - requests
+  - numpy
+  - openai
+  - ffmpeg
+  - pip:
+      - pillow
+      - clip
+      - opencv-python-headless
+      - profanity-filter
+      - notebook
+      - transformers
+      - matplotlib
