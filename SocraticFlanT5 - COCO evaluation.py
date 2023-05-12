@@ -8,7 +8,7 @@ Please make sure that you have the files place_feats.npy and object_feats.npy in
 '''
 
 # Package loading
-from image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, COCOManager
+from image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager
 from eval import SocraticEvalCap
 from utils import get_device
 import os
@@ -156,17 +156,29 @@ def main():
             gts[item['image_id']] = []
         gts[item['image_id']].append({'image_id': item['image_id'], 'caption': item['caption']})
 
-    socratic_eval = SocraticEvalCap(gts, res)
-    socratic_eval.evaluate()
+    eval_cap = {}
+    evaluator = SocraticEvalCap(gts, res)
 
-    ## Print output evaluation scores, store and save them
-    rulebased_metrics = {}
-    for metric, score in socratic_eval.eval.items():
+    ## Rule-based metrics
+    eval_rulebased = {}
+    evaluator.evaluate_rulebased()
+    for metric, score in evaluator.eval.items():
         print(f'{metric}: {score:.3f}')
-        rulebased_metrics[metric] = round(score, 5)
+        eval_rulebased[metric] = round(score, 5)
+    eval_cap['rulebased'] = eval_rulebased
 
-    with open('rulebased_metrics.pickle', 'wb') as handle:
-        pickle.dump(rulebased_metrics, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    ## Metric based on cosine similarity/dot product between the captions and images
+    eval_cossim = {}
+    evaluator.evaluate_cossim()
+    for source_caption, sim in evaluator.sims.items():
+        print(f'{source_caption}: avg = {sim[0]:.3f}, sd = {sim[1]:.3f}')
+        eval_cossim[source_caption] = [round(sim[0], 5), round(sim[1], 5)]
+    eval_cap['cossim'] = eval_cossim
+
+
+    ## Save the evaluation scores
+    with open('eval_cap.pickle', 'wb') as handle:
+        pickle.dump(eval_cap, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 

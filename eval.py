@@ -1,11 +1,11 @@
-from pycocotools.coco import COCO
 from pycocoevalcap.tokenizer.ptbtokenizer import PTBTokenizer
 from pycocoevalcap.bleu.bleu import Bleu
 from pycocoevalcap.meteor.meteor import Meteor
 from pycocoevalcap.cider.cider import Cider
 from pycocoevalcap.spice.spice import Spice
 from pycocoevalcap.rouge.rouge import Rouge
-
+from image_captioning import ClipManager
+from utils import get_device
 
 class SocraticEvalCap:
     def __init__(self, gts, res):
@@ -27,6 +27,7 @@ class SocraticEvalCap:
         """
         self.evalImgs = []
         self.eval = {}
+        self.sims = {}
         self.imgToEval = {}
 
         union_keys = set(gts.keys()) & set(res.keys())
@@ -37,7 +38,7 @@ class SocraticEvalCap:
         self.gts = gts
         self.img_ids = self.gts.keys()
 
-    def evaluate(self):
+    def evaluate_rulebased(self):
         # imgIds = self.coco.getImgIds()
         # gts = {}
         # res = {}
@@ -93,3 +94,14 @@ class SocraticEvalCap:
 
     def setEvalImgs(self):
         self.evalImgs = [eval for imgId, eval in self.imgToEval.items()]
+
+
+    def evaluate_cossim(self):
+        ## Set the device to use
+        device = get_device()
+
+        ## Instantiate the clip manager
+        clip_manager = ClipManager(device)
+
+        self.sims['gts'] = [1, 1]
+        self.sims['res'] = [1, 1]
