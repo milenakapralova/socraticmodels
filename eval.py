@@ -30,15 +30,11 @@ class SocraticEvalCap:
         self.eval = {}
         self.gts_sims = {}
         self.res_sims = {}
-        # self.sims = {
-        #     'gts': [],
-        #     'res': []
-        # }
         self.imgToEval = {}
 
-        self.union_keys = set(gts.keys()) & set(res.keys())
-        gts = {key: gts.get(key) for key in self.union_keys}
-        res = {key: res.get(key) for key in self.union_keys}
+        self.intersect_keys = set(gts.keys()) & set(res.keys())
+        gts = {key: gts.get(key) for key in self.intersect_keys}
+        res = {key: res.get(key) for key in self.intersect_keys}
 
         self.res = res
         self.gts = gts
@@ -107,19 +103,18 @@ class SocraticEvalCap:
             embed_capt_res = pickle.load(handle)
 
         # Calculate similarities between images and captions
-        for img_id in self.union_keys:
+        for img_id in self.intersect_keys:
             # GT
             self.gts_sims[img_id] = (embed_capt_gt[img_id] @ embed_imgs[img_id].T).flatten().tolist()
             # RES
             self.res_sims[img_id] = float(embed_capt_res[img_id] @ embed_imgs[img_id].T)
 
+        gts_list = list(itertools.chain(*self.gts_sims.values()))
+        res_list = list(self.res_sims.values())
+
         # Calculate aggregates
-        self.sims_mean = {
-            'gts': np.mean(list(itertools.chain(*self.gts_sims.values()))),
-            'res': np.mean(list(self.res_sims.values()))
+        self.sims = {
+            'gts': [np.mean(gts_list), np.std(gts_list)],
+            'res': [np.mean(res_list), np.std(res_list)]
         }
-            # self.gts_sims_mean = np.mean(self.gts_sims.values())
-            # self.gts_sims_std = np.std(self.gts_sims.values())
-            # self.res_sims_mean = np.mean(self.res_sims.values())
-            # self.res_sims_std = np.std(self.res_sims.values())
 

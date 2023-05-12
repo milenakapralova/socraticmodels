@@ -17,6 +17,7 @@ import json
 import numpy as np
 import pickle
 import time
+import random
 
 
 def main():
@@ -70,7 +71,7 @@ def main():
     obj_topk = 10
 
     ### Zero-shot LM: generate captions.
-    num_captions = 1
+    num_captions = 10
 
     ## Generating captions for images
     if not os.path.exists('cache/res.pickle'):
@@ -82,11 +83,14 @@ def main():
         embed_capt_res = {}
 
         # N = len(os.listdir(imgs_folder))
-        N = 3
+        random.seed(42)
+        N = 100
+        random_numbers = random.sample(range(len(os.listdir(imgs_folder))), N)
 
-        for ix, file_name in enumerate(os.listdir(imgs_folder)[:N]):
+        # for ix, file_name in enumerate(os.listdir(imgs_folder)[:N]):
+        for ix, file_name in enumerate(os.listdir(imgs_folder)):
             start_time = time.time()
-            if file_name.endswith(".jpg"):  # consider only image files
+            if file_name.endswith(".jpg") and ix in random_numbers:  # consider only image files
                 # Getting image id
                 ## Image_id
                 file_name_strip = file_name.strip('.jpg')
@@ -195,15 +199,10 @@ def main():
     eval_cap['rulebased'] = eval_rulebased
 
     ## Metric based on cosine similarity/dot product between the captions and images
-    eval_cossim = {}
     evaluator.evaluate_cossim()
-    for source_caption, sim in evaluator.sims_mean.items():
-        # print(f'{source_caption}: avg = {sim[0]:.3f}, sd = {sim[1]:.3f}')
-        # eval_cossim[source_caption] = [round(sim[0], 5), round(sim[1], 5)]
-        print(f'{source_caption}: avg = {sim:.3f}')
-        eval_cossim[source_caption] = [round(sim, 5)]
-
-    eval_cap['cossim'] = eval_cossim
+    for source_caption, sim in evaluator.sims.items():
+        print(f'{source_caption}: avg = {sim[0]:.3f}, std = {sim[1]:.3f}')
+    eval_cap['cossim'] = evaluator.sims
 
 
     ## Save the evaluation scores

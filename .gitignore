@@ -30,5 +30,5 @@
 /cache/
 /environment.yml
 /eval_cap.pickle
-/res.pickle
+/cache/res.pickle
 /cute_bear.jpg
