@@ -17,3 +17,9 @@
 /annotations/person_keypoints_val2014.json
 /val2017.zip
 /imgs/
+/test.py
+/place_texts.txt
+/object_texts.txt
+/environment.yml
+/coco_eval_example.py
+/captions_val2014.json
