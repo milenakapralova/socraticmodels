@@ -24,3 +24,8 @@
 /environment.yml
 /coco_eval_example.py
 /captions_val2014.json
+/dl2_gpu.yml
+/eval_cap.pickle
+/res.pickle
+/cache/
+/annotations/
