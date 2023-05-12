@@ -19,7 +19,8 @@ image = image_manager.load_image(img_path)
 model_params = {
     'max_length': 40,
     'no_repeat_ngram_size': 2,
-    'repetition_penalty': 1.5
+    'repetition_penalty': 1.5,
+    # 'do_sample': True
 }
 
 # Example 1: Caption without a prompt

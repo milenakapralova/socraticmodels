@@ -134,7 +134,9 @@ for iteration in range(n_iteration):
             'term': new_term, 'candidate': term_to_test, 'score': score
         })
     combined_df = pd.DataFrame(data_list).sort_values('score', ascending=False)
-    if combined_df['score'].iloc[0] > best_cos_sim:
+    if combined_df['score'].iloc[0] > best_cos_sim + 0.01:
+        diff = combined_df['score'].iloc[0] - best_cos_sim
+        print(f'term: {combined_df["candidate"].iloc[0]}, diff: {diff}')
         best_cos_sim = combined_df['score'].iloc[0]
         terms_to_include.append(combined_df['candidate'].iloc[0])
         terms_to_check = combined_df['candidate'].tolist()[1:]
