@@ -30,7 +30,7 @@ image_manager = ImageManager()
 vocab_manager = VocabManager()
 
 # Instantiate the Flan T5 manager
-flan_manager = FlanT5Manager(version="google/flan-t5-xxl", use_api=True)
+flan_manager = FlanT5Manager(version="google/flan-t5-xl", use_api=False)
 
 # Print out clip model info
 print_clip_info(clip_manager.model)

@@ -15,16 +15,5 @@
 /annotations/instances_val2014.json
 /annotations/person_keypoints_train2014.json
 /annotations/person_keypoints_val2014.json
-/Quantitative_evaluation_local.py
-/environment.yml
-/coco_eval_example.py
-/captions_val2014.json
-/environment.yml
-/coco_eval_example.py
-/captions_val2014.json
-/annotations/
-/cache/
+/val2017.zip
 /imgs/
-/test.py
-/object_texts.txt
-/place_texts.txt

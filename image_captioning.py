@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 from profanity_filter import ProfanityFilter
 import torch
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration
 from utils import print_time_dec
 
 
@@ -262,6 +262,23 @@ class FlanT5Manager:
         response = requests.post(self.api_url, headers=self.headers, json=payload)
         return response.json()
 
+
+class Blip2Manager:
+    def __init__(self, device, version="Salesforce/blip2-opt-2.7b"):
+        self.processor = Blip2Processor.from_pretrained(version)
+        self.model = Blip2ForConditionalGeneration.from_pretrained(version, torch_dtype=torch.float16)
+        self.device = device
+
+    def generate_response(self, image, prompt=None, model_params=None):
+        if model_params is None:
+            model_params = {}
+        if prompt is None:
+            inputs = self.processor(image, return_tensors="pt").to(self.device, torch.float16)
+        else:
+            inputs = self.processor(image, prompt, return_tensors="pt").to(self.device, torch.float16)
+        self.model.to(self.device)
+        out = self.model.generate(**inputs, **model_params)
+        return self.processor.decode(out[0], skip_special_tokens=True).strip()
 
 def num_params(model):
     """
