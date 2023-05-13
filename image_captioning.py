@@ -324,6 +324,12 @@ class Blip2Manager:
         out = self.model.generate(**inputs, **model_params)
         return self.processor.decode(out[0], skip_special_tokens=True).strip()
 
+def create_lm_prompt(img_type, ppl_result, terms_to_include):
+    return f'''Create a creative beautiful caption from this context:
+    "This image is a {img_type}. There {ppl_result}.
+    The context is: {', '.join(terms_to_include)}.
+    A creative short caption I can generate to describe this image is:'''
+
 def num_params(model):
     """
     Calculates the number of parameters in the model.
