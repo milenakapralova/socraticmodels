@@ -4,7 +4,6 @@ The following script:
 - Passes the COCO images through the Socratic model pipeline and gets the resulting captions for the COCO images
 - Evaluates the resulting captions against ground truth COCO annotations
 
-Please make sure that you have the files place_feats.npy and object_feats.npy in your directory. If that is not the case, please run the generate_features.py file.
 '''
 
 # Package loading
@@ -198,7 +197,7 @@ def main():
         eval_rulebased[metric] = round(score, 5)
     eval_cap['rulebased'] = eval_rulebased
 
-    ## Metric based on cosine similarity/dot product between the captions and images
+    ## Embedding-based metric
     evaluator.evaluate_cossim()
     for source_caption, sim in evaluator.sims.items():
         print(f'{source_caption}: avg = {sim[0]:.3f}, std = {sim[1]:.3f}')
