@@ -185,7 +185,6 @@ class ClipManager:
         self.model.to(self.device)
         self.model.eval()
 
-    @print_time_dec
     def get_text_feats(self, in_text: List[str], batch_size: int = 64) -> np.ndarray:
         """
         Creates a numpy array of text features with the columns containing the features and the rows containing the
@@ -324,11 +323,22 @@ class Blip2Manager:
         out = self.model.generate(**inputs, **model_params)
         return self.processor.decode(out[0], skip_special_tokens=True).strip()
 
-def create_lm_prompt(img_type, ppl_result, terms_to_include):
-    return f'''Create a creative beautiful caption from this context:
-    "This image is a {img_type}. There {ppl_result}.
-    The context is: {', '.join(terms_to_include)}.
-    A creative short caption I can generate to describe this image is:'''
+
+class LmPromptGenerator:
+    @staticmethod
+    def create_baseline_lm_prompt(img_type, ppl_result, sorted_places, object_list):
+        return f'''I am an intelligent image captioning bot.
+        This image is a {img_type}. There {ppl_result}.
+        I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
+        I think there might be a {object_list} in this {img_type}.
+        A creative short caption I can generate to describe this image is:'''
+
+    @staticmethod
+    def create_improved_lm_prompt(img_type, ppl_result, terms_to_include):
+        return f'''Create a creative beautiful caption from this context:
+        "This image is a {img_type}. There {ppl_result}.
+        The context is: {', '.join(terms_to_include)}.
+        A creative short caption I can generate to describe this image is:'''
 
 def num_params(model):
     """

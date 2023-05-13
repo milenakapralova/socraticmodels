@@ -1,0 +1,5 @@
+image_name,image_path,generated_caption,cosine_similarity
+Living room,demo_img.png,a picture of a dining area that includes a window.,0.30499652
+Monkey with gun,monkey_with_gun.jpg,"A chimpanzee that is at a v, e, or t park",0.24025503
+Cute bear,cute_bear.jpg,cartoon of a teddy bear,0.2642907
+Astronaut with beer,astronaut_with_beer.jpg,A crouching cosmonaut wearing a spacesuit is relaxing.,0.27864188
