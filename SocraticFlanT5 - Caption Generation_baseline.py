@@ -14,7 +14,7 @@
 
 # ### Loading the required packages
 
-# In[9]:
+# In[4]:
 
 
 # Package loading
@@ -30,14 +30,14 @@ import random
 import pandas as pd
 
 # Local imports
-from image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager
+from image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, COCOManager
 from image_captioning import LmPromptGenerator as pg
 from utils import get_device
 
 
 # ### Set seeds for reproducible results
 
-# In[11]:
+# In[2]:
 
 
 # Set HuggingFace seed
@@ -49,7 +49,7 @@ random.seed(42)
 
 # ## Step 1: Downloading the MS COCO images and annotations
 
-# In[3]:
+# In[5]:
 
 
 imgs_folder = 'imgs/val2017/'
@@ -64,7 +64,7 @@ coco_manager.download_data()
 
 # ### Set the device and instantiate managers
 
-# In[4]:
+# In[ ]:
 
 
 # Set the device to use
@@ -79,10 +79,13 @@ image_manager = ImageManager()
 # Instantiate the vocab manager
 vocab_manager = VocabManager()
 
+# Instantiate the Flan T5 manager
+flan_manager = FlanT5Manager()
+
 
 # ### Compute place and object features
 
-# In[5]:
+# In[ ]:
 
 
 # Calculate the place features
