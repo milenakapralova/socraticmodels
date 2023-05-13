@@ -9,7 +9,7 @@ import numpy as np
 import itertools
 
 class SocraticEvalCap:
-    def __init__(self, gts, res):
+    def __init__(self, gts, res, approach='baseline'):
         """
         Adapted from the COCOEvalCap class from pycocoevalcap/eval.py.
 
@@ -39,6 +39,7 @@ class SocraticEvalCap:
         self.res = res
         self.gts = gts
         self.img_ids = self.gts.keys()
+        self.approach = approach
 
     def evaluate_rulebased(self):
         # =================================================
@@ -99,7 +100,7 @@ class SocraticEvalCap:
         with open('cache/embed_capt_gt.pickle', 'rb') as handle:
             embed_capt_gt = pickle.load(handle)
 
-        with open('cache/embed_capt_res.pickle', 'rb') as handle:
+        with open(f'cache/embed_capt_res_{self.approach}.pickle', 'rb') as handle:
             embed_capt_res = pickle.load(handle)
 
         # Calculate similarities between images and captions
