@@ -5,7 +5,6 @@ from typing import List, Union
 import requests
 import clip
 import cv2
-import numpy as np
 from PIL import Image
 from profanity_filter import ProfanityFilter
 import torch
@@ -14,6 +13,9 @@ import sys
 sys.path.append('..')
 from scripts.utils import print_time_dec, prepare_dir
 import zipfile
+import numpy as np
+np.random.seed(42)
+
 
 
 class COCOManager:
@@ -21,6 +23,7 @@ class COCOManager:
         """
         dataset: dataset to download
         """
+        self.image_dir = '../data/coco/val2017'
         self.dataset_to_download = {
             '../data/coco/val2017': 'http://images.cocodataset.org/zips/val2017.zip',
             '../data/coco/annotations': 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
@@ -51,6 +54,34 @@ class COCOManager:
         """
         for folder, url in self.dataset_to_download.items():
             self.download_unzip_delete(folder, url)
+
+    def get_random_image_paths(self, num_images):
+        return np.random.choice(os.listdir(self.image_dir), size=num_images)
+
+
+
+
+        #     N = 100
+        # random_numbers = random.sample(range(len(os.listdir(imgs_folder))), N)
+        #
+        # # for ix, file_name in enumerate(os.listdir(imgs_folder)[:N]):
+        # for ix, file_name in enumerate(os.listdir(imgs_folder)):
+        #     # Consider only image files that are part of the random sample
+        #     if file_name.endswith(".jpg") and ix in random_numbers:
+        #         # Getting image id
+        #         file_name_strip = file_name.strip('.jpg')
+        #         match = re.search('^0+', file_name_strip)
+        #         sequence = match.group(0)
+        #         image_id = int(file_name_strip[len(sequence):])
+        #
+        #         img_path = os.path.join(imgs_folder, file_name)
+        #         img = image_manager.load_image(img_path)
+        #         img_feats = clip_manager.get_img_feats(img)
+        #         img_feats = img_feats.flatten()
+        #         img_paths[image_id] = file_name
+        #
+        #         img_dic[image_id] = img
+        #         img_feat_dic[image_id] = img_feats
 
 
 class ImageManager:
@@ -284,6 +315,32 @@ class ClipManager:
     def get_image_caption_score(self, caption, img_feats):
         text_feats = self.get_text_feats([caption])
         return float(text_feats @ img_feats.T)
+
+
+class CacheManager:
+    @staticmethod
+    def get_place_feats(clip_manager, vocab_manager):
+        place_feats_path = '../data/cache/place_feats.npy'
+        if not os.path.exists(place_feats_path):
+            # Calculate the place features
+            place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
+            np.save(place_feats_path, place_feats)
+        else:
+            # Load cache
+            place_feats = np.load(place_feats_path)
+        return place_feats
+
+    @staticmethod
+    def get_object_feats(clip_manager, vocab_manager):
+        object_feats_path = '../data/cache/object_feats.npy'
+        if not os.path.exists(object_feats_path):
+            # Calculate the place features
+            object_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.object_list])
+            np.save(object_feats_path, object_feats)
+        else:
+            # Load cache
+            object_feats = np.load(object_feats_path)
+        return object_feats
 
 
 class FlanT5Manager:
