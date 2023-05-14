@@ -9,7 +9,7 @@ import numpy as np
 import itertools
 
 class SocraticEvalCap:
-    def __init__(self, gts, res, approach='baseline'):
+    def __init__(self, gts, res_raw):
         """
         Adapted from the COCOEvalCap class from pycocoevalcap/eval.py.
 
@@ -32,6 +32,17 @@ class SocraticEvalCap:
         self.res_sims = {}
         self.imgToEval = {}
 
+        self.res_cossim = res_raw
+
+        #Make res a suitable format for the rule-based evaluation
+        res = {}
+        for i, row in res_raw.iterrows():
+            res[row.image_name] = [{
+                'image_id': row.image_name,
+                'id': row.image_name,
+                'caption': row.generated_caption
+            }]
+
         self.intersect_keys = set(gts.keys()) & set(res.keys())
         gts = {key: gts.get(key) for key in self.intersect_keys}
         res = {key: res.get(key) for key in self.intersect_keys}
@@ -39,7 +50,6 @@ class SocraticEvalCap:
         self.res = res
         self.gts = gts
         self.img_ids = self.gts.keys()
-        self.approach = approach
 
     def evaluate_rulebased(self):
         # =================================================
@@ -100,22 +110,22 @@ class SocraticEvalCap:
         with open('cache/embed_capt_gt.pickle', 'rb') as handle:
             embed_capt_gt = pickle.load(handle)
 
-        with open(f'cache/embed_capt_res_{self.approach}.pickle', 'rb') as handle:
-            embed_capt_res = pickle.load(handle)
+        # with open(f'cache/embed_capt_res_{self.approach}.pickle', 'rb') as handle:
+        #     embed_capt_res = pickle.load(handle)
 
         # Calculate similarities between images and captions
         for img_id in self.intersect_keys:
             # GT
             self.gts_sims[img_id] = (embed_capt_gt[img_id] @ embed_imgs[img_id].T).flatten().tolist()
             # RES
-            self.res_sims[img_id] = float(embed_capt_res[img_id] @ embed_imgs[img_id].T)
+            # self.res_sims[img_id] = float(embed_capt_res[img_id] @ embed_imgs[img_id].T)
 
         gts_list = list(itertools.chain(*self.gts_sims.values()))
-        res_list = list(self.res_sims.values())
+        # res_list = list(self.res_sims.values())
 
         # Calculate aggregates
         self.sims = {
             'gts': [np.mean(gts_list), np.std(gts_list)],
-            'res': [np.mean(res_list), np.std(res_list)]
+            'res': [self.res_cossim['cosine_similarity'].mean(), self.res_cossim['cosine_similarity'].std()]
         }
 

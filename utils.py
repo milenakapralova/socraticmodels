@@ -19,6 +19,6 @@ def get_device():
     if getattr(torch, 'has_mps', False):
         return 'mps'
     elif torch.cuda.is_available():
-        return 'gpu'
+        return 'cuda'
     else:
         return 'cpu'

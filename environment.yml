@@ -16,7 +16,7 @@ dependencies:
   - ffmpeg
   - pip:
       - pillow
-      - clip
+      - openai-clip
       - opencv-python-headless
       - notebook
       - profanity-filter
