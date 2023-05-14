@@ -54,7 +54,7 @@ class ImageManager:
             'fruit_bowl.jpg': 'https://drive.google.com/uc?export=download&id=1gRYMoTfCwuV4tNy14Qf2Q_hebx05GNd9',
             'cute_bear.jpg': 'https://drive.google.com/uc?export=download&id=1WvgweWH_vSODLv2EOoXqGaHDcUKPDHbh',
         }
-        # self.download_data()
+        self.download_data()
 
     def download_data(self):
         """

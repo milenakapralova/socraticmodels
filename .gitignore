@@ -46,3 +46,5 @@
 /res.pickle
 /cache/
 /annotations/
+/improved_outputs.csv
+/baseline_outputs.csv
