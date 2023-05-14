@@ -10,7 +10,7 @@ from PIL import Image
 from profanity_filter import ProfanityFilter
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration
-from utils import print_time_dec
+from utils import print_time_dec, prepare_dir
 import zipfile
 
 

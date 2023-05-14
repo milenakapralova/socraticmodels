@@ -1,6 +1,7 @@
 import time
 import torch
 import numpy as np
+import os
 
 
 def print_time_dec(func):
@@ -22,3 +23,15 @@ def get_device():
         return 'cuda'
     else:
         return 'cpu'
+
+
+def prepare_dir(file_path):
+    """
+    This function is used to create the directories needed to output a path. If the directories already exist, the
+    function continues.
+    """
+    dir_path = '/'.join(file_path.split('/')[:-1])
+    try:
+        os.makedirs(dir_path)
+    except FileExistsError:
+        pass
