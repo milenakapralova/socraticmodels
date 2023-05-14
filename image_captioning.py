@@ -340,6 +340,7 @@ class LmPromptGenerator:
         The context is: {', '.join(terms_to_include)}.
         A creative short caption I can generate to describe this image is:'''
 
+
 def num_params(model):
     """
     Calculates the number of parameters in the model.
