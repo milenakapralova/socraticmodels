@@ -104,10 +104,10 @@ class SocraticEvalCap:
 
     def evaluate_cossim(self):
         # Get the clip embeddings for images and captions
-        with open('cache/embed_imgs.pickle', 'rb') as handle:
+        with open('../cache/embed_imgs.pickle', 'rb') as handle:
             embed_imgs = pickle.load(handle)
 
-        with open('cache/embed_capt_gt.pickle', 'rb') as handle:
+        with open('../cache/embed_capt_gt.pickle', 'rb') as handle:
             embed_capt_gt = pickle.load(handle)
 
         # with open(f'cache/embed_capt_res_{self.approach}.pickle', 'rb') as handle:

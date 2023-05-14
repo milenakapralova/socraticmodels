@@ -97,26 +97,26 @@ class VocabManager:
     @staticmethod
     def download_data():
         # Download scene categories from Places365.
-        if not os.path.exists('categories_places365.txt'):
+        if not os.path.exists('../categories_places365.txt'):
             url = "https://raw.githubusercontent.com/zhoubolei/places_devkit/master/categories_places365.txt"
             response = requests.get(url)
-            with open("categories_places365.txt", "wb") as f:
+            with open("../categories_places365.txt", "wb") as f:
                 f.write(response.content)
         # Download object categories from Tencent ML Images.
-        if not os.path.exists('dictionary_and_semantic_hierarchy.txt'):
+        if not os.path.exists('../dictionary_and_semantic_hierarchy.txt'):
             url = (
                 "https://raw.githubusercontent.com/Tencent/tencent-ml-images/master/data/dictionary_and_semantic_hierar"
                 "chy.txt"
             )
             response = requests.get(url)
-            with open("dictionary_and_semantic_hierarchy.txt", "wb") as f:
+            with open("../dictionary_and_semantic_hierarchy.txt", "wb") as f:
                 f.write(response.content)
 
     @staticmethod
     @print_time_dec
     def load_places() -> List[str]:
-        if not os.path.exists('place_texts.txt'):
-            place_categories = np.loadtxt('categories_places365.txt', dtype=str)
+        if not os.path.exists('../place_texts.txt'):
+            place_categories = np.loadtxt('../categories_places365.txt', dtype=str)
             place_texts = []
             for place in place_categories[:, 0]:
                 place = place.split('/')[2:]
@@ -126,19 +126,19 @@ class VocabManager:
                     place = place[0]
                 place = place.replace('_', ' ')
                 place_texts.append(place)
-            with open('place_texts.txt', 'w') as f:
+            with open('../place_texts.txt', 'w') as f:
                 for place in place_texts:
                     f.write(f"{place}\n")
 
         else:
-            with open('place_texts.txt') as f:
+            with open('../place_texts.txt') as f:
                 place_texts = f.read().splitlines()
         return place_texts
 
     @print_time_dec
     def load_objects(self, remove_profanity: bool = False) -> List[str]:
-        if not os.path.exists('object_texts.txt'):
-            with open('dictionary_and_semantic_hierarchy.txt') as fid:
+        if not os.path.exists('../object_texts.txt'):
+            with open('../dictionary_and_semantic_hierarchy.txt') as fid:
                 object_categories = fid.readlines()
             object_texts = []
             pf = ProfanityFilter()
@@ -157,11 +157,11 @@ class VocabManager:
                         object_texts.append(safe_list)
                 else:
                     object_texts.append(object_text)
-            with open('object_texts.txt', 'w') as f:
+            with open('../object_texts.txt', 'w') as f:
                 for obj in object_texts:
                     f.write(f"{obj}\n")
         else:
-            with open('object_texts.txt') as f:
+            with open('../object_texts.txt') as f:
                 object_texts = f.read().splitlines()
         return [o for o in list(set(object_texts)) if o not in self.place_list]
 

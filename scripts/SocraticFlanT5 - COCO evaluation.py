@@ -22,7 +22,7 @@ import random
 def main():
     # Step 1: Downloading the COCO images and annotations
     imgs_folder = 'imgs/val2017/'
-    annotation_file = 'annotations/annotations/captions_val2017.json'
+    annotation_file = '../annotations/annotations/captions_val2017.json'
 
     # Step 2: Passing the COCO images through the Socratic model pipeline
     ## Set the device to use
@@ -38,21 +38,21 @@ def main():
     vocab_manager = VocabManager()
 
     ## Calculate the place features
-    if not os.path.exists('cache/place_feats.npy'):
+    if not os.path.exists('../cache/place_feats.npy'):
 
         # Calculate the place features
         place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
-        np.save('cache/place_feats.npy', place_feats)
+        np.save('../cache/place_feats.npy', place_feats)
     else:
-        place_feats = np.load('cache/place_feats.npy')
+        place_feats = np.load('../cache/place_feats.npy')
 
     ## Calculate the object features
-    if not os.path.exists('cache/object_feats.npy'):
+    if not os.path.exists('../cache/object_feats.npy'):
         # Calculate the object features
         object_feats = clip_manager.get_text_feats([f'Photo of a {o}.' for o in vocab_manager.object_list])
-        np.save('cache/object_feats.npy', object_feats)
+        np.save('../cache/object_feats.npy', object_feats)
     else:
-        object_feats = np.load('cache/object_feats.npy')
+        object_feats = np.load('../cache/object_feats.npy')
 
     ## Defining parameters regarding the template prompt
     ### Zero-shot VLM: classify image type.
@@ -154,9 +154,9 @@ def main():
 
         with open('cache/res.pickle', 'wb') as handle:
             pickle.dump(res, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        with open('cache/embed_imgs.pickle', 'wb') as handle:
+        with open('../cache/embed_imgs.pickle', 'wb') as handle:
             pickle.dump(embed_imgs, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        with open('cache/embed_capt_res.pickle', 'wb') as handle:
+        with open('../cache/embed_capt_res.pickle', 'wb') as handle:
             pickle.dump(embed_capt_res, handle, protocol=pickle.HIGHEST_PROTOCOL)
     else:
         with open('cache/res.pickle', 'rb') as handle:
@@ -173,7 +173,7 @@ def main():
         gts[item['image_id']].append({'image_id': item['image_id'], 'caption': item['caption']})
 
     # If the embeddings for the gt captions are not yet computed, compute then
-    if not os.path.exists('cache/embed_capt_gt.pickle'):
+    if not os.path.exists('../cache/embed_capt_gt.pickle'):
         embed_capt_gt = {}
         for img_id, list_of_capt_dict in gts.items():
             list_of_captions = [capt_dict['caption'] for capt_dict in list_of_capt_dict]
@@ -183,7 +183,7 @@ def main():
 
             embed_capt_gt[img_id] = img_feats_gt
 
-        with open('cache/embed_capt_gt.pickle', 'wb') as handle:
+        with open('../cache/embed_capt_gt.pickle', 'wb') as handle:
             pickle.dump(embed_capt_gt, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     eval_cap = {}
@@ -205,7 +205,7 @@ def main():
 
 
     ## Save the evaluation scores
-    with open('eval_cap.pickle', 'wb') as handle:
+    with open('../eval_cap.pickle', 'wb') as handle:
         pickle.dump(eval_cap, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 

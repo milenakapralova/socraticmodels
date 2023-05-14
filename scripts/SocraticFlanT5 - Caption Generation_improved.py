@@ -53,7 +53,7 @@ random.seed(42)
 
 
 imgs_folder = 'imgs/val2017/'
-annotation_file = 'annotations/annotations/captions_val2017.json'
+annotation_file = '../annotations/annotations/captions_val2017.json'
 
 coco_manager = COCOManager()
 coco_manager.download_data()
@@ -89,20 +89,20 @@ flan_manager = FlanT5Manager()
 
 
 # Calculate the place features
-if not os.path.exists('cache/place_feats.npy'):
+if not os.path.exists('../cache/place_feats.npy'):
     # Calculate the place features
     place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
-    np.save('cache/place_feats.npy', place_feats)
+    np.save('../cache/place_feats.npy', place_feats)
 else:
-    place_feats = np.load('cache/place_feats.npy')
+    place_feats = np.load('../cache/place_feats.npy')
 
 # Calculate the object features
-if not os.path.exists('cache/object_feats.npy'):
+if not os.path.exists('../cache/object_feats.npy'):
     # Calculate the object features
     object_feats = clip_manager.get_text_feats([f'Photo of a {o}.' for o in vocab_manager.object_list])
-    np.save('cache/object_feats.npy', object_feats)
+    np.save('../cache/object_feats.npy', object_feats)
 else:
-    object_feats = np.load('cache/object_feats.npy')
+    object_feats = np.load('../cache/object_feats.npy')
 
 
 # ### Load images and compute image embedding

@@ -11,7 +11,7 @@ from utils import get_device
 # def main(img_path='demo_img.png', verbose=True):
 
 
-img_path = 'monkey_with_gun.jpg'
+img_path = '../astronaut_with_beer.jpg'
 verbose = True
 
 # Set HuggingFace seed
@@ -30,7 +30,7 @@ image_manager = ImageManager()
 vocab_manager = VocabManager()
 
 # Instantiate the Flan T5 manager
-flan_manager = FlanT5Manager()
+flan_manager = FlanT5Manager(version="google/flan-t5-xl", use_api=False)
 
 # Print out clip model info
 print_clip_info(clip_manager.model)
@@ -79,27 +79,27 @@ object_list = object_list[:-2]
 object_embeddings = dict(zip(vocab_manager.object_list, object_feats))
 
 # Create a list that contains the objects ordered by cosine sim.
-top_100_embeddings = [object_embeddings[w] for w in sorted_obj_texts]
+embeddings_sorted = [object_embeddings[w] for w in sorted_obj_texts]
 
 # Create a list to store the best matches
-best_matches_from_top_100 = [sorted_obj_texts[0]]
+best_matches = [sorted_obj_texts[0]]
 
 # Create an array to store the embeddings of the best matches
-unique_embeddings = top_100_embeddings[0].reshape(-1, 1)
+unique_embeddings = embeddings_sorted[0].reshape(-1, 1)
 
 # Loop through the 100 best objects by cosine similarity
 for i in range(1, 100):
     # Obtain the maximum cosine similarity when comparing object i to the embeddings of the current best matches
-    max_cos_sim = (unique_embeddings.T @ top_100_embeddings[i]).max()
+    max_cos_sim = (unique_embeddings.T @ embeddings_sorted[i]).max()
     # If object i is different enough to the current best matches, add it to the best matches
     if max_cos_sim < 0.7:
-        print(f'{sorted_obj_texts[i]}: {unique_embeddings.T @ top_100_embeddings[i]}')
-        unique_embeddings = np.concatenate([unique_embeddings, top_100_embeddings[i].reshape(-1, 1)], 1)
-        best_matches_from_top_100.append(sorted_obj_texts[i])
+        print(f'{sorted_obj_texts[i]}: {unique_embeddings.T @ embeddings_sorted[i]}')
+        unique_embeddings = np.concatenate([unique_embeddings, embeddings_sorted[i].reshape(-1, 1)], 1)
+        best_matches.append(sorted_obj_texts[i])
 
 # Looping through the best matches, consider each terms separately by splitting the commas and spaces.
 data_list = []
-for terms in best_matches_from_top_100:
+for terms in best_matches:
     for term_split in terms.split(', '):
         score = clip_manager.get_image_caption_score(term_split, img_feats)
         data_list.append({
@@ -134,7 +134,9 @@ for iteration in range(n_iteration):
             'term': new_term, 'candidate': term_to_test, 'score': score
         })
     combined_df = pd.DataFrame(data_list).sort_values('score', ascending=False)
-    if combined_df['score'].iloc[0] > best_cos_sim:
+    if combined_df['score'].iloc[0] > best_cos_sim + 0.01:
+        diff = combined_df['score'].iloc[0] - best_cos_sim
+        print(f'term: {combined_df["candidate"].iloc[0]}, diff: {diff}')
         best_cos_sim = combined_df['score'].iloc[0]
         terms_to_include.append(combined_df['candidate'].iloc[0])
         terms_to_check = combined_df['candidate'].tolist()[1:]
@@ -142,34 +144,19 @@ for iteration in range(n_iteration):
     else:
         break
 
+# Generate 100 captions, order them and print out the best.
+num_captions = 100
+prompt = f'''Create a creative beautiful caption from this context:
+    "This image is a {img_type}. There {ppl_result}.
+    The context is: {', '.join(terms_to_include)}.
+    A creative short caption I can generate to describe this image is:'''
+model_params = {'temperature': 0.9, 'max_length': 40, 'do_sample': True}
+caption_texts = flan_manager.generate_response([prompt] * num_captions, model_params)
 
+# Zero-shot VLM: rank captions.
+caption_feats = clip_manager.get_text_feats(caption_texts)
+sorted_captions, caption_scores = clip_manager.get_nn_text(caption_texts, caption_feats, img_feats)
+caption_score_map = dict(zip(sorted_captions, caption_scores))
+print(f'{sorted_captions[0]}\n')
 
-english_vocab = pd.read_csv('English-Morph.txt', sep=' ')
-
-active_verbs = []
-with open('English-Morph.txt', 'r') as file:
-    lines = file.readlines()
-    for l in lines:
-        for w in l.split('\t'):
-            if len(w) > 4 and w.endswith('ing'):
-                active_verbs.append(w)
-
-active_verbs = list(set(active_verbs))
-
-active_verbs_fea = clip_manager.get_text_feats(active_verbs)
-active_verbs_texts, active_verbs_scores = clip_manager.get_nn_text(active_verbs, active_verbs_fea, img_feats)
-
-active_verb_map = dict(zip(active_verbs_texts, active_verbs_scores))
-
-if len(terms_to_include) > 1:
-    data_list = []
-    for v in active_verbs_texts[:100]:
-
-        test_term = f'{terms_to_include[0]} {v} {terms_to_include[1]}'
-
-        score = clip_manager.get_image_caption_score(test_term, img_feats)
-
-        data_list.append({'verb': v, 'new_term': test_term, 'score': score})
-
-    verb_df = pd.DataFrame(data_list).sort_values('score', ascending=False)
 

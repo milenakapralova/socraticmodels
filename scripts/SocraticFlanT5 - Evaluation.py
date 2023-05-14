@@ -63,7 +63,7 @@ from utils import get_device
 # In[2]:
 
 
-annotation_file = 'annotations/annotations/captions_val2017.json'
+annotation_file = '../annotations/annotations/captions_val2017.json'
 
 with open(annotation_file, 'r') as f:
     lines = json.load(f)['annotations']
@@ -79,7 +79,7 @@ for item in lines:
 # In[3]:
 
 
-if not os.path.exists('cache/embed_capt_gt.pickle'):
+if not os.path.exists('../cache/embed_capt_gt.pickle'):
     # Set the device to use
     device = get_device()
 
@@ -95,7 +95,7 @@ if not os.path.exists('cache/embed_capt_gt.pickle'):
 
         embed_capt_gt[img_id] = img_feats_gt
 
-    with open('cache/embed_capt_gt.pickle', 'wb') as handle:
+    with open('../cache/embed_capt_gt.pickle', 'wb') as handle:
         pickle.dump(embed_capt_gt, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -141,7 +141,7 @@ for approach in approaches:
 # In[5]:
 
 
-with open('eval_cap.pickle', 'wb') as handle:
+with open('../eval_cap.pickle', 'wb') as handle:
     pickle.dump(eval_cap, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 

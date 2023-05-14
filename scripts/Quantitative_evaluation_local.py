@@ -92,8 +92,8 @@ class SocraticEvalCap:
         self.evalImgs = [eval for imgId, eval in self.imgToEval.items()]
 
 
-annotation_file = 'captions_val2014.json'
-results_file = 'captions_val2014_fakecap_results.json'
+annotation_file = '../captions_val2014.json'
+results_file = '../captions_val2014_fakecap_results.json'
 
 # create coco object and coco_result object
 coco = COCO(annotation_file)

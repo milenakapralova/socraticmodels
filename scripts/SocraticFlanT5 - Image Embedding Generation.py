@@ -69,20 +69,20 @@ vocab_manager = VocabManager()
 
 
 # Calculate the place features
-if not os.path.exists('cache/place_feats.npy'):
+if not os.path.exists('../cache/place_feats.npy'):
     # Calculate the place features
     place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
-    np.save('cache/place_feats.npy', place_feats)
+    np.save('../cache/place_feats.npy', place_feats)
 else:
-    place_feats = np.load('cache/place_feats.npy')
+    place_feats = np.load('../cache/place_feats.npy')
 
 # Calculate the object features
-if not os.path.exists('cache/object_feats.npy'):
+if not os.path.exists('../cache/object_feats.npy'):
     # Calculate the object features
     object_feats = clip_manager.get_text_feats([f'Photo of a {o}.' for o in vocab_manager.object_list])
-    np.save('cache/object_feats.npy', object_feats)
+    np.save('../cache/object_feats.npy', object_feats)
 else:
-    object_feats = np.load('cache/object_feats.npy')
+    object_feats = np.load('../cache/object_feats.npy')
 
 
 # ### Load images and compute image embedding
@@ -111,7 +111,7 @@ for ix, file_name in enumerate(os.listdir(imgs_folder)):
 # In[ ]:
 
 
-with open('cache/embed_imgs.pickle', 'wb') as handle:
+with open('../cache/embed_imgs.pickle', 'wb') as handle:
         pickle.dump(embed_imgs, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 

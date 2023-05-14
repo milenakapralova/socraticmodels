@@ -17,8 +17,8 @@
 /annotations/person_keypoints_val2014.json
 /captions_val2014.json
 /coco_eval_example.py
-/eval.py
-/Quantitative_evaluation_local.py
+/scripts/eval.py
+/scripts/Quantitative_evaluation_local.py
 /annotations/
 /test.py
 /object_feats.npy
