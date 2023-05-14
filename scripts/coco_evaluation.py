@@ -12,7 +12,7 @@ import itertools
 class SocraticEvalCap:
     def __init__(self, gts, res_raw):
         """
-        Adapted from the COCOEvalCap class from pycocoevalcap/eval.py.
+        Adapted from the COCOEvalCap class from pycocoevalcap/coco_evaluation.py.
 
         :param coco:
         :param cocoRes:

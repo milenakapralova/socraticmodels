@@ -14,7 +14,7 @@ image_manager = ImageManager()
 # Load the image
 img_folder = '../data/images/example_images/'
 img_file = 'astronaut_with_beer.jpg'
-img_path = image_folder + img_file
+img_path = img_folder + img_file
 image = image_manager.load_image(img_path)
 
 # Set the model parameters
@@ -33,7 +33,6 @@ print(f'BLIP2 caption without prompt: "{caption}"')
 question1 = "Question: where is the picture taken? Answer:"
 response1 = blip2_manager.generate_response(image, prompt=question1, model_params=model_params)
 print(f'Prompt input: "{question1}" - BLIP2 Output: "{response1}"')
-
 
 question2 = "Question: what are the different objects in the image? Answer:"
 response2 = blip2_manager.generate_response(image, prompt=question2, model_params=model_params)

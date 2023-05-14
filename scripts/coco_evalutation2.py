@@ -31,11 +31,11 @@
 # ---
 
 # <span style="color:#8B0000">**Important**</span>: we assume that you have the generated captions accessible from the current directory via `cache/baseline_outputs.csv` or `cache/improved_outputs.csv` or both. If that is not the case, please run (either or both of) the following notebooks:
-# * `SocraticFlanT5 - Caption Generation_baseline.ipynb`
-# * `SocraticFlanT5 - Caption Generation_improved.ipynb`
+# * `coco_captioning_baseline.ipynb`
+# * `coco_captioning_improved.ipynb`
 # 
 # Moreover, we assume you have pre-computed the image embeddings and have them stored and accessible from the current directory via `cache/embed_imgs.pickle`. If that is not the case, please run (either or both of) the following notebook:
-# * `SocraticFlanT5 - Image Embedding Generation.ipynb`
+# * `coco_image_embedding.ipynb`
 
 # ### Set-up
 
@@ -52,7 +52,7 @@ import pandas as pd
 
 # Local imports
 from image_captioning import ClipManager
-from eval import SocraticEvalCap
+from coco_evaluation import SocraticEvalCap
 from utils import get_device
 
 
