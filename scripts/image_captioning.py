@@ -10,7 +10,9 @@ from PIL import Image
 from profanity_filter import ProfanityFilter
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration
-from utils import print_time_dec, prepare_dir
+import sys
+sys.path.append('..')
+from scripts.utils import print_time_dec, prepare_dir
 import zipfile
 
 
@@ -20,19 +22,28 @@ class COCOManager:
         dataset: dataset to download
         """
         self.dataset_to_download = {
-            'imgs': 'http://images.cocodataset.org/zips/val2017.zip',
-            'annotations': 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
+            '../data/coco/val2017': 'http://images.cocodataset.org/zips/val2017.zip',
+            '../data/coco/annotations': 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
         }
         self.download_data()
 
-    def download_unzip_delete(self, part, url):
-        if not os.path.exists(part + '/'):
+    def download_unzip_delete(self, folder, url):
+        """
+        Checks if the COCO data is there, otherwise it downloads and unzips the data.
+
+        :param folder:
+        :param url:
+        :return:
+        """
+        if not os.path.exists(folder):
+            prepare_dir(folder)
             response = requests.get(url)
-            with open(part + '.zip', "wb") as f:
+            parent = '/'.join(folder.split('/')[:-1])
+            with open(parent + '/zip.zip', "wb") as f:
                 f.write(response.content)
-            with zipfile.ZipFile(part + '.zip',"r") as zip_ref:
-                zip_ref.extractall(part)
-                os.remove(part + '.zip')
+            with zipfile.ZipFile(parent + '/zip.zip', "r") as zip_ref:
+                zip_ref.extractall(parent)
+            os.remove(parent + '/zip.zip')
 
     def download_data(self):
         """
@@ -47,6 +58,7 @@ class ImageManager:
         """
         images_to_download: image_path to download_url map
         """
+        self.image_folder = '../data/images/example_images/'
         self.images_to_download = {
             'demo_img.png': 'https://github.com/rmokady/CLIP_prefix_caption/raw/main/Images/COCO_val2014_000000165547.jpg',
             'monkey_with_gun.jpg': 'https://drive.google.com/uc?export=download&id=1iG0TJTZ0yRJEC8dA-WwS7X-GhuX8sfy8',
@@ -63,11 +75,10 @@ class ImageManager:
         """
         # Download images
         for img_path, img_url in self.images_to_download.items():
-            if not os.path.exists(img_path):
+            if not os.path.exists(self.image_folder + img_path):
                 self.download_image_from_url(img_path, img_url)
 
-    @staticmethod
-    def download_image_from_url(img_path: str, img_url: str):
+    def download_image_from_url(self, img_path: str, img_url: str):
         """
         Downloads an image from an url.
 
@@ -75,7 +86,9 @@ class ImageManager:
         :param img_url: Download url.
         :return:
         """
-        with open(img_path, 'wb') as f:
+        file_path = self.image_folder + img_path
+        prepare_dir(file_path)
+        with open(self.image_folder + img_path, 'wb') as f:
             f.write(requests.get(img_url).content)
 
     @staticmethod
@@ -90,33 +103,60 @@ class ImageManager:
 
 class VocabManager:
     def __init__(self):
+        self.vocab_folder = '../data/vocabulary/'
+        self.cache_folder = '../data/cache/'
+        self.files_to_download = {
+            'categories_places365.txt': "https://raw.githubusercontent.com/zhoubolei/places_devkit/master/categories_pl"
+            "aces365.txt",
+            'dictionary_and_semantic_hierarchy.txt': "https://raw.githubusercontent.com/Tencent/tencent-ml-images/maste"
+            "r/data/dictionary_and_semantic_hierarchy.txt"
+        }
         self.download_data()
         self.place_list = self.load_places()
-        self.object_list = self.load_objects(remove_profanity=True)
+        self.object_list = self.load_objects(remove_profanity=False)
+
+    def download_data(self):
+        """
+        Download the vocabularies.
+
+        :return:
+        """
+        # Download the vocabularies
+        for file_name, url in self.files_to_download.items():
+            file_path = self.vocab_folder + file_name
+            if not os.path.exists(file_path):
+                self.download_vocab_from_url(file_path, url)
 
     @staticmethod
-    def download_data():
-        # Download scene categories from Places365.
-        if not os.path.exists('../categories_places365.txt'):
-            url = "https://raw.githubusercontent.com/zhoubolei/places_devkit/master/categories_places365.txt"
-            response = requests.get(url)
-            with open("../categories_places365.txt", "wb") as f:
-                f.write(response.content)
-        # Download object categories from Tencent ML Images.
-        if not os.path.exists('../dictionary_and_semantic_hierarchy.txt'):
-            url = (
-                "https://raw.githubusercontent.com/Tencent/tencent-ml-images/master/data/dictionary_and_semantic_hierar"
-                "chy.txt"
-            )
-            response = requests.get(url)
-            with open("../dictionary_and_semantic_hierarchy.txt", "wb") as f:
-                f.write(response.content)
+    def download_vocab_from_url(file_path, url):
+        """
+        Downloads a file for a given url and stores it in the file_path.
 
-    @staticmethod
+        :param file_path: Output file
+        :param url: Download url
+        :return:
+        """
+        prepare_dir(file_path)
+        response = requests.get(url)
+        with open(file_path, "wb") as f:
+            f.write(response.content)
+
     @print_time_dec
-    def load_places() -> List[str]:
-        if not os.path.exists('../place_texts.txt'):
-            place_categories = np.loadtxt('../categories_places365.txt', dtype=str)
+    def load_places(self) -> List[str]:
+        """
+        Load the places.
+
+        This function comes from the original Socratic Models repository. A cache was added to speed up execution.
+
+        :return:
+        """
+        file_path = self.vocab_folder + 'categories_places365.txt'
+        cache_path = self.cache_folder + 'place_texts.txt'
+        # Ensure the cache folder exists
+        prepare_dir(cache_path)
+        if not os.path.exists(cache_path):
+            # Load the raw places file
+            place_categories = np.loadtxt(file_path, dtype=str)
             place_texts = []
             for place in place_categories[:, 0]:
                 place = place.split('/')[2:]
@@ -126,19 +166,32 @@ class VocabManager:
                     place = place[0]
                 place = place.replace('_', ' ')
                 place_texts.append(place)
-            with open('../place_texts.txt', 'w') as f:
+            # Cache the file for the next run
+            with open(cache_path, 'w') as f:
                 for place in place_texts:
                     f.write(f"{place}\n")
-
         else:
-            with open('../place_texts.txt') as f:
+            # Read the cache file
+            with open(cache_path) as f:
                 place_texts = f.read().splitlines()
         return place_texts
 
     @print_time_dec
     def load_objects(self, remove_profanity: bool = False) -> List[str]:
-        if not os.path.exists('../object_texts.txt'):
-            with open('../dictionary_and_semantic_hierarchy.txt') as fid:
+        """
+        Load the objects.
+
+        This function comes from the original Socratic Models repository. A cache was added to speed up execution.
+
+        :return:
+        """
+        file_path = self.vocab_folder + 'dictionary_and_semantic_hierarchy.txt'
+        cache_path = self.cache_folder + 'object_texts.txt'
+        # Ensure the cache folder exists
+        prepare_dir(cache_path)
+        if not os.path.exists(cache_path):
+            # Load the raw object file
+            with open(file_path) as fid:
                 object_categories = fid.readlines()
             object_texts = []
             pf = ProfanityFilter()
@@ -157,11 +210,13 @@ class VocabManager:
                         object_texts.append(safe_list)
                 else:
                     object_texts.append(object_text)
-            with open('../object_texts.txt', 'w') as f:
+            # Cache the file for the next run
+            with open(cache_path, 'w') as f:
                 for obj in object_texts:
                     f.write(f"{obj}\n")
         else:
-            with open('../object_texts.txt') as f:
+            # Read the cache file
+            with open(cache_path) as f:
                 object_texts = f.read().splitlines()
         return [o for o in list(set(object_texts)) if o not in self.place_list]
 
@@ -169,9 +224,9 @@ class VocabManager:
 class ClipManager:
     def __init__(self, device: str, version: str = "ViT-L/14"):
         """
+        The ClipManager handles all the methods relating to the CLIP model.
 
-
-        :param device: The device to use ('gpu', 'mps', 'cpu').
+        :param device: The device to use ('cuda', 'mps', 'cpu').
         :param version: The CLIP model version.
         """
         self.device = device
@@ -233,6 +288,12 @@ class ClipManager:
 
 class FlanT5Manager:
     def __init__(self, version="google/flan-t5-xl", use_api=False):
+        """
+        The FlanT5Manager handles all the method related to the Flan T5 model.
+
+        :param version:
+        :param use_api:
+        """
         self.model = None
         self.tokenizer = None
         self.api_url = None
@@ -270,6 +331,8 @@ class FlanT5Manager:
             self, prompt: Union[List[str], str], model_params: Union[dict, None] = None
     ) -> Union[List[str], str]:
         """
+        Generates a response using a local model. Accepts a single prompt or a list of prompts.
+
         :param prompt: Prompt(s) as list or str
         :param model_params: Model parameters
         :return: str if 1 else list
@@ -287,6 +350,8 @@ class FlanT5Manager:
             self, prompt: Union[List[str], str], model_params: Union[dict, None] = None
     ) -> Union[List[str], str]:
         """
+        Generate a response through the API. Accepts a single prompt or a list of prompts.
+
         :param prompt: Prompt(s) as list or str
         :param model_params: Model parameters
         :return: str if 1 else list
@@ -313,6 +378,13 @@ class Blip2Manager:
         self.device = device
 
     def generate_response(self, image, prompt=None, model_params=None):
+        """
+
+        :param image: Input image.
+        :param prompt: The prompt to pass to BLIP.
+        :param model_params:
+        :return:
+        """
         if model_params is None:
             model_params = {}
         if prompt is None:

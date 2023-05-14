@@ -8,21 +8,12 @@ import pickle
 import numpy as np
 import itertools
 
+
 class SocraticEvalCap:
     def __init__(self, gts, res_raw):
         """
         Adapted from the COCOEvalCap class from pycocoevalcap/eval.py.
 
-        gts[id] = [{
-            'image_id': 391895,
-            'id': 770337,
-            'caption': 'A man with a red helmet on a small moped on a dirt road. '
-        }, ...]
-        res[id] = [{
-            'image_id': 391895,
-            'id': 770337,
-            'caption': 'A man with a red helmet on a small moped. '
-        }]
         :param coco:
         :param cocoRes:
         """

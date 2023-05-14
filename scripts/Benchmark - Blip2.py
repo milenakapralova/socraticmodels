@@ -12,7 +12,9 @@ blip2_manager = Blip2Manager(device)
 image_manager = ImageManager()
 
 # Load the image
-img_path = '../astronaut_with_beer.jpg'
+img_folder = '../data/images/example_images/'
+img_file = 'astronaut_with_beer.jpg'
+img_path = image_folder + img_file
 image = image_manager.load_image(img_path)
 
 # Set the model parameters

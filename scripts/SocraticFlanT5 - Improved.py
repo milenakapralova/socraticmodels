@@ -3,15 +3,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from transformers import set_seed
-
-from image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, print_clip_info
+import sys
+sys.path.append('..')
+from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, print_clip_info
 from utils import get_device
 
 
 # def main(img_path='demo_img.png', verbose=True):
 
-
-img_path = '../astronaut_with_beer.jpg'
+image_folder = '../data/images/example_images/'
+img_file = 'astronaut_with_beer.jpg'
+img_path = image_folder + img_file
 verbose = True
 
 # Set HuggingFace seed

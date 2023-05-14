@@ -48,3 +48,6 @@
 /annotations/
 /improved_outputs.csv
 /baseline_outputs.csv
+/scripts/test.py
+/data/
+/scripts/__pycache__/
