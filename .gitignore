@@ -51,3 +51,7 @@
 /scripts/test.py
 /data/
 /scripts/__pycache__/
+/scripts/baseline_outputs.csv
+/scripts/bert.py
+/scripts/improved_outputs.csv
+/notebooks/000000335177.jpg

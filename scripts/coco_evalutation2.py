@@ -104,13 +104,14 @@ if not os.path.exists('../cache/embed_capt_gt.pickle'):
 # In[4]:
 
 
-approaches = ['baseline', 'improved']
-# approaches = ['baseline']
+# approaches = ['baseline', 'improved']
+approaches = ['improved']
 
 
 eval_cap = {
     'rulebased': {},
-    'cossim': {}
+    'cossim': {},
+    'bert_score': {}
 }
 
 for approach in approaches:
@@ -135,10 +136,16 @@ for approach in approaches:
         print(f'{source_caption}: avg = {sim[0]:.3f}, std = {sim[1]:.3f}')
     eval_cap['cossim'][approach] = evaluator.sims
 
+    # Learned-based metric
+    evaluator.evaluate_bert()
+    for metric, score in evaluator.bert_scores.items():
+        print(f'{metric}: avg = {score[0]:.3f}, std = {score[1]:.3f}')
+    eval_cap['bert_score'][approach] = evaluator.bert_scores
 
 # ### Save the outputs
 
 # In[5]:
+
 
 
 with open('../eval_cap.pickle', 'wb') as handle:

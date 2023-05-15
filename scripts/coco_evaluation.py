@@ -7,7 +7,7 @@ from pycocoevalcap.rouge.rouge import Rouge
 import pickle
 import numpy as np
 import itertools
-
+from bert_score import score
 
 class SocraticEvalCap:
     def __init__(self, gts, res_raw):
@@ -107,7 +107,11 @@ class SocraticEvalCap:
         # Calculate similarities between images and captions
         for img_id in self.intersect_keys:
             # GT
-            self.gts_sims[img_id] = (embed_capt_gt[img_id] @ embed_imgs[img_id].T).flatten().tolist()
+            try:
+                self.gts_sims[img_id] = (embed_capt_gt[img_id] @ embed_imgs[img_id].T).flatten().tolist()
+            except:
+                print('t')
+
             # RES
             # self.res_sims[img_id] = float(embed_capt_res[img_id] @ embed_imgs[img_id].T)
 
@@ -118,5 +122,28 @@ class SocraticEvalCap:
         self.sims = {
             'gts': [np.mean(gts_list), np.std(gts_list)],
             'res': [self.res_cossim['cosine_similarity'].mean(), self.res_cossim['cosine_similarity'].std()]
+        }
+
+
+    def evaluate_bert(self):
+
+        cands = []
+        for image_id, caption_list in self.res.items():
+            cpt_dict = caption_list[0]
+            cands.append(cpt_dict['caption'])
+
+        refs = []
+        for image_id, caption_list in self.gts.items():
+            current_ref = ''
+            for cpt_dict in caption_list:
+                current_ref += ' ' + cpt_dict['caption']
+            refs.append(current_ref)
+
+        P, R, F1 = score(cands, refs, lang="en", verbose=True)
+
+        self.bert_scores = {
+            'P': [P.mean(), P.std()],
+            'R': [R.mean(), R.std()],
+            'F1': [F1.mean(), F1.std()]
         }
 
