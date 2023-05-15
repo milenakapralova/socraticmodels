@@ -2,7 +2,7 @@ import time
 import torch
 import numpy as np
 import os
-
+from transformers import set_seed
 
 def print_time_dec(func):
     def wrap(*args, **kwargs):
@@ -35,3 +35,13 @@ def prepare_dir(file_path):
         os.makedirs(dir_path)
     except FileExistsError:
         pass
+
+def set_all_seeds(num):
+    """
+    This function sets the seeds and ensures reproducible results.
+    """
+    # Seed for selecting images from the validation split
+    np.random.seed(num)
+
+    # Seed for FLAN-T5
+    set_seed(num)

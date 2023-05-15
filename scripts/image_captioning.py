@@ -14,7 +14,7 @@ sys.path.append('..')
 from scripts.utils import print_time_dec, prepare_dir
 import zipfile
 import numpy as np
-np.random.seed(42)
+
 
 
 

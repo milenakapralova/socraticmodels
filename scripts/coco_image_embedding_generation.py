@@ -28,7 +28,7 @@ import random
 
 # Local imports
 from image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, COCOManager
-from utils import get_device
+from utils import get_device, prepare_dir
 
 
 # ## Step 1: Downloading the MS COCO images and annotations
@@ -36,7 +36,7 @@ from utils import get_device
 # In[3]:
 
 
-imgs_folder = 'imgs/val2017/'
+imgs_folder = '../data/images/val2017/'
 
 coco_manager = COCOManager()
 coco_manager.download_data()
@@ -67,22 +67,26 @@ vocab_manager = VocabManager()
 
 # In[5]:
 
-
 # Calculate the place features
-if not os.path.exists('../cache/place_feats.npy'):
+file_path = '../data/cache/place_feats.npy'
+if not os.path.exists(file_path):
+    prepare_dir(file_path)
     # Calculate the place features
     place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
-    np.save('../cache/place_feats.npy', place_feats)
+    np.save(file_path, place_feats)
 else:
-    place_feats = np.load('../cache/place_feats.npy')
+    place_feats = np.load(file_path)
+
 
 # Calculate the object features
-if not os.path.exists('../cache/object_feats.npy'):
+file_path = '../data/cache/object_feats.npy'
+if not os.path.exists(file_path):
+    prepare_dir(file_path)
     # Calculate the object features
     object_feats = clip_manager.get_text_feats([f'Photo of a {o}.' for o in vocab_manager.object_list])
-    np.save('../cache/object_feats.npy', object_feats)
+    np.save(file_path, object_feats)
 else:
-    object_feats = np.load('../cache/object_feats.npy')
+    object_feats = np.load(file_path)
 
 
 # ### Load images and compute image embedding
@@ -110,8 +114,9 @@ for ix, file_name in enumerate(os.listdir(imgs_folder)):
 
 # In[ ]:
 
-
-with open('../cache/embed_imgs.pickle', 'wb') as handle:
+file_path = '../data/cache/object_feats.npy'
+prepare_dir(file_path)
+with open(file_path, 'wb') as handle:
         pickle.dump(embed_imgs, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 

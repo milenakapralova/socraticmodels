@@ -53,8 +53,7 @@ import pandas as pd
 # Local imports
 from image_captioning import ClipManager
 from coco_evaluation import SocraticEvalCap
-from utils import get_device
-
+from utils import get_device, prepare_dir
 
 # ### Evaluate the generated captions against the ground truth
 
@@ -62,8 +61,19 @@ from utils import get_device
 
 # In[2]:
 
+# Assessing whether the generated data is present so that we have something to evaluate
 
-annotation_file = '../annotations/annotations/captions_val2017.json'
+try:
+    res_baseline = pd.read_csv(f'../data/outputs/baseline_outputs.csv')
+    res_improved = pd.read_csv(f'../data/outputs/improved_outputs.csv')
+
+except FileNotFoundError:
+    print("Either (or both) of the files baseline_outputs.csv and improved_outputs.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved.py to obtain the generated captions before proceeding with the evaluation.")
+    raise
+
+
+
+annotation_file = '../data/coco/annotations/captions_val2017.json'
 
 with open(annotation_file, 'r') as f:
     lines = json.load(f)['annotations']
@@ -78,8 +88,10 @@ for item in lines:
 
 # In[3]:
 
+file_path = '../data/cache/embed_capt_gt.pickle'
+if not os.path.exists(file_path):
+    prepare_dir(file_path)
 
-if not os.path.exists('../cache/embed_capt_gt.pickle'):
     # Set the device to use
     device = get_device()
 
@@ -95,7 +107,7 @@ if not os.path.exists('../cache/embed_capt_gt.pickle'):
 
         embed_capt_gt[img_id] = img_feats_gt
 
-    with open('../cache/embed_capt_gt.pickle', 'wb') as handle:
+    with open(file_path, 'wb') as handle:
         pickle.dump(embed_capt_gt, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -110,14 +122,17 @@ approaches = ['baseline', 'improved']
 
 eval_cap = {
     'rulebased': {},
-    'cossim': {}
+    'cossim': {},
+    'bert_score': {}
 }
+
 
 for approach in approaches:
     # Load the generated captions
-    res_raw = pd.read_csv(f'{approach}_outputs.csv')
+    res_raw = pd.read_csv(f'../data/outputs/{approach}_outputs.csv')
+    res_raw['image_path'] = res_raw['image_path'].str.split('.').str[0].astype(int, inplace=True)
 
-    
+
     evaluator = SocraticEvalCap(gts, res_raw)
 
     # Rule-based metrics
@@ -135,13 +150,20 @@ for approach in approaches:
         print(f'{source_caption}: avg = {sim[0]:.3f}, std = {sim[1]:.3f}')
     eval_cap['cossim'][approach] = evaluator.sims
 
+    # Learned-based metric
+    evaluator.evaluate_bert()
+    for metric, score in evaluator.bert_scores.items():
+        print(f'{metric}: avg = {score[0]:.3f}, std = {score[1]:.3f}')
+    eval_cap['bert_score'][approach] = evaluator.bert_scores
 
 # ### Save the outputs
 
 # In[5]:
 
 
-with open('../eval_cap.pickle', 'wb') as handle:
+file_path = '../data/outputs/eval_cap.pickle'
+prepare_dir(file_path)
+with open(file_path, 'wb') as handle:
     pickle.dump(eval_cap, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 

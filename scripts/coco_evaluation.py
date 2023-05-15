@@ -7,7 +7,7 @@ from pycocoevalcap.rouge.rouge import Rouge
 import pickle
 import numpy as np
 import itertools
-
+from bert_score import score
 
 class SocraticEvalCap:
     def __init__(self, gts, res_raw):
@@ -95,10 +95,10 @@ class SocraticEvalCap:
 
     def evaluate_cossim(self):
         # Get the clip embeddings for images and captions
-        with open('../cache/embed_imgs.pickle', 'rb') as handle:
+        with open('../data/cache/embed_imgs.pickle', 'rb') as handle:
             embed_imgs = pickle.load(handle)
 
-        with open('../cache/embed_capt_gt.pickle', 'rb') as handle:
+        with open('../data/cache/embed_capt_gt.pickle', 'rb') as handle:
             embed_capt_gt = pickle.load(handle)
 
         # with open(f'cache/embed_capt_res_{self.approach}.pickle', 'rb') as handle:
@@ -120,3 +120,23 @@ class SocraticEvalCap:
             'res': [self.res_cossim['cosine_similarity'].mean(), self.res_cossim['cosine_similarity'].std()]
         }
 
+    def evaluate_bert(self):
+        cands = []
+        for image_id, caption_list in self.res.items():
+            cpt_dict = caption_list[0]
+            cands.append(cpt_dict['caption'])
+
+        refs = []
+        for image_id, caption_list in self.gts.items():
+            current_ref = ''
+            for cpt_dict in caption_list:
+                current_ref += ' ' + cpt_dict['caption']
+            refs.append(current_ref)
+
+        P, R, F1 = score(cands, refs, lang="en", verbose=True)
+
+        self.bert_scores = {
+            'P': [P.mean(), P.std()],
+            'R': [R.mean(), R.std()],
+            'F1': [F1.mean(), F1.std()]
+        }

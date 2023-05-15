@@ -52,3 +52,11 @@
 /data/
 /scripts/__pycache__/
 /notebooks/.ipynb_checkpoints/coco_captioning_baseline-checkpoint.ipynb
+/scripts/image_captioning_lisa.py
+/scripts/coco_captioning_improved_lisa.py
+/scripts/utils_lisa.py
+/scripts/coco_captioning_baseline_lisa.py
+/scripts/coco_image_embedding_generation_lisa.py
+/scripts/coco_evaluation_lisa.py
+/scripts/coco_evalutation2_lisa.py
+/scripts/bert.py

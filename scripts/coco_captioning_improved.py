@@ -25,10 +25,12 @@ import random
 import pandas as pd
 
 # Local imports
+import sys
+sys.path.append('..')
 from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, COCOManager
 from scripts.image_captioning import LmPromptGenerator as pg
 from scripts.image_captioning import CacheManager as cm
-from scripts.utils import get_device
+from scripts.utils import get_device, prepare_dir, set_all_seeds
 
 
 # ### Set seeds for reproducible results
@@ -36,11 +38,8 @@ from scripts.utils import get_device
 # In[2]:
 
 
-# Set HuggingFace seed
-set_seed(42)
-
-# Set seed for 100 random images of the MS COCO validation split
-random.seed(42)
+# Set the seeds
+set_all_seeds(42)
 
 
 # ## Step 1: Downloading the MS COCO images and annotations
@@ -48,8 +47,8 @@ random.seed(42)
 # In[5]:
 
 
-imgs_folder = 'imgs/val2017/'
-annotation_file = '../annotations/annotations/captions_val2017.json'
+# imgs_folder = '../data/coco/imgs/val2017/'
+# annotation_file = '../data/coco/annotations/annotations/captions_val2017.json'
 
 coco_manager = COCOManager()
 coco_manager.download_data()
@@ -96,7 +95,8 @@ object_feats = cm.get_object_feats(clip_manager, vocab_manager)
 # In[9]:
 
 # Randomly select images from the COCO dataset
-img_files = coco_manager.get_random_image_paths(num_images=100)
+N = 100
+img_files = coco_manager.get_random_image_paths(num_images=N)
 
 # Create dictionaries to store the images features
 img_dic = {}
@@ -304,7 +304,9 @@ for img_name in img_dic:
         'generated_caption': generated_caption,
         'cosine_similarity': caption_score_map[img_name][generated_caption]
     })
-pd.DataFrame(data_list).to_csv(f'improved_outputs.csv', index=False)
+file_path = '../data/outputs/improved_outputs.csv'
+prepare_dir(file_path)
+pd.DataFrame(data_list).to_csv(file_path, index=False)
 
 
 # In[ ]:
