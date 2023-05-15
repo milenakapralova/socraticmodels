@@ -3,7 +3,7 @@
 > Ryan Amaudruz, Abhinav Bhuyan, Milena Kapralova, Bogdan Palfi, Alexandru Turcu <br>
 >  Project Report, Deep Learning 2 University of Amsterdam
 
-# Introduction
+## Introduction
 
 Socratic models [1] (SMs) is a modular framework in which multiple pre-trained models are composed zero-shot via multimodal informed prompting, which acts as a method of exchanging information between the models. Such models range from pure language models (LM), whose input and output are exclusively textual, to visual-language (VLM) and audio-language models (ALM), which transform visual or audio information into text. In addition to these DL models, the framework can also incorporate modules that rely on the user's input or on specific APIs (e.g. robot actions). The main benefit of this framework is that it can be used to capture new multimodal, zero-shot reasoning capabilities without requiring task-specific fine-tuning. However, the model proposed by Zeng et al. [1] uses the GPT-3 LM [12], which is a proprietary API. We aim to bridge the gap between the performance of SMs using proprietary state-of-the-art language models (LMs) and SMs using open-source LMs in image captioning tasks. Specifically, we use the open-source FLAN-T5 [2, 3] language models developed by Google trained using instruction finetuning.
 
@@ -20,7 +20,7 @@ Mokady et al. [4] propose ClipCap, a vision-language model (VLM) using CLIP [5] 
 [7] is a suite of vision-language models (VLMs) trained on arbitrarily interleaved text and images, endowing them with in-context few-shot learning capabilities on a range of image and video tasks such as captioning, where they outperform the state-of-the-art. Wang et al. [8] introduce the Generative Image-to-Text Transformer (GIT), a generative VLM with a simplified pipeline which achieves state- of-the-art in image/video captioning and question-answering tasks. BLIP [9] and BLIP-2 [10] are frameworks for bootstrapping vision-language pretraining from frozen pre-trained image encoders and frozen LLMs and achieve state-of-the-art on various vision-language tasks including zero-shot image- to-text generation and image/video captioning. More recently, Koh et al. [11] propose FROMAGe, a method for grounding LMs to the visual domain by freezing the LM and finetuning the input and output layers to enable cross-modality interaction, showcasing strong zero-shot capabilities on grounded tasks such as image captioning and contextual image-to-text retrieval.
 
 
-# Strenghts and Weaknesses
+## Strenghts and Weaknesses
 
 Strenghts:
 
@@ -37,7 +37,7 @@ Weaknesses:
 3. No proper evaluation was provided for the three applications
 
 
-# Our novel contribution
+## Our novel contribution
 
 Our contribution was twofold. First, we used a different LLM from GPT-3, and second, we used additional, semantic based quantitative metrics to evaluate  quality of the generated captions.
 
@@ -55,7 +55,7 @@ The BERT score is learning based method to evaluate image captions, exploiting t
 the tokens in the reference and candidate sentences via cosine similarity [21]. To this end, we calculated precision, recall and the F1 score for the baseline and improved model.
 
 
-# Results
+## Results
 
 We present both quantitative and qualitative reults. Qualitative results show the vast improvement of the model compared to baseline (Figure 1), and the quantitative results confirm this observation (Table 1).
 
