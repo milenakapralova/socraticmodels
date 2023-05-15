@@ -1,3 +1,8 @@
+# Socratic Models: Composing Zero-Shot Multimodal Reasoning with Language, Free of Charge
+
+> Ryan Amaudruz, Abhinav Bhuyan, Milena Kapralova, Bogdan Palfi, Alexandru Turcu <br>
+>  Project Report, Deep Learning 2 University of Amsterdam
+
 # Introduction
 
 Socratic models [1] (SMs) is a modular framework in which multiple pre-trained models are composed zero-shot via multimodal informed prompting, which acts as a method of exchanging information between the models. Such models range from pure language models (LM), whose input and output are exclusively textual, to visual-language (VLM) and audio-language models (ALM), which transform visual or audio information into text. In addition to these DL models, the framework can also incorporate modules that rely on the user's input or on specific APIs (e.g. robot actions). The main benefit of this framework is that it can be used to capture new multimodal, zero-shot reasoning capabilities without requiring task-specific fine-tuning. However, the model proposed by Zeng et al. [1] uses the GPT-3 LM [12], which is a proprietary API. We aim to bridge the gap between the performance of SMs using proprietary state-of-the-art language models (LMs) and SMs using open-source LMs in image captioning tasks. Specifically, we use the open-source FLAN-T5 [2, 3] language models developed by Google trained using instruction finetuning.
