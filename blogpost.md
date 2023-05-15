@@ -52,7 +52,12 @@ the tokens in the reference and candidate sentences via cosine similarity [21]. 
 
 # Results
 
-We present both quantitative and qualitative reults. 
+We present both quantitative and qualitative reults. Qualitative results show the vast improvement of the model compared to baseline (Figure 1), and the quantitative results confirm this observation (Table 1).
+
+[Figure 1: Demo | Pictue of the astronaut with beer and the generated captions scored as most likely.]
+
+[Table 1]: Rule-based metrics to compare the baseline and improved models to the SoTA in image captioning and the original paper [1], and the embedding-based, and learning-based metrics to compare the baseline and improved models to each other.
+
 
 
 
