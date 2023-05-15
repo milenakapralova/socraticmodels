@@ -34,14 +34,24 @@ Weaknesses:
 
 # Our novel contribution
 
+Our contribution was twofold. First, we used a different LLM from GPT-3, and second, we used additional, semantic based quantitative metrics to evaluate  quality of the generated captions.
+
 To make the SM framework truly free and open-source, we replaced the costly GPT-3 LM model with a freely accessible although less capable language model FLAN-T5 [2, 3]. GPT-3 has demonstrated a strong ability to summarise and paraphrase information, which allows it to create a clear and concise caption, being less affected by sub-optimal prompts. On the other hand, FLAN-T5 seems to be much more affected by the given prompt, being less capable of paraphrasing information in a realistic way. For instance, FLAN-T5 tends to struggle when the provided prompt contains a large number of similar terms. Therefore, we aimed to bridge the gap between the performance of the two models by using prompt engineering and various pre-processing methods for both the vocabulary and the prompts. To do this, our method creates prompts that are more suitable for FLAN-T5 by paying closer attention to the words that are passed onto the prompt. In this way, the goal would be to not have too similar terms which might be redundant and thus confuse the model. To achieve this goal, we first obtain the cosine similarities between all available terms in the vocabulary. We then build a list of candidate terms that have a high cosine similarity with the image, but a low cosine similarity with the other terms in the candidate list. This is done by looping through the first 100 terms and considering the terms in succession. The first term is included as a default, as it has the highest cosine similarity
 and is therefore assumed to be the most relevant. The subsequent terms are then only included if they fall below a cosine similarity threshold of 0.7 when compared to the terms that were previously included as candidates. This first filtering phase allows the algorithm to consider a broader context with more diverse terms. This was not the case in the original paper, which only considered the first 10 terms with the highest cosine similarity, which were often too similar and thus did not contain any new information. In comparison, our method can select objects that are in the top 100 best matches by cosine similarity. In this way, the case in which the top 10 terms are too similar (e.g. synonyms) is less likely since we map these similar terms to just a single word and thus increase the chance of including possibly relevant terms in the top 100.
 
 Empirically, we found that the optimal number of terms to include in the prompt varies from image to image, as some images contain a small number of relevant objects while others have more objects that should be considered. To handle this aspect, our method has a clever way of determining the number of candidate terms that should be included in the prompt. Specifically, we combine the term that has the highest cosine similarity with each of the previously determined candidate terms. We then calculate the cosine similarity between these combinations and the image and verify whether at least one of the combinations managed to achieve a higher cosine similarity compared to the original top term (at least 1% higher). This ensures that only relevant terms that contribute to the image
 description are added and all other not-so-relevant terms are filtered out. Finally, we also tested different prompt structures and combinations in order to find a prompt that was best suited for the FLAN-T5 model. More details should be expected in the final version.
 
+The other of our contributions was in extending the evaluation pipeline to include also more semantically informed caption evaluations metrics. Specifically, the authors of the original paper [1] use only rule-based metrics such as BLUE-4, METEOR, CIDEr, SPICE and ROUGE-L to evaluate the quality of generated captions, and those metrics often do not correlate with human judgements, and they also have blind spots to syntactically pathological caption constructions [17], taking into account only information such as n-gram matching, word order, TF-IDF weights, and overlapping sequences of words. To remedy this, 
+
+For the embedding-based approach (based on CLIP embeddings), we calculate the cosine similarities between each image embedding and embeddings of the ground truth captions and then we calculate the cosine similarities between each image embedding and embeddings of the captions generated with FLAN-T5-xl.
+
+
+
 
 # Results
+
+
 
 ## References 
 
@@ -93,3 +103,9 @@ CLIP 2021. arXiv: 2106.11097 [cs.CV].
 
 [16]  Kreiss, E., Fang, F., Goodman, N. D. & Potts, C. Concadia: Towards Image-Based Text Gener-
 ation with a Purpose 2022. arXiv: 2104.08376 [cs.CL].
+
+[17] Cui, Y., Yang, G., Veit, A., Huang, X., & Belongie, S. J. (2018). Learning to Evaluate Image Captioning. CoRR, abs/1806.06422. Retrieved from http://arxiv.org/abs/1806.06422.
+
+[18] M. Stefanini, M. Cornia, L. Baraldi, S. Cascianelli, G. Fiameni and R. Cucchiara, "From Show to Tell: A Survey on Deep Learning-Based Image Captioning," in IEEE Transactions on Pattern Analysis and Machine Intelligence, vol. 45, no. 1, pp. 539-559, 1 Jan. 2023, doi: 10.1109/TPAMI.2022.3148210.
+
+[19] Zhang, T., Kishore, V., Wu, F., Weinberger, K. Q., & Artzi, Y. (2019). BERTScore: Evaluating Text Generation with BERT. CoRR, abs/1904.09675. Retrieved from http://arxiv.org/abs/1904.09675.
