@@ -6,7 +6,7 @@ from transformers import set_seed
 import sys
 sys.path.append('..')
 from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, print_clip_info
-from utils import get_device
+from scripts.utils import get_device
 
 
 # def main(img_path='demo_img.png', verbose=True):

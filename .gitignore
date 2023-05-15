@@ -51,3 +51,4 @@
 /scripts/test.py
 /data/
 /scripts/__pycache__/
+/notebooks/.ipynb_checkpoints/coco_captioning_baseline-checkpoint.ipynb

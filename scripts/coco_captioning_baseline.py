@@ -30,9 +30,10 @@ import random
 import pandas as pd
 
 # Local imports
-from image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, COCOManager
-from image_captioning import LmPromptGenerator as pg
-from utils import get_device
+from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, COCOManager
+from scripts.image_captioning import LmPromptGenerator as pg
+from scripts.image_captioning import CacheManager as cm
+from scripts.utils import get_device
 
 
 # ### Set seeds for reproducible results

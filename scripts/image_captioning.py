@@ -23,7 +23,7 @@ class COCOManager:
         """
         dataset: dataset to download
         """
-        self.image_dir = '../data/coco/val2017'
+        self.image_dir = '../data/coco/val2017/'
         self.dataset_to_download = {
             '../data/coco/val2017': 'http://images.cocodataset.org/zips/val2017.zip',
             '../data/coco/annotations': 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
@@ -56,7 +56,7 @@ class COCOManager:
             self.download_unzip_delete(folder, url)
 
     def get_random_image_paths(self, num_images):
-        return np.random.choice(os.listdir(self.image_dir), size=num_images)
+        return np.random.choice(os.listdir(self.image_dir), size=num_images).tolist()
 
 
 
@@ -205,6 +205,7 @@ class VocabManager:
             # Read the cache file
             with open(cache_path) as f:
                 place_texts = f.read().splitlines()
+        place_texts.sort()
         return place_texts
 
     @print_time_dec
@@ -249,7 +250,9 @@ class VocabManager:
             # Read the cache file
             with open(cache_path) as f:
                 object_texts = f.read().splitlines()
-        return [o for o in list(set(object_texts)) if o not in self.place_list]
+        object_texts = [o for o in list(set(object_texts)) if o not in self.place_list]
+        object_texts.sort()
+        return object_texts
 
 
 class ClipManager:
@@ -322,6 +325,8 @@ class CacheManager:
     def get_place_feats(clip_manager, vocab_manager):
         place_feats_path = '../data/cache/place_feats.npy'
         if not os.path.exists(place_feats_path):
+            # Ensure the directory exists
+            prepare_dir(place_feats_path)
             # Calculate the place features
             place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
             np.save(place_feats_path, place_feats)
@@ -334,6 +339,8 @@ class CacheManager:
     def get_object_feats(clip_manager, vocab_manager):
         object_feats_path = '../data/cache/object_feats.npy'
         if not os.path.exists(object_feats_path):
+            # Ensure the directory exists
+            prepare_dir(object_feats_path)
             # Calculate the place features
             object_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.object_list])
             np.save(object_feats_path, object_feats)

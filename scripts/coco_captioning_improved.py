@@ -18,21 +18,17 @@
 
 
 # Package loading
-import matplotlib.pyplot as plt
-import pandas as pd
 from transformers import set_seed
 import os
 import numpy as np
-import re
-import pickle
-import time
 import random
 import pandas as pd
 
 # Local imports
-from image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, COCOManager
-from image_captioning import LmPromptGenerator as pg
-from utils import get_device
+from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, COCOManager
+from scripts.image_captioning import LmPromptGenerator as pg
+from scripts.image_captioning import CacheManager as cm
+from scripts.utils import get_device
 
 
 # ### Set seeds for reproducible results
@@ -89,55 +85,28 @@ flan_manager = FlanT5Manager()
 
 
 # Calculate the place features
-if not os.path.exists('../cache/place_feats.npy'):
-    # Calculate the place features
-    place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
-    np.save('../cache/place_feats.npy', place_feats)
-else:
-    place_feats = np.load('../cache/place_feats.npy')
+place_feats = cm.get_place_feats(clip_manager, vocab_manager)
 
 # Calculate the object features
-if not os.path.exists('../cache/object_feats.npy'):
-    # Calculate the object features
-    object_feats = clip_manager.get_text_feats([f'Photo of a {o}.' for o in vocab_manager.object_list])
-    np.save('../cache/object_feats.npy', object_feats)
-else:
-    object_feats = np.load('../cache/object_feats.npy')
+object_feats = cm.get_object_feats(clip_manager, vocab_manager)
 
 
 # ### Load images and compute image embedding
 
 # In[9]:
 
+# Randomly select images from the COCO dataset
+img_files = coco_manager.get_random_image_paths(num_images=100)
 
-approach = 'improved'
-
+# Create dictionaries to store the images features
 img_dic = {}
 img_feat_dic = {}
-img_paths = {}
-# if not os.path.exists(f'{approach}_outputs.csv'):
-    # N = len(os.listdir(imgs_folder))
-N = 100
-random_numbers = random.sample(range(len(os.listdir(imgs_folder))), N)
 
-# for ix, file_name in enumerate(os.listdir(imgs_folder)[:N]):
-for ix, file_name in enumerate(os.listdir(imgs_folder)):
-     # Consider only image files that are part of the random sample
-    if file_name.endswith(".jpg") and ix in random_numbers:  
-        # Getting image id
-        file_name_strip = file_name.strip('.jpg')
-        match = re.search('^0+', file_name_strip)
-        sequence = match.group(0)
-        image_id = int(file_name_strip[len(sequence):])
-
-        img_path = os.path.join(imgs_folder, file_name)
-        img = image_manager.load_image(img_path)
-        img_feats = clip_manager.get_img_feats(img)
-        img_feats = img_feats.flatten()
-        img_paths[image_id] = file_name
-
-        img_dic[image_id] = img
-        img_feat_dic[image_id] = img_feats
+for img_file in img_files:
+    # Load the image
+    img_dic[img_file] = image_manager.load_image(coco_manager.image_dir + img_file)
+    # Generate the CLIP image embedding
+    img_feat_dic[img_file] = clip_manager.get_img_feats(img_dic[img_file]).flatten()
 
 
 # ### Zero-shot VLM (CLIP)
@@ -185,6 +154,10 @@ place_topk = 3
 # Create a dictionary to store the number of people
 location_dic = {}
 for img_name, img_feat in img_feat_dic.items():
+    print(img_name)
+    print(img_feat[0])
+    print(vocab_manager.object_list[0])
+    print(object_feats[0][0])
     sorted_places, places_scores = clip_manager.get_nn_text(vocab_manager.place_list, place_feats, img_feat)
     location_dic[img_name] = sorted_places[0]
 
@@ -200,13 +173,14 @@ obj_topk = 10
 object_score_map = {}
 sorted_obj_dic = {}
 for img_name, img_feat in img_feat_dic.items():
+    print(img_name)
+    print(img_feat[0])
+    print(vocab_manager.object_list[0])
+    print(object_feats[0][0])
+
     sorted_obj_texts, obj_scores = clip_manager.get_nn_text(vocab_manager.object_list, object_feats, img_feat)
     object_score_map[img_name] = dict(zip(sorted_obj_texts, obj_scores))
     sorted_obj_dic[img_name] = sorted_obj_texts
-    object_list = ''
-    for i in range(obj_topk):
-        object_list += f'{sorted_obj_texts[i]}, '
-    object_list = object_list[:-2]
 
 
 # #### Finding both relevant and different objects using cosine similarity
@@ -327,11 +301,10 @@ for img_name in img_dic:
     generated_caption = sorted_caption_map[img_name][0]
     data_list.append({
         'image_name': img_name,
-        'image_path': img_paths[img_name],
         'generated_caption': generated_caption,
         'cosine_similarity': caption_score_map[img_name][generated_caption]
     })
-pd.DataFrame(data_list).to_csv(f'{approach}_outputs.csv', index=False)
+pd.DataFrame(data_list).to_csv(f'improved_outputs.csv', index=False)
 
 
 # In[ ]:
