@@ -55,7 +55,9 @@ The BERT score is learning based method to evaluate image captions, exploiting t
 the tokens in the reference and candidate sentences via cosine similarity [21]. To this end, we calculated precision, recall and the F1 score for the baseline and improved model.
 
 
-## Results
+## Results 
+
+[to be added soon]
 
 We present both quantitative and qualitative reults. Qualitative results show the vast improvement of the model compared to baseline (Figure 1), and the quantitative results confirm this observation (Table 1).
 
