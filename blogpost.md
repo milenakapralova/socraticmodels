@@ -64,7 +64,13 @@ We present both quantitative and qualitative reults. Qualitative results show th
 [Table 1]: Rule-based metrics to compare the baseline and improved models to the SoTA in image captioning and the original paper [1], and the embedding-based, and learning-based metrics to compare the baseline and improved models to each other.
 
 
+## Conclusion
 
+Good performing LLMs and the resultant Socratic models don't have to be expensive. With careful prompt post-processing, we demostrated that we can achieve high performance on image captioning even with open-source models such as FLAN-T5.
+
+## Individual contributions
+
+All group members contributed equally.
 
 
 ## References 
