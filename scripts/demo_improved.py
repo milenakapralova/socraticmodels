@@ -5,14 +5,20 @@ import numpy as np
 from transformers import set_seed
 import sys
 sys.path.append('..')
-from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, print_clip_info
+
+from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager
+from scripts.image_captioning import CacheManager as cm
 from scripts.utils import get_device
 
 
 # def main(img_path='demo_img.png', verbose=True):
 
-image_folder = '../data/images/example_images/'
-img_file = 'astronaut_with_beer.jpg'
+image_folder = '../data/coco/val2017/'
+img_file = '000000546219.jpg'
+
+# image_folder = '../data/coco/example_images/'
+# img_file = 'astronaut_with_beer.jpg'
+
 img_path = image_folder + img_file
 verbose = True
 
@@ -34,14 +40,11 @@ vocab_manager = VocabManager()
 # Instantiate the Flan T5 manager
 flan_manager = FlanT5Manager(version="google/flan-t5-xl", use_api=False)
 
-# Print out clip model info
-print_clip_info(clip_manager.model)
-
 # Calculate the place features
-place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
+place_feats = cm.get_place_feats(clip_manager, vocab_manager)
 
 # Calculate the object features
-object_feats = clip_manager.get_text_feats([f'Photo of a {o}.' for o in vocab_manager.object_list])
+object_feats = cm.get_object_feats(clip_manager, vocab_manager)
 
 # Load image.
 img = image_manager.load_image(img_path)
