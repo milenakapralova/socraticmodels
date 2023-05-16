@@ -88,7 +88,6 @@ class VocabManager:
             with open(f'{self.data_dir}/dictionary_and_semantic_hierarchy.txt', 'wb') as f:
                 f.write(response.content)
 
-    @print_time_dec
     def load_places(self) -> List[str]:
         place_categories = np.loadtxt(f'{self.data_dir}/categories_places365.txt', dtype=str)
         place_texts = []
@@ -102,7 +101,6 @@ class VocabManager:
             place_texts.append(place)
         return place_texts
 
-    @print_time_dec
     def load_objects(self, remove_profanity: bool = False) -> List[str]:
         with open(f'{self.data_dir}/dictionary_and_semantic_hierarchy.txt') as fid:
             object_categories = fid.readlines()
@@ -143,7 +141,6 @@ class ClipManager:
         self.model.to(self.device)
         self.model.eval()
 
-    @print_time_dec
     def get_text_feats(self, in_text: List[str], batch_size: int = 64) -> np.ndarray:
         """
         Creates a numpy array of text features with the columns containing the features and the rows containing the

@@ -1,4 +1,6 @@
+ipykernel
 numpy
+pandas
 requests
 tqdm
 matplotlib
