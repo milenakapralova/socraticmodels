@@ -68,7 +68,11 @@ try:
     res_improved = pd.read_csv(f'../data/outputs/improved_outputs.csv')
 
 except FileNotFoundError:
-    print("Either (or both) of the files baseline_outputs.csv and improved_outputs.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved.py to obtain the generated captions before proceeding with the evaluation.")
+    print(
+        "Either (or both) of the files baseline_outputs.csv and improved_outputs.csv not found! Please run the "
+        "coco_captioning_baseline.py or coco_captioning_improved.py to obtain the generated captions before proceeding "
+        "with the evaluation."
+    )
     raise
 
 
@@ -102,10 +106,10 @@ if not os.path.exists(file_path):
     for img_id, list_of_capt_dict in gts.items():
         list_of_captions = [capt_dict['caption'] for capt_dict in list_of_capt_dict]
 
-        # Dims of img_feats_gt: 5 x 768
-        img_feats_gt = clip_manager.get_text_feats(list_of_captions)
+        # Dims of img_emb_gt: 5 x 768
+        img_emb_gt = clip_manager.get_text_emb(list_of_captions)
 
-        embed_capt_gt[img_id] = img_feats_gt
+        embed_capt_gt[img_id] = img_emb_gt
 
     with open(file_path, 'wb') as handle:
         pickle.dump(embed_capt_gt, handle, protocol=pickle.HIGHEST_PROTOCOL)

@@ -38,39 +38,39 @@ flan_manager = FlanT5Manager(version="google/flan-t5-xl", use_api=False)
 print_clip_info(clip_manager.model)
 
 # Calculate the place features
-place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
+place_emb = clip_manager.get_text_emb([f'Photo of a {p}.' for p in vocab_manager.place_list])
 
 # Calculate the object features
-object_feats = clip_manager.get_text_feats([f'Photo of a {o}.' for o in vocab_manager.object_list])
+object_emb = clip_manager.get_text_emb([f'Photo of a {o}.' for o in vocab_manager.object_list])
 
 # Load image.
 img = image_manager.load_image(img_path)
-img_feats = clip_manager.get_img_feats(img)
+img_emb = clip_manager.get_img_emb(img)
 plt.imshow(img)
 plt.show()
 
 # Zero-shot VLM: classify image type.
 img_types = ['photo', 'cartoon', 'sketch', 'painting']
-img_types_feats = clip_manager.get_text_feats([f'This is a {t}.' for t in img_types])
-sorted_img_types, img_type_scores = clip_manager.get_nn_text(img_types, img_types_feats, img_feats)
+img_types_emb = clip_manager.get_text_emb([f'This is a {t}.' for t in img_types])
+sorted_img_types, img_type_scores = clip_manager.get_nn_text(img_types, img_types_emb, img_emb)
 img_type = sorted_img_types[0]
 
 # Zero-shot VLM: classify number of people.
 ppl_texts = [
     'are no people', 'is one person', 'are two people', 'are three people', 'are several people', 'are many people'
 ]
-ppl_feats = clip_manager.get_text_feats([f'There {p} in this photo.' for p in ppl_texts])
-sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts, ppl_feats, img_feats)
+ppl_emb = clip_manager.get_text_emb([f'There {p} in this photo.' for p in ppl_texts])
+sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts, ppl_emb, img_emb)
 ppl_result = sorted_ppl_texts[0]
 
 # Zero-shot VLM: classify places.
 place_topk = 3
-sorted_places, places_scores = clip_manager.get_nn_text(vocab_manager.place_list, place_feats, img_feats)
+sorted_places, places_scores = clip_manager.get_nn_text(vocab_manager.place_list, place_emb, img_emb)
 place_score_map = dict(zip(sorted_places, places_scores))
 
 # Zero-shot VLM: classify objects.
 obj_topk = 10
-sorted_obj_texts, obj_scores = clip_manager.get_nn_text(vocab_manager.object_list, object_feats, img_feats)
+sorted_obj_texts, obj_scores = clip_manager.get_nn_text(vocab_manager.object_list, object_emb, img_emb)
 object_score_map = dict(zip(sorted_obj_texts, obj_scores))
 object_list = ''
 for i in range(obj_topk):
@@ -78,7 +78,7 @@ for i in range(obj_topk):
 object_list = object_list[:-2]
 
 # Create a dictionary that maps the objects to the cosine sim.
-object_embeddings = dict(zip(vocab_manager.object_list, object_feats))
+object_embeddings = dict(zip(vocab_manager.object_list, object_emb))
 
 # Create a list that contains the objects ordered by cosine sim.
 embeddings_sorted = [object_embeddings[w] for w in sorted_obj_texts]
@@ -103,14 +103,14 @@ for i in range(1, 100):
 data_list = []
 for terms in best_matches:
     for term_split in terms.split(', '):
-        score = clip_manager.get_image_caption_score(term_split, img_feats)
+        score = clip_manager.get_image_caption_score(term_split, img_emb)
         data_list.append({
             'term': term_split, 'score': score, 'context': terms
         })
         term_split_split = term_split.split(' ')
         if len(term_split_split) > 1:
             for term_split2 in term_split_split:
-                score = clip_manager.get_image_caption_score(term_split2, img_feats)
+                score = clip_manager.get_image_caption_score(term_split2, img_emb)
                 data_list.append({
                     'term': term_split2, 'score': score, 'context': terms
                 })
@@ -131,7 +131,7 @@ for iteration in range(n_iteration):
     data_list = []
     for term_to_test in terms_to_check:
         new_term = f"{best_term} {term_to_test}"
-        score = clip_manager.get_image_caption_score(new_term, img_feats)
+        score = clip_manager.get_image_caption_score(new_term, img_emb)
         data_list.append({
             'term': new_term, 'candidate': term_to_test, 'score': score
         })
@@ -156,8 +156,8 @@ model_params = {'temperature': 0.9, 'max_length': 40, 'do_sample': True}
 caption_texts = flan_manager.generate_response([prompt] * num_captions, model_params)
 
 # Zero-shot VLM: rank captions.
-caption_feats = clip_manager.get_text_feats(caption_texts)
-sorted_captions, caption_scores = clip_manager.get_nn_text(caption_texts, caption_feats, img_feats)
+caption_emb = clip_manager.get_text_emb(caption_texts)
+sorted_captions, caption_scores = clip_manager.get_nn_text(caption_texts, caption_emb, img_emb)
 caption_score_map = dict(zip(sorted_captions, caption_scores))
 print(f'{sorted_captions[0]}\n')
 

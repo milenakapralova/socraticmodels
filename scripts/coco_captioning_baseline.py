@@ -87,10 +87,10 @@ flan_manager = FlanT5Manager()
 
 
 # Calculate the place features
-place_feats = cm.get_place_feats(clip_manager, vocab_manager)
+place_emb = cm.get_place_emb(clip_manager, vocab_manager)
 
 # Calculate the object features
-object_feats = cm.get_object_feats(clip_manager, vocab_manager)
+object_emb = cm.get_object_emb(clip_manager, vocab_manager)
 
 
 # ### Load images and compute image embedding
@@ -109,7 +109,7 @@ for img_file in img_files:
     # Load the image
     img_dic[img_file] = image_manager.load_image(coco_manager.image_dir + img_file)
     # Generate the CLIP image embedding
-    img_feat_dic[img_file] = clip_manager.get_img_feats(img_dic[img_file]).flatten()
+    img_feat_dic[img_file] = clip_manager.get_img_emb(img_dic[img_file]).flatten()
 
 
 
@@ -122,12 +122,12 @@ for img_file in img_files:
 
 
 img_types = ['photo', 'cartoon', 'sketch', 'painting']
-img_types_feats = clip_manager.get_text_feats([f'This is a {t}.' for t in img_types])
+img_types_emb = clip_manager.get_text_emb([f'This is a {t}.' for t in img_types])
 
 # Create a dictionary to store the image types
 img_type_dic = {}
 for img_name, img_feat in img_feat_dic.items():
-    sorted_img_types, img_type_scores = clip_manager.get_nn_text(img_types, img_types_feats, img_feat)
+    sorted_img_types, img_type_scores = clip_manager.get_nn_text(img_types, img_types_emb, img_feat)
     img_type_dic[img_name] = sorted_img_types[0]
 
 
@@ -137,19 +137,19 @@ for img_name, img_feat in img_feat_dic.items():
 
 
 ppl_texts_bool = ['no people', 'people']
-ppl_feats_bool = clip_manager.get_text_feats([f'There are {p} in this photo.' for p in ppl_texts_bool])
+ppl_emb_bool = clip_manager.get_text_emb([f'There are {p} in this photo.' for p in ppl_texts_bool])
 
 ppl_texts_mult = ['is one person', 'are two people', 'are three people', 'are several people', 'are many people']
-ppl_feats_mult = clip_manager.get_text_feats([f'There {p} in this photo.' for p in ppl_texts_mult])
+ppl_emb_mult = clip_manager.get_text_emb([f'There {p} in this photo.' for p in ppl_texts_mult])
 
 # Create a dictionary to store the number of people
 num_people_dic = {}
 
 for img_name, img_feat in img_feat_dic.items():
-    sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts_bool, ppl_feats_bool, img_feat)
+    sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts_bool, ppl_emb_bool, img_feat)
     ppl_result = sorted_ppl_texts[0]
     if ppl_result == 'people':
-        sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts_mult, ppl_feats_mult, img_feat)
+        sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts_mult, ppl_emb_mult, img_feat)
         ppl_result = sorted_ppl_texts[0]
     else:
         ppl_result = f'are {ppl_result}'
@@ -167,7 +167,7 @@ place_topk = 3
 # Create a dictionary to store the number of people
 location_dic = {}
 for img_name, img_feat in img_feat_dic.items():
-    sorted_places, places_scores = clip_manager.get_nn_text(vocab_manager.place_list, place_feats, img_feat)
+    sorted_places, places_scores = clip_manager.get_nn_text(vocab_manager.place_list, place_emb, img_feat)
     location_dic[img_name] = sorted_places[0]
 
 
@@ -181,7 +181,7 @@ obj_topk = 10
 # Create a dictionary to store the similarity of each object with the images
 obj_list_dic = {}
 for img_name, img_feat in img_feat_dic.items():
-    sorted_obj_texts, obj_scores = clip_manager.get_nn_text(vocab_manager.object_list, object_feats, img_feat)
+    sorted_obj_texts, obj_scores = clip_manager.get_nn_text(vocab_manager.object_list, object_emb, img_feat)
     object_list = ''
     for i in range(obj_topk):
         object_list += f'{sorted_obj_texts[i]}, '
@@ -214,8 +214,8 @@ for img_name in img_dic:
     caption_texts = flan_manager.generate_response(num_captions * [prompt_dic[img_name]], model_params)
 
     # Zero-shot VLM: rank captions.
-    caption_feats = clip_manager.get_text_feats(caption_texts)
-    sorted_captions, caption_scores = clip_manager.get_nn_text(caption_texts, caption_feats, img_feat_dic[img_name])
+    caption_emb = clip_manager.get_text_emb(caption_texts)
+    sorted_captions, caption_scores = clip_manager.get_nn_text(caption_texts, caption_emb, img_feat_dic[img_name])
     sorted_caption_map[img_name] = sorted_captions
     caption_score_map[img_name] = dict(zip(sorted_captions, caption_scores))
 

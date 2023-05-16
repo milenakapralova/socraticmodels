@@ -76,12 +76,12 @@ class COCOManager:
         #
         #         img_path = os.path.join(imgs_folder, file_name)
         #         img = image_manager.load_image(img_path)
-        #         img_feats = clip_manager.get_img_feats(img)
-        #         img_feats = img_feats.flatten()
+        #         img_emb = clip_manager.get_img_emb(img)
+        #         img_emb = img_emb.flatten()
         #         img_paths[image_id] = file_name
         #
         #         img_dic[image_id] = img
-        #         img_feat_dic[image_id] = img_feats
+        #         img_feat_dic[image_id] = img_emb
 
 
 class ImageManager:
@@ -274,7 +274,7 @@ class ClipManager:
         self.model.to(self.device)
         self.model.eval()
 
-    def get_text_feats(self, in_text: List[str], batch_size: int = 64) -> np.ndarray:
+    def get_text_emb(self, in_text: List[str], batch_size: int = 64) -> np.ndarray:
         """
         Creates a numpy array of text features with the columns containing the features and the rows containing the
         representations for each of the strings in the input in_text list.
@@ -285,69 +285,83 @@ class ClipManager:
         """
         text_tokens = clip.tokenize(in_text).to(self.device)
         text_id = 0
-        text_feats = np.zeros((len(in_text), self.feat_dim), dtype=np.float32)
+        text_emb = np.zeros((len(in_text), self.feat_dim), dtype=np.float32)
         while text_id < len(text_tokens):  # Batched inference.
             batch_size = min(len(in_text) - text_id, batch_size)
             text_batch = text_tokens[text_id:text_id + batch_size]
             with torch.no_grad():
-                batch_feats = self.model.encode_text(text_batch).float()
-            batch_feats /= batch_feats.norm(dim=-1, keepdim=True)
-            batch_feats = np.float32(batch_feats.cpu())
-            text_feats[text_id:text_id + batch_size, :] = batch_feats
+                batch_emb = self.model.encode_text(text_batch).float()
+            batch_emb /= batch_emb.norm(dim=-1, keepdim=True)
+            batch_emb = np.float32(batch_emb.cpu())
+            text_emb[text_id:text_id + batch_size, :] = batch_emb
             text_id += batch_size
-        return text_feats
+        return text_emb
 
-    def get_img_feats(self, img):
+    def get_img_emb(self, img):
         img_pil = Image.fromarray(np.uint8(img))
         img_in = self.preprocess(img_pil)[None, ...]
         with torch.no_grad():
-            img_feats = self.model.encode_image(img_in.to(self.device)).float()
-        img_feats /= img_feats.norm(dim=-1, keepdim=True)
-        img_feats = np.float32(img_feats.cpu())
-        return img_feats
+            img_emb = self.model.encode_image(img_in.to(self.device)).float()
+        img_emb /= img_emb.norm(dim=-1, keepdim=True)
+        img_emb = np.float32(img_emb.cpu())
+        return img_emb
 
     @staticmethod
-    def get_nn_text(raw_texts, text_feats, img_feats):
-        scores = text_feats @ img_feats.T
+    def get_nn_text(raw_texts, text_emb, img_emb):
+        scores = text_emb @ img_emb.T
         scores = scores.squeeze()
         high_to_low_ids = np.argsort(scores).squeeze()[::-1]
         high_to_low_texts = [raw_texts[i] for i in high_to_low_ids]
         high_to_low_scores = np.sort(scores).squeeze()[::-1]
         return high_to_low_texts, high_to_low_scores
 
-    def get_image_caption_score(self, caption, img_feats):
-        text_feats = self.get_text_feats([caption])
-        return float(text_feats @ img_feats.T)
+    def get_image_caption_score(self, caption, img_emb):
+        text_emb = self.get_text_emb([caption])
+        return float(text_emb @ img_emb.T)
 
 
 class CacheManager:
     @staticmethod
-    def get_place_feats(clip_manager, vocab_manager):
-        place_feats_path = '../data/cache/place_feats.npy'
-        if not os.path.exists(place_feats_path):
+    def get_place_emb(clip_manager, vocab_manager):
+        place_emb_path = '../data/cache/place_emb.npy'
+        if not os.path.exists(place_emb_path):
             # Ensure the directory exists
-            prepare_dir(place_feats_path)
+            prepare_dir(place_emb_path)
             # Calculate the place features
-            place_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.place_list])
-            np.save(place_feats_path, place_feats)
+            place_emb = clip_manager.get_text_emb([f'Photo of a {p}.' for p in vocab_manager.place_list])
+            np.save(place_emb_path, place_emb)
         else:
             # Load cache
-            place_feats = np.load(place_feats_path)
-        return place_feats
+            place_emb = np.load(place_emb_path)
+        return place_emb
 
     @staticmethod
-    def get_object_feats(clip_manager, vocab_manager):
-        object_feats_path = '../data/cache/object_feats.npy'
-        if not os.path.exists(object_feats_path):
+    def get_object_emb(clip_manager, vocab_manager):
+        object_emb_path = '../data/cache/object_emb.npy'
+        if not os.path.exists(object_emb_path):
             # Ensure the directory exists
-            prepare_dir(object_feats_path)
+            prepare_dir(object_emb_path)
             # Calculate the place features
-            object_feats = clip_manager.get_text_feats([f'Photo of a {p}.' for p in vocab_manager.object_list])
-            np.save(object_feats_path, object_feats)
+            object_emb = clip_manager.get_text_emb([f'Photo of a {p}.' for p in vocab_manager.object_list])
+            np.save(object_emb_path, object_emb)
         else:
             # Load cache
-            object_feats = np.load(object_feats_path)
-        return object_feats
+            object_emb = np.load(object_emb_path)
+        return object_emb
+
+    @staticmethod
+    def get_img_emb(clip_manager, vocab_manager):
+        object_emb_path = '../data/cache/object_emb.npy'
+        if not os.path.exists(object_emb_path):
+            # Ensure the directory exists
+            prepare_dir(object_emb_path)
+            # Calculate the place features
+            object_emb = clip_manager.get_text_emb([f'Photo of a {p}.' for p in vocab_manager.object_list])
+            np.save(object_emb_path, object_emb)
+        else:
+            # Load cache
+            object_emb = np.load(object_emb_path)
+        return object_emb
 
 
 class FlanT5Manager:

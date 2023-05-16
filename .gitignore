@@ -21,9 +21,9 @@
 /scripts/quantitative_evaluation_local.py
 /annotations/
 /test.py
-/object_feats.npy
+/object_emb.npy
 /object_texts.txt
-/place_feats.npy
+/place_emb.npy
 /place_texts.txt
 /res.txt
 /imgs/
