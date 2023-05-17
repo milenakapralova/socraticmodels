@@ -17,8 +17,7 @@ import numpy as np
 
 
 
-
-class COCOManager:
+class CocoManager:
     def __init__(self):
         """
         dataset: dataset to download

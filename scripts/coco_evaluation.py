@@ -8,6 +8,9 @@ import pickle
 import numpy as np
 import itertools
 from bert_score import score
+import uuid
+
+
 
 class SocraticEvalCap:
     def __init__(self, gts, res_raw):
@@ -91,18 +94,12 @@ class SocraticEvalCap:
     def setEvalImgs(self):
         self.evalImgs = [eval for imgId, eval in self.imgToEval.items()]
 
-    def evaluate_cossim(self):
-        # Get the clip embeddings for images and captions
-        with open('../data/cache/embed_imgs.pickle', 'rb') as handle:
-            embed_imgs = pickle.load(handle)
-
-        with open('../data/cache/embed_capt_gt.pickle', 'rb') as handle:
-            embed_capt_gt = pickle.load(handle)
+    def evaluate_cossim(self, gt_caption_emb, image_emb):
 
         # Calculate similarities between images and captions
         for img_id in self.intersect_keys:
             # GT
-            self.gts_sims[img_id] = (embed_capt_gt[img_id] @ embed_imgs[img_id].T).flatten().tolist()
+            self.gts_sims[img_id] = (gt_caption_emb[img_id] @ image_emb[img_id].T).flatten().tolist()
 
         gts_list = list(itertools.chain(*self.gts_sims.values()))
 
@@ -125,13 +122,41 @@ class SocraticEvalCap:
                 current_ref += ' ' + cpt_dict['caption']
             refs.append(current_ref)
 
-        P, R, F1 = score(cands, refs, lang="en", verbose=True)
+        p, r, f1 = score(cands, refs, lang="en", verbose=True)
 
         self.bert_scores = {
-            'P': [P.mean(), P.std()],
-            'R': [R.mean(), R.std()],
-            'F1': [F1.mean(), F1.std()]
+            'p': p,
+            'r': r,
+            'f1': f1
         }
+
+
+def load_result_baseline():
+    """
+    Load the captions
+    """
+    try:
+        res_baseline = pd.read_csv(f'../data/outputs/baseline_outputs.csv')
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            "baseline_outputs.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved.py "
+            "to obtain the generated captions before proceeding with the evaluation."
+        )
+    return res_baseline
+
+
+def load_result_improved():
+    """
+    Load the captions
+    """
+    try:
+        res_improved = pd.read_csv(f'../data/outputs/improved_outputs.csv')
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            "improved_outputs.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved.py "
+            "to obtain the generated captions before proceeding with the evaluation."
+        )
+    return res_improved
 
 
 # Package loading
@@ -140,124 +165,166 @@ import json
 import pickle
 import pandas as pd
 
-# Local imports
-from image_captioning import ClipManager
-from coco_evaluation import SocraticEvalCap
-from utils import get_device, prepare_dir
-
-# ### Evaluate the generated captions against the ground truth
-
-# #### Load the ground truth annotations
-
-# In[2]:
-
-# Assessing whether the generated data is present so that we have something to evaluate
-
 try:
-    res_baseline = pd.read_csv(f'../data/outputs/baseline_outputs.csv')
-    res_improved = pd.read_csv(f'../data/outputs/improved_outputs.csv')
-
-except FileNotFoundError:
-    print(
-        "Either (or both) of the files baseline_outputs.csv and improved_outputs.csv not found! Please run the "
-        "coco_captioning_baseline.py or coco_captioning_improved.py to obtain the generated captions before proceeding "
-        "with the evaluation."
-    )
-    raise
+    os.chdir('scripts')
+except:
+    pass
 
 
+# Local imports
+from scripts.image_captioning import ClipManager, ImageManager, CocoManager
+from scripts.utils import get_device, prepare_dir
 
-annotation_file = '../data/coco/annotations/captions_val2017.json'
+def load_gts_captions():
+    # Load the ground truth annotations
+    annotation_file = '../data/coco/annotations/captions_val2017.json'
 
-with open(annotation_file, 'r') as f:
-    lines = json.load(f)['annotations']
-gts = {}
-for item in lines:
-    if item['image_id'] not in gts:
-        gts[item['image_id']] = []
-    gts[item['image_id']].append({'image_id': item['image_id'], 'caption': item['caption']})
+    with open(annotation_file, 'r') as f:
+        lines = json.load(f)['annotations']
 
+    gts = {}
+    for item in lines:
+        if item['image_id'] in gts:
+            gts[item['image_id']].append({'image_id': item['image_id'], 'caption': item['caption']})
+        else:
+            gts[item['image_id']] = [{'image_id': item['image_id'], 'caption': item['caption']}]
 
-# #### Compute the embeddings for the gt captions
-
-# In[3]:
-
-file_path = '../data/cache/embed_capt_gt.pickle'
-if not os.path.exists(file_path):
-    prepare_dir(file_path)
-
-    # Set the device to use
-    device = get_device()
-
-    # Instantiate the clip manager
-    clip_manager = ClipManager(device)
-
-    embed_capt_gt = {}
-    for img_id, list_of_capt_dict in gts.items():
-        list_of_captions = [capt_dict['caption'] for capt_dict in list_of_capt_dict]
-
-        # Dims of img_emb_gt: 5 x 768
-        img_emb_gt = clip_manager.get_text_emb(list_of_captions)
-
-        embed_capt_gt[img_id] = img_emb_gt
-
-    with open(file_path, 'wb') as handle:
-        pickle.dump(embed_capt_gt, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    return gts
 
 
-# #### Evaluation
-
-# In[4]:
-
-
-approaches = ['baseline', 'improved']
-# approaches = ['baseline']
+def get_img_list_sorted(res_baseline):
+    img_list = res_baseline['image_name'].tolist()
+    img_list.sort()
+    return img_list
 
 
-eval_cap = {
-    'rulebased': {},
-    'cossim': {},
-    'bert_score': {}
+def get_uuid_for_imgs(img_list):
+    return str(uuid.uuid3(uuid.NAMESPACE_DNS, ''.join(img_list)))
+
+
+def load_caption_emb(clip_manager, gts, img_list):
+
+    emb_pickle_path = f'../data/cache/caption_emb_{get_uuid_for_imgs(img_list)}.pickle'
+
+    if os.path.exists(emb_pickle_path):
+        with open(emb_pickle_path, 'rb') as f:
+            gt_caption_emb = pickle.load(f)
+    else:
+        # Ensure the directory exists
+        prepare_dir(emb_pickle_path)
+
+        gt_caption_emb = {}
+        for img_name in img_list:
+            img_id = int(img_name.split('.')[0])
+            list_of_captions = [capt_dict['caption'] for capt_dict in gts[img_id]]
+
+            # Dims of img_emb_gt: 5 x 768
+            img_emb_gt = clip_manager.get_text_emb(list_of_captions)
+
+            gt_caption_emb[img_id] = img_emb_gt
+
+        with open(emb_pickle_path, 'wb') as handle:
+            pickle.dump(gt_caption_emb, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    return gt_caption_emb
+
+def load_image_emb(clip_manager, img_list):
+
+    emb_pickle_path = f'../data/cache/img_emb_{get_uuid_for_imgs(img_list)}.pickle'
+
+    if os.path.exists(emb_pickle_path):
+        with open(emb_pickle_path, 'rb') as f:
+            image_emb = pickle.load(f)
+    else:
+        # Ensure the directory exists
+        prepare_dir(emb_pickle_path)
+
+        # Set the image folder path
+        img_folder = '../data/coco/val2017/'
+
+        # Instantiate the image manager
+        image_manager = ImageManager()
+
+        image_emb = {}
+        for img_name in img_list:
+            img = image_manager.load_image(img_folder + img_name)
+            img_emb = clip_manager.get_img_emb(img)
+            image_emb[int(img_name.split('.')[0])] = img_emb.flatten()
+
+        with open(emb_pickle_path, 'wb') as handle:
+            pickle.dump(image_emb, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    return image_emb
+
+
+def evaluate_captions(data_to_analyse, gt_caption_emb, image_emb):
+    # Create a data list to store the outputs
+    data_list = []
+
+    for approach, data_df in data_to_analyse.items():
+
+        data_df['image_name'] = data_df['image_name'].map(lambda x: int(x.split('.')[0]))
+
+        # Instantiate the evaluator
+        evaluator = SocraticEvalCap(gts, data_df)
+
+        # Rule-based metrics
+        evaluator.evaluate_rulebased()
+        # for metric, score in evaluator.eval.items():
+        #     print(f'{metric}: {score:.3f}')
+
+        # Embedding-based metric
+        evaluator.evaluate_cossim(gt_caption_emb, image_emb)
+        # for source_caption, sim in evaluator.sims.items():
+        #     print(f'{source_caption}: avg = {sim[0]:.3f}, std = {sim[1]:.3f}')
+
+        # Learned-based metric
+        evaluator.evaluate_bert()
+        # for metric, score in evaluator.bert_scores.items():
+        #     print(f'{metric}: avg = {score[0]:.3f}, std = {score[1]:.3f}')
+
+        # Store results
+        for i, data_dic in enumerate(evaluator.evalImgs):
+            data_list.append({
+                'approach': approach,
+                'caption': evaluator.res[data_dic['image_id']][0]['caption'],
+                **data_dic,
+                'gts_sims': evaluator.gts_sims[data_dic['image_id']],
+                'bert_p': float(evaluator.bert_scores['p'][i]),
+                'bert_r': float(evaluator.bert_scores['r'][i]),
+                'bert_f1': float(evaluator.bert_scores['f1'][i]),
+            })
+    return pd.DataFrame(data_list)
+
+
+# Load the results
+res_baseline = load_result_baseline()
+res_improved = load_result_improved()
+
+# Load the captions
+gts = load_gts_captions()
+
+# Extract a sorted list of the images whose captions will be evaluated
+img_list = get_img_list_sorted(res_baseline)
+
+# Set the device to use
+device = get_device()
+
+# Instantiate the clip manager
+clip_manager = ClipManager(device)
+
+# Retrieve the embeddings of the ground truth captions
+gt_caption_emb = load_caption_emb(clip_manager, gts, img_list)
+
+# Retrieve the embeddings of the images
+image_emb = load_image_emb(clip_manager, img_list)
+
+data_to_analyse = {
+    'baseline': res_baseline,
+    'improved': res_improved
 }
 
+analysis_df = evaluate_captions(data_to_analyse, gt_caption_emb, image_emb)
+analysis_df.to_csv('../data/outputs/caption_eval.csv', index=False)
 
-for approach in approaches:
-    # Load the generated captions
-    res_raw = pd.read_csv(f'../data/outputs/{approach}_outputs.csv')
-    res_raw['image_path'] = res_raw['image_path'].str.split('.').str[0].astype(int, inplace=True)
-
-
-    evaluator = SocraticEvalCap(gts, res_raw)
-
-    # Rule-based metrics
-    evaluator.evaluate_rulebased()
-    eval_rulebased = {}
-
-    for metric, score in evaluator.eval.items():
-        print(f'{metric}: {score:.3f}')
-        eval_rulebased[metric] = round(score, 5)
-    eval_cap['rulebased'][approach] = eval_rulebased
-
-    # Embedding-based metric
-    evaluator.evaluate_cossim()
-    for source_caption, sim in evaluator.sims.items():
-        print(f'{source_caption}: avg = {sim[0]:.3f}, std = {sim[1]:.3f}')
-    eval_cap['cossim'][approach] = evaluator.sims
-
-    # Learned-based metric
-    evaluator.evaluate_bert()
-    for metric, score in evaluator.bert_scores.items():
-        print(f'{metric}: avg = {score[0]:.3f}, std = {score[1]:.3f}')
-    eval_cap['bert_score'][approach] = evaluator.bert_scores
-
-# ### Save the outputs
-
-# In[5]:
-
-
-file_path = '../data/outputs/eval_cap.pickle'
-prepare_dir(file_path)
-with open(file_path, 'wb') as handle:
-    pickle.dump(eval_cap, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 

@@ -27,7 +27,7 @@ def get_device():
 
 def prepare_dir(file_path):
     """
-    This function is used to create the directories needed to output a path. If the directories already exist, the
+    This function is used to create the directories needed to outputs a path. If the directories already exist, the
     function continues.
     """
     dir_path = '/'.join(file_path.split('/')[:-1])

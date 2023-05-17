@@ -27,7 +27,7 @@ import pandas as pd
 # Local imports
 import sys
 sys.path.append('..')
-from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, COCOManager
+from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, CocoManager
 from scripts.image_captioning import LmPromptGenerator as pg
 from scripts.image_captioning import CacheManager as cm
 from scripts.utils import get_device, prepare_dir, set_all_seeds
@@ -50,7 +50,7 @@ set_all_seeds(42)
 # imgs_folder = '../data/coco/imgs/val2017/'
 # annotation_file = '../data/coco/annotations/annotations/captions_val2017.json'
 
-coco_manager = COCOManager()
+coco_manager = CocoManager()
 coco_manager.download_data()
 
 

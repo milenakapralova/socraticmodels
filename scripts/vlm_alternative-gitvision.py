@@ -11,7 +11,7 @@ image_manager = ImageManager()
 # Load image.
 img_folder = '../data/images/example_images/'
 img_file = 'monkey_with_gun.jpg'
-img_path = image_folder + img_file
+img_path = img_folder + img_file
 img = image_manager.load_image(img_path)
 
 inputs = processor(images=img, return_tensors="pt")

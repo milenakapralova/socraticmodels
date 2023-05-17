@@ -1,18 +1,25 @@
 # Package loading
+import os
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from transformers import set_seed
 import sys
 sys.path.append('..')
+try:
+    os.chdir('scripts')
+except:
+    pass
 from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, print_clip_info
+from scripts.image_captioning import CacheManager as cm
 from scripts.utils import get_device
 
 
 # def main(img_path='demo_img.png', verbose=True):
 
-image_folder = '../data/images/example_images/'
-img_file = 'astronaut_with_beer.jpg'
+image_folder = '../data/coco/val2017/'
+img_file = '000000244750.jpg'
 img_path = image_folder + img_file
 verbose = True
 
@@ -38,10 +45,11 @@ flan_manager = FlanT5Manager(version="google/flan-t5-xl", use_api=False)
 print_clip_info(clip_manager.model)
 
 # Calculate the place features
-place_emb = clip_manager.get_text_emb([f'Photo of a {p}.' for p in vocab_manager.place_list])
+place_emb = cm.get_place_emb(clip_manager, vocab_manager)
 
 # Calculate the object features
-object_emb = clip_manager.get_text_emb([f'Photo of a {o}.' for o in vocab_manager.object_list])
+object_emb = cm.get_object_emb(clip_manager, vocab_manager)
+
 
 # Load image.
 img = image_manager.load_image(img_path)
@@ -99,58 +107,64 @@ for i in range(1, 100):
         unique_embeddings = np.concatenate([unique_embeddings, embeddings_sorted[i].reshape(-1, 1)], 1)
         best_matches.append(sorted_obj_texts[i])
 
-# Looping through the best matches, consider each terms separately by splitting the commas and spaces.
-data_list = []
-for terms in best_matches:
-    for term_split in terms.split(', '):
-        score = clip_manager.get_image_caption_score(term_split, img_emb)
-        data_list.append({
-            'term': term_split, 'score': score, 'context': terms
-        })
-        term_split_split = term_split.split(' ')
-        if len(term_split_split) > 1:
-            for term_split2 in term_split_split:
-                score = clip_manager.get_image_caption_score(term_split2, img_emb)
-                data_list.append({
-                    'term': term_split2, 'score': score, 'context': terms
-                })
+# # Looping through the best matches, consider each terms separately by splitting the commas and spaces.
+# data_list = []
+# for terms in best_matches:
+#     for term_split in terms.split(', '):
+#         score = clip_manager.get_image_caption_score(term_split, img_emb)
+#         data_list.append({
+#             'term': term_split, 'score': score, 'context': terms
+#         })
+#         term_split_split = term_split.split(' ')
+#         if len(term_split_split) > 1:
+#             for term_split2 in term_split_split:
+#                 score = clip_manager.get_image_caption_score(term_split2, img_emb)
+#                 data_list.append({
+#                     'term': term_split2, 'score': score, 'context': terms
+#                 })
+#
+# # Create a dataframe with the terms and scores and only keep the top term per context.
+# term_df = pd.DataFrame(data_list).sort_values('score', ascending=False).drop_duplicates('context').reset_index(drop=True)
+#
+# # Prepare loop to find if additional terms can improve cosine similarity
+# best_terms_sorted = term_df['term'].tolist()
+# best_term = best_terms_sorted[0]
+# terms_to_check = list(set(best_terms_sorted[1:]))
+# best_cos_sim = term_df['score'].iloc[0]
+# terms_to_include = [best_term]
 
-# Create a dataframe with the terms and scores and only keep the top term per context.
-term_df = pd.DataFrame(data_list).sort_values('score', ascending=False).drop_duplicates('context').reset_index(drop=True)
-
-# Prepare loop to find if additional terms can improve cosine similarity
-best_terms_sorted = term_df['term'].tolist()
-best_term = best_terms_sorted[0]
-terms_to_check = list(set(best_terms_sorted[1:]))
-best_cos_sim = term_df['score'].iloc[0]
-terms_to_include = [best_term]
-
-# Perform a loop to find if additional terms can improve the cosine similarity
-n_iteration = 5
-for iteration in range(n_iteration):
-    data_list = []
-    for term_to_test in terms_to_check:
-        new_term = f"{best_term} {term_to_test}"
-        score = clip_manager.get_image_caption_score(new_term, img_emb)
-        data_list.append({
-            'term': new_term, 'candidate': term_to_test, 'score': score
-        })
-    combined_df = pd.DataFrame(data_list).sort_values('score', ascending=False)
-    if combined_df['score'].iloc[0] > best_cos_sim + 0.01:
-        diff = combined_df['score'].iloc[0] - best_cos_sim
-        print(f'term: {combined_df["candidate"].iloc[0]}, diff: {diff}')
-        best_cos_sim = combined_df['score'].iloc[0]
-        terms_to_include.append(combined_df['candidate'].iloc[0])
-        terms_to_check = combined_df['candidate'].tolist()[1:]
-        best_term += f" {combined_df['candidate'].iloc[0]}"
-    else:
-        break
+# # Perform a loop to find if additional terms can improve the cosine similarity
+# n_iteration = 5
+# for iteration in range(n_iteration):
+#     data_list = []
+#     for term_to_test in terms_to_check:
+#         new_term = f"{best_term} {term_to_test}"
+#         score = clip_manager.get_image_caption_score(new_term, img_emb)
+#         data_list.append({
+#             'term': new_term, 'candidate': term_to_test, 'score': score
+#         })
+#     combined_df = pd.DataFrame(data_list).sort_values('score', ascending=False)
+#     if combined_df['score'].iloc[0] > best_cos_sim + 0.01:
+#         diff = combined_df['score'].iloc[0] - best_cos_sim
+#         print(f'term: {combined_df["candidate"].iloc[0]}, diff: {diff}')
+#         best_cos_sim = combined_df['score'].iloc[0]
+#         terms_to_include.append(combined_df['candidate'].iloc[0])
+#         terms_to_check = combined_df['candidate'].tolist()[1:]
+#         best_term += f" {combined_df['candidate'].iloc[0]}"
+#     else:
+#         break
 
 # Generate 100 captions, order them and print out the best.
-num_captions = 100
-prompt = f'''Create a creative beautiful caption from this context:
-    "This image is a {img_type}. There {ppl_result}.
-    The context is: {', '.join(terms_to_include)}.
+num_captions = 50
+# prompt = f'''Create a creative beautiful caption from this context:
+#     "This image is a {img_type}. There {ppl_result}.
+#     The context is: {', '.join(terms_to_include)}.
+#     A creative short caption I can generate to describe this image is:'''
+
+prompt = f'''I am an intelligent image captioning bot.
+    This image is a {img_type}. There {ppl_result}.
+    I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
+    I think there might be a {', '.join(best_matches[:5])} in this {img_type}.
     A creative short caption I can generate to describe this image is:'''
 model_params = {'temperature': 0.9, 'max_length': 40, 'do_sample': True}
 caption_texts = flan_manager.generate_response([prompt] * num_captions, model_params)
