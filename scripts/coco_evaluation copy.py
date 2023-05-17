@@ -20,7 +20,7 @@ from bert_score import score
 
 # Local imports
 from image_captioning import ClipManager
-from utils import get_device, prepare_dir
+from utils import get_device
 
 
 class SocraticEvalCap:
@@ -107,10 +107,10 @@ class SocraticEvalCap:
 
     def evaluate_cossim(self):
         # Get the clip embeddings for images and captions
-        with open('../data/cache/embed_imgs.pickle', 'rb') as handle:
+        with open('data/cache/image_emb.pickle', 'rb') as handle:
             embed_imgs = pickle.load(handle)
 
-        with open('../data/cache/embed_capt_gt.pickle', 'rb') as handle:
+        with open('data/cache/embed_capt_gt.pickle', 'rb') as handle:
             embed_capt_gt = pickle.load(handle)
 
         # Calculate similarities between images and captions
@@ -153,7 +153,7 @@ def load_result_baseline():
     Load the captions
     """
     try:
-        res_baseline = pd.read_csv(f'../data/outputs/baseline_outputs.csv')
+        res_baseline = pd.read_csv(f'data/outputs/baseline_outputs.csv')
     except FileNotFoundError:
         raise FileNotFoundError(
             "Either (or both) of the files baseline_outputs.csv and improved_outputs.csv not found! Please run the "
@@ -168,7 +168,7 @@ def load_result_improved():
     Load the captions
     """
     try:
-        res_improved = pd.read_csv(f'../data/outputs/improved_outputs.csv')
+        res_improved = pd.read_csv(f'data/outputs/improved_outputs.csv')
     except FileNotFoundError:
         raise FileNotFoundError(
             "Either (or both) of the files baseline_outputs.csv and improved_outputs.csv not found! Please run the "
@@ -180,7 +180,7 @@ def load_result_improved():
 
 def load_gts_captions():
     # Load the ground truth annotations
-    annotation_file = '../data/coco/annotations/captions_val2017.json'
+    annotation_file = 'data/coco/annotations/captions_val2017.json'
 
     with open(annotation_file, 'r') as f:
         lines = json.load(f)['annotations']
@@ -202,9 +202,8 @@ gts = load_gts_captions()
 
 def compute_gts_caption_emb():
     # Compute the embeddings for the gt captions
-    file_path = '../data/cache/embed_capt_gt.pickle'
+    file_path = 'data/cache/embed_capt_gt.pickle'
     if not os.path.exists(file_path):
-        prepare_dir(file_path)
 
         # Set the device to use
         device = get_device()
@@ -236,10 +235,10 @@ bert_score = {}
 for approach in approaches:
 
     # Load the generated captions
-    res_raw = pd.read_csv(f'../data/outputs/{approach}_outputs.csv')
-    res_raw['image_name'] = res_raw['image_name'].str.split('.').str[0].astype(int, copy=False)
+    res_raw = pd.read_csv(f'data/outputs/{approach}_outputs.csv')
+    res_raw['image_name'] = res_raw['image_name'].str.split('.').str[0].astype(int, inplace=True)
 
-    # Instatiate the evaluator
+    # Instantiate the evaluator
     evaluator = SocraticEvalCap(gts, res_raw)
 
     # Rule-based metrics
@@ -264,6 +263,5 @@ for approach in approaches:
         **{f'bert_{k}': v for k, v in evaluator.bert_scores.items()},
     })
 
-file_path = '../data/outputs/coco_evaluation.csv'
-prepare_dir(file_path)
+file_path = 'data/outputs/coco_evaluation.csv'
 pd.DataFrame(data_list).to_csv(file_path, index=False)

@@ -351,7 +351,7 @@ class CacheManager:
 
     @staticmethod
     def get_img_emb(clip_manager, vocab_manager):
-        object_emb_path = '../data/cache/object_emb.npy'
+        object_emb_path = '../data/cache/image_emb.npy'
         if not os.path.exists(object_emb_path):
             # Ensure the directory exists
             prepare_dir(object_emb_path)

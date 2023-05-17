@@ -114,7 +114,7 @@ for ix, file_name in enumerate(os.listdir(imgs_folder)):
 
 # In[ ]:
 
-file_path = '../data/cache/object_emb.npy'
+file_path = '../data/cache/img_emb.pickle'
 prepare_dir(file_path)
 with open(file_path, 'wb') as handle:
         pickle.dump(embed_imgs, handle, protocol=pickle.HIGHEST_PROTOCOL)
