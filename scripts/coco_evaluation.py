@@ -11,7 +11,6 @@ from bert_score import score
 import uuid
 
 
-
 class SocraticEvalCap:
     def __init__(self, gts, res_raw):
         """
@@ -26,13 +25,14 @@ class SocraticEvalCap:
         self.res_sims = {}
         self.imgToEval = {}
         self.res_cossim = res_raw
+        self.res_cossim_map = dict(zip(res_raw['image_id'], res_raw['cosine_similarity']))
 
         #Make res a suitable format for the rule-based evaluation
         res = {}
         for i, row in res_raw.iterrows():
-            res[row.image_name] = [{
-                'image_id': row.image_name,
-                'id': row.image_name,
+            res[row.image_id] = [{
+                'image_id': row.image_id,
+                'id': row.image_id,
                 'caption': row.generated_caption
             }]
 
@@ -172,7 +172,7 @@ except:
 
 
 # Local imports
-from scripts.image_captioning import ClipManager, ImageManager, CocoManager
+from scripts.image_captioning import ClipManager, ImageManager
 from scripts.utils import get_device, prepare_dir
 
 def load_gts_captions():
@@ -262,7 +262,7 @@ def evaluate_captions(data_to_analyse, gt_caption_emb, image_emb):
 
     for approach, data_df in data_to_analyse.items():
 
-        data_df['image_name'] = data_df['image_name'].map(lambda x: int(x.split('.')[0]))
+        data_df['image_id'] = data_df['image_name'].map(lambda x: int(x.split('.')[0]))
 
         # Instantiate the evaluator
         evaluator = SocraticEvalCap(gts, data_df)
@@ -287,11 +287,13 @@ def evaluate_captions(data_to_analyse, gt_caption_emb, image_emb):
             data_list.append({
                 'approach': approach,
                 'caption': evaluator.res[data_dic['image_id']][0]['caption'],
-                **data_dic,
+                **{k: v for k, v in data_dic.items()},
+                'SPICE': data_dic['SPICE']['All']['f'],
                 'gts_sims': evaluator.gts_sims[data_dic['image_id']],
                 'bert_p': float(evaluator.bert_scores['p'][i]),
                 'bert_r': float(evaluator.bert_scores['r'][i]),
                 'bert_f1': float(evaluator.bert_scores['f1'][i]),
+                'cossim': evaluator.res_cossim_map[data_dic['image_id']]
             })
     return pd.DataFrame(data_list)
 
@@ -324,7 +326,7 @@ data_to_analyse = {
 }
 
 analysis_df = evaluate_captions(data_to_analyse, gt_caption_emb, image_emb)
-analysis_df.to_csv('../data/outputs/caption_eval.csv', index=False)
+analysis_df.to_csv('../data/outputs/caption_eval2.csv', index=False)
 
 
 
