@@ -8,7 +8,6 @@ an improved baseline model where the template prompt filled by CLIP is processed
 # Set-up
 # If you haven't done so already, please activate the corresponding environment by running in the terminal: `conda env create -f environment.yml`. Then type `conda activate socratic`.
 
-
 # Package loading
 import os
 import numpy as np
@@ -25,8 +24,6 @@ from scripts.image_captioning import ClipManager, ImageManager, VocabManager, Fl
 from scripts.image_captioning import LmPromptGenerator as pg
 from scripts.image_captioning import CacheManager as cm
 from scripts.utils import get_device, prepare_dir, set_all_seeds, get_uuid_for_imgs
-
-# Set seeds for reproducible results
 
 
 # Set the seeds
@@ -205,6 +202,8 @@ for img_name, sorted_obj_texts in sorted_obj_dic.items():
         else:
             break
 
+
+# Generate captions
 num_captions = 50
 
 # Set LM params
@@ -231,6 +230,7 @@ for img_name in img_dic:
     caption_score_map[img_name] = dict(zip(sorted_captions, caption_scores))
 
 
+# Store the captions
 data_list = []
 for img_name in img_dic:
     generated_caption = sorted_caption_map[img_name][0]
