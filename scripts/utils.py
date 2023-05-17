@@ -2,6 +2,7 @@ import time
 import torch
 import numpy as np
 import os
+import uuid
 from transformers import set_seed
 
 def print_time_dec(func):
@@ -45,3 +46,14 @@ def set_all_seeds(num):
 
     # Seed for FLAN-T5
     set_seed(num)
+
+
+def get_uuid_for_imgs(img_list):
+    """
+    This function receives a list of string and creates a deterministic UUID identifier.
+
+    :param img_list: The list of images.
+    :return: A UUID string as a unique identifier for the image list.
+    """
+    img_list.sort()
+    return str(uuid.uuid3(uuid.NAMESPACE_DNS, ''.join(img_list)))

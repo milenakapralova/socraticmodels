@@ -18,16 +18,14 @@
 
 
 # Package loading
-import matplotlib.pyplot as plt
 import pandas as pd
-from transformers import set_seed
+import sys
+sys.path.append('..')
 import os
-import numpy as np
-import re
-import pickle
-import time
-import random
-import pandas as pd
+try:
+    os.chdir('scripts')
+except:
+    pass
 
 # Local imports
 from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, CocoManager
@@ -35,11 +33,7 @@ from scripts.image_captioning import LmPromptGenerator as pg
 from scripts.image_captioning import CacheManager as cm
 from scripts.utils import get_device, prepare_dir, set_all_seeds
 
-
 # ### Set seeds for reproducible results
-
-# In[2]:
-
 
 # Set the seeds
 set_all_seeds(42)
@@ -47,23 +41,12 @@ set_all_seeds(42)
 
 # ## Step 1: Downloading the MS COCO images and annotations
 
-# In[5]:
-
-
 # imgs_folder = 'imgs/val2017/'
 # annotation_file = '../annotations/annotations/captions_val2017.json'
 
 coco_manager = CocoManager()
-coco_manager.download_data()
-
 
 # ## Step 2: Generating the captions via the Socratic pipeline
-# 
-
-# ### Set the device and instantiate managers
-
-# In[7]:
-
 
 # Set the device to use
 device = get_device()
@@ -80,12 +63,6 @@ vocab_manager = VocabManager()
 # Instantiate the Flan T5 manager
 flan_manager = FlanT5Manager()
 
-
-# ### Compute place and object features
-
-# In[8]:
-
-
 # Calculate the place features
 place_emb = cm.get_place_emb(clip_manager, vocab_manager)
 
@@ -95,10 +72,8 @@ object_emb = cm.get_object_emb(clip_manager, vocab_manager)
 
 # ### Load images and compute image embedding
 
-# In[9]:
-
 # Randomly select images from the COCO dataset
-N = 100
+N = 5
 img_files = coco_manager.get_random_image_paths(num_images=N)
 
 # Create dictionaries to store the images features
@@ -118,8 +93,6 @@ for img_file in img_files:
 
 # #### Classify image type
 
-# In[10]:
-
 
 img_types = ['photo', 'cartoon', 'sketch', 'painting']
 img_types_emb = clip_manager.get_text_emb([f'This is a {t}.' for t in img_types])
@@ -132,9 +105,6 @@ for img_name, img_feat in img_feat_dic.items():
 
 
 # #### Classify number of people
-
-# In[ ]:
-
 
 ppl_texts_bool = ['no people', 'people']
 ppl_emb_bool = clip_manager.get_text_emb([f'There are {p} in this photo.' for p in ppl_texts_bool])
@@ -173,8 +143,6 @@ for img_name, img_feat in img_feat_dic.items():
 
 # #### Classify image object
 
-# In[ ]:
-
 
 obj_topk = 10
 
@@ -188,11 +156,7 @@ for img_name, img_feat in img_feat_dic.items():
     object_list = object_list[:-2]
     obj_list_dic[img_name] = object_list
 
-
 # #### Generate captions
-
-# In[ ]:
-
 
 num_captions = 50
 
@@ -219,12 +183,6 @@ for img_name in img_dic:
     sorted_caption_map[img_name] = sorted_captions
     caption_score_map[img_name] = dict(zip(sorted_captions, caption_scores))
 
-
-# ### Save the outputs
-
-# In[ ]:
-
-
 data_list = []
 for img_name in img_dic:
     generated_caption = sorted_caption_map[img_name][0]
@@ -233,13 +191,7 @@ for img_name in img_dic:
         'generated_caption': generated_caption,
         'cosine_similarity': caption_score_map[img_name][generated_caption]
     })
-file_path = '../data/outputs/baseline_outputs.csv'
+
+file_path = f'../data/outputs/baseline_caption.csv'
 prepare_dir(file_path)
 pd.DataFrame(data_list).to_csv(file_path, index=False)
-
-
-# In[ ]:
-
-
-
-

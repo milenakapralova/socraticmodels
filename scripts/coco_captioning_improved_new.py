@@ -15,18 +15,22 @@
 # ### Loading the required packages
 
 # In[4]:
+
+
 # Package loading
+from transformers import set_seed
 import os
 import numpy as np
+import random
 import pandas as pd
-try:
-    os.chdir('scripts')
-except:
-    pass
 
 # Local imports
 import sys
 sys.path.append('..')
+try:
+    os.chdir('scripts')
+except:
+    pass
 from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, CocoManager
 from scripts.image_captioning import LmPromptGenerator as pg
 from scripts.image_captioning import CacheManager as cm
@@ -130,6 +134,10 @@ place_topk = 3
 # Create a dictionary to store the number of people
 location_dic = {}
 for img_name, img_feat in img_feat_dic.items():
+    print(img_name)
+    print(img_feat[0])
+    print(vocab_manager.object_list[0])
+    print(object_emb[0][0])
     sorted_places, places_scores = clip_manager.get_nn_text(vocab_manager.place_list, place_emb, img_feat)
     location_dic[img_name] = sorted_places[0]
 
@@ -165,6 +173,7 @@ object_embeddings = dict(zip(vocab_manager.object_list, object_emb))
 
 # Create a dictionary to store the terms to include
 terms_to_include = {}
+best_matches = {}
 
 for img_name, sorted_obj_texts in sorted_obj_dic.items():
 
@@ -172,7 +181,7 @@ for img_name, sorted_obj_texts in sorted_obj_dic.items():
     embeddings_sorted = [object_embeddings[w] for w in sorted_obj_texts]
 
     # Create a list to store the best matches
-    best_matches = [sorted_obj_texts[0]]
+    best_matches[img_name] = [sorted_obj_texts[0]]
 
     # Create an array to store the embeddings of the best matches
     unique_embeddings = embeddings_sorted[0].reshape(-1, 1)
@@ -184,52 +193,7 @@ for img_name, sorted_obj_texts in sorted_obj_dic.items():
         # If object i is different enough to the current best matches, add it to the best matches
         if max_cos_sim < 0.7:
             unique_embeddings = np.concatenate([unique_embeddings, embeddings_sorted[i].reshape(-1, 1)], 1)
-            best_matches.append(sorted_obj_texts[i])
-
-    # Looping through the best matches, consider each terms separately by splitting the commas and spaces.
-    data_list = []
-    for terms in best_matches:
-        for term_split in terms.split(', '):
-            score = clip_manager.get_image_caption_score(term_split, img_feat_dic[img_name])
-            data_list.append({
-                'term': term_split, 'score': score, 'context': terms
-            })
-            term_split_split = term_split.split(' ')
-            if len(term_split_split) > 1:
-                for term_split2 in term_split_split:
-                    score = clip_manager.get_image_caption_score(term_split2, img_feat_dic[img_name])
-                    data_list.append({
-                        'term': term_split2, 'score': score, 'context': terms
-                    })
-
-    # Create a dataframe with the terms and scores and only keep the top term per context.
-    term_df = pd.DataFrame(data_list).sort_values('score', ascending=False).drop_duplicates('context').reset_index(drop=True)
-
-    # Prepare loop to find if additional terms can improve cosine similarity
-    best_terms_sorted = term_df['term'].tolist()
-    best_term = best_terms_sorted[0]
-    terms_to_check = list(set(best_terms_sorted[1:]))
-    best_cos_sim = term_df['score'].iloc[0]
-    terms_to_include[img_name] = [best_term]
-
-    # Perform a loop to find if additional terms can improve the cosine similarity
-    n_iteration = 5
-    for iteration in range(n_iteration):
-        data_list = []
-        for term_to_test in terms_to_check:
-            new_term = f"{best_term} {term_to_test}"
-            score = clip_manager.get_image_caption_score(new_term, img_feat_dic[img_name])
-            data_list.append({
-                'term': new_term, 'candidate': term_to_test, 'score': score
-            })
-        combined_df = pd.DataFrame(data_list).sort_values('score', ascending=False)
-        if combined_df['score'].iloc[0] > best_cos_sim + 0.01:
-            best_cos_sim = combined_df['score'].iloc[0]
-            terms_to_include[img_name].append(combined_df['candidate'].iloc[0])
-            terms_to_check = combined_df['candidate'].tolist()[1:]
-            best_term += f" {combined_df['candidate'].iloc[0]}"
-        else:
-            break
+            best_matches[img_name].append(sorted_obj_texts[i])
 
 num_captions = 50
 
@@ -243,9 +207,15 @@ caption_score_map = {}
 
 for img_name in img_dic:
     # Create the prompt for the language model
-    prompt_dic[img_name] = pg.create_improved_lm_prompt(
-        img_type_dic[img_name], num_people_dic[img_name], terms_to_include[img_name]
-    )
+    # prompt_dic[img_name] = pg.create_improved_lm_prompt(
+    #     img_type_dic[img_name], num_people_dic[img_name], terms_to_include[img_name]
+    # )
+
+    prompt_dic[img_name] = f'''I am an intelligent image captioning bot.
+        This image is a {img_type_dic[img_name]}. There {num_people_dic[img_name]}.
+        I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
+        I think there might be a {', '.join(best_matches[img_name][:5])} in this {img_type_dic[img_name]}.
+        A creative short caption I can generate to describe this image is:'''
 
     # Generate the caption using the language model
     caption_texts = flan_manager.generate_response(num_captions * [prompt_dic[img_name]], model_params)
@@ -268,9 +238,6 @@ for img_name in img_dic:
 file_path = f'../data/outputs/improved_caption.csv'
 prepare_dir(file_path)
 pd.DataFrame(data_list).to_csv(file_path, index=False)
-
-
-# In[ ]:
 
 
 

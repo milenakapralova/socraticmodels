@@ -1,14 +1,25 @@
+# Package loading
 from pycocoevalcap.tokenizer.ptbtokenizer import PTBTokenizer
 from pycocoevalcap.bleu.bleu import Bleu
 from pycocoevalcap.meteor.meteor import Meteor
 from pycocoevalcap.cider.cider import Cider
 from pycocoevalcap.spice.spice import Spice
 from pycocoevalcap.rouge.rouge import Rouge
-import pickle
 import numpy as np
 import itertools
 from bert_score import score
-import uuid
+import os
+import json
+import pickle
+import pandas as pd
+try:
+    os.chdir('scripts')
+except FileNotFoundError:
+    pass
+
+# Local imports
+from scripts.image_captioning import ClipManager, ImageManager
+from scripts.utils import get_device, prepare_dir, get_uuid_for_imgs
 
 
 class SocraticEvalCap:
@@ -131,7 +142,7 @@ class SocraticEvalCap:
         }
 
 
-def load_result_baseline():
+def load_caption_baseline():
     """
     Load the captions
     """
@@ -145,7 +156,7 @@ def load_result_baseline():
     return res_baseline
 
 
-def load_result_improved():
+def load_caption_improved():
     """
     Load the captions
     """
@@ -158,22 +169,6 @@ def load_result_improved():
         )
     return res_improved
 
-
-# Package loading
-import os
-import json
-import pickle
-import pandas as pd
-
-try:
-    os.chdir('scripts')
-except:
-    pass
-
-
-# Local imports
-from scripts.image_captioning import ClipManager, ImageManager
-from scripts.utils import get_device, prepare_dir
 
 def load_gts_captions():
     # Load the ground truth annotations
@@ -190,16 +185,6 @@ def load_gts_captions():
             gts[item['image_id']] = [{'image_id': item['image_id'], 'caption': item['caption']}]
 
     return gts
-
-
-def get_img_list_sorted(res_baseline):
-    img_list = res_baseline['image_name'].tolist()
-    img_list.sort()
-    return img_list
-
-
-def get_uuid_for_imgs(img_list):
-    return str(uuid.uuid3(uuid.NAMESPACE_DNS, ''.join(img_list)))
 
 
 def load_caption_emb(clip_manager, gts, img_list):
@@ -227,6 +212,7 @@ def load_caption_emb(clip_manager, gts, img_list):
             pickle.dump(gt_caption_emb, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     return gt_caption_emb
+
 
 def load_image_emb(clip_manager, img_list):
 
@@ -269,20 +255,14 @@ def evaluate_captions(data_to_analyse, gt_caption_emb, image_emb):
 
         # Rule-based metrics
         evaluator.evaluate_rulebased()
-        # for metric, score in evaluator.eval.items():
-        #     print(f'{metric}: {score:.3f}')
 
         # Embedding-based metric
         evaluator.evaluate_cossim(gt_caption_emb, image_emb)
-        # for source_caption, sim in evaluator.sims.items():
-        #     print(f'{source_caption}: avg = {sim[0]:.3f}, std = {sim[1]:.3f}')
 
         # Learned-based metric
         evaluator.evaluate_bert()
-        # for metric, score in evaluator.bert_scores.items():
-        #     print(f'{metric}: avg = {score[0]:.3f}, std = {score[1]:.3f}')
 
-        # Store results
+        # Store evaluations
         for i, data_dic in enumerate(evaluator.evalImgs):
             data_list.append({
                 'approach': approach,
@@ -298,15 +278,15 @@ def evaluate_captions(data_to_analyse, gt_caption_emb, image_emb):
     return pd.DataFrame(data_list)
 
 
-# Load the results
-res_baseline = load_result_baseline()
-res_improved = load_result_improved()
+# Load the generated captions
+caption_baseline = load_caption_baseline()
+caption_improved = load_caption_improved()
 
-# Load the captions
+# Load the ground truth captions
 gts = load_gts_captions()
 
-# Extract a sorted list of the images whose captions will be evaluated
-img_list = get_img_list_sorted(res_baseline)
+# Extract the list of images
+img_list = caption_baseline['image_name'].tolist()
 
 # Set the device to use
 device = get_device()
@@ -321,12 +301,9 @@ gt_caption_emb = load_caption_emb(clip_manager, gts, img_list)
 image_emb = load_image_emb(clip_manager, img_list)
 
 data_to_analyse = {
-    'baseline': res_baseline,
-    'improved': res_improved
+    'baseline': caption_baseline,
+    'improved': caption_improved
 }
 
 analysis_df = evaluate_captions(data_to_analyse, gt_caption_emb, image_emb)
-analysis_df.to_csv('../data/outputs/caption_eval2.csv', index=False)
-
-
-
+analysis_df.to_csv('../data/outputs/caption_eval.csv', index=False)
