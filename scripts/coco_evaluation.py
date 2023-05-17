@@ -147,7 +147,7 @@ def load_caption_baseline():
     Load the captions
     """
     try:
-        res_baseline = pd.read_csv(f'../data/outputs/baseline_outputs.csv')
+        res_baseline = pd.read_csv(f'../data/outputs/captions/baseline_caption.csv')
     except FileNotFoundError:
         raise FileNotFoundError(
             "baseline_outputs.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved.py "
@@ -161,7 +161,7 @@ def load_caption_improved():
     Load the captions
     """
     try:
-        res_improved = pd.read_csv(f'../data/outputs/improved_outputs.csv')
+        res_improved = pd.read_csv(f'../data/outputs/captions/improved_caption.csv')
     except FileNotFoundError:
         raise FileNotFoundError(
             "improved_outputs.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved.py "
@@ -277,6 +277,10 @@ def evaluate_captions(data_to_analyse, gt_caption_emb, image_emb):
             })
     return pd.DataFrame(data_list)
 
+def summarise_analysis(analysis_df):
+    analysis_df['gts_sims'] = analysis_df['gts_sims'].map(lambda x: np.mean(x))
+    numerical_cols = [c for c in analysis_df.columns if c not in ('approach', 'caption')]
+    return analysis_df.groupby('approach')[numerical_cols].mean().reset_index()
 
 # Load the generated captions
 caption_baseline = load_caption_baseline()
@@ -300,10 +304,19 @@ gt_caption_emb = load_caption_emb(clip_manager, gts, img_list)
 # Retrieve the embeddings of the images
 image_emb = load_image_emb(clip_manager, img_list)
 
+# Perform analysis
 data_to_analyse = {
     'baseline': caption_baseline,
     'improved': caption_improved
 }
-
 analysis_df = evaluate_captions(data_to_analyse, gt_caption_emb, image_emb)
-analysis_df.to_csv('../data/outputs/caption_eval.csv', index=False)
+analysis_df_gr = summarise_analysis(analysis_df)
+
+# Prepare output folder
+out_folder = '../data/outputs/analysis/'
+prepare_dir(out_folder)
+
+# Output analysis
+analysis_df.to_csv(out_folder + 'caption_eval3.csv', index=False)
+analysis_df_gr.to_csv(out_folder + 'caption_eval_summary.csv', index=False)
+

@@ -158,7 +158,7 @@ for img_name, img_feat in img_feat_dic.items():
 
 # #### Generate captions
 
-num_captions = 50
+num_captions = 20
 
 # Set LM params
 model_params = {'temperature': 0.9, 'max_length': 40, 'do_sample': True}
@@ -192,6 +192,6 @@ for img_name in img_dic:
         'cosine_similarity': caption_score_map[img_name][generated_caption]
     })
 
-file_path = f'../data/outputs/baseline_caption.csv'
+file_path = f'../data/outputs/captions/baseline_caption.csv'
 prepare_dir(file_path)
 pd.DataFrame(data_list).to_csv(file_path, index=False)

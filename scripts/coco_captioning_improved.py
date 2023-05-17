@@ -265,7 +265,7 @@ for img_name in img_dic:
         'generated_caption': generated_caption,
         'cosine_similarity': caption_score_map[img_name][generated_caption]
     })
-file_path = f'../data/outputs/improved_caption.csv'
+file_path = f'../data/outputs/captions/improved_caption.csv'
 prepare_dir(file_path)
 pd.DataFrame(data_list).to_csv(file_path, index=False)
 
