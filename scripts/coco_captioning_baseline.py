@@ -127,11 +127,7 @@ for img_name, img_feat in img_feat_dic.items():
     num_people_dic[img_name] = ppl_result
 
 
-# #### Classify image place
-
-# In[ ]:
-
-
+# Classify image place
 place_topk = 3
 
 # Create a dictionary to store the number of people
