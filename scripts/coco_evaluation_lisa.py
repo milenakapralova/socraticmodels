@@ -243,14 +243,14 @@ for approach in approaches:
     evaluator = SocraticEvalCap(gts, res_raw)
 
     # Rule-based metrics
-    evaluator.evaluate_rulebased()
-    for metric, score in evaluator.eval.items():
-        print(f'{metric}: {score:.3f}')
+    # evaluator.evaluate_rulebased()
+    # for metric, score in evaluator.eval.items():
+    #     print(f'{metric}: {score:.3f}')
 
     # Embedding-based metric
-    evaluator.evaluate_cossim()
-    for source_caption, sim in evaluator.sims.items():
-        print(f'{source_caption}: avg = {sim[0]:.3f}, std = {sim[1]:.3f}')
+    # evaluator.evaluate_cossim()
+    # for source_caption, sim in evaluator.sims.items():
+    #     print(f'{source_caption}: avg = {sim[0]:.3f}, std = {sim[1]:.3f}')
 
     # Learned-based metric
     evaluator.evaluate_bert()

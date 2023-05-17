@@ -27,27 +27,20 @@ import random
 # import pandas as pd
 
 # Local imports
-from image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, COCOManager
+from image_captioning import ClipManager, ImageManager, VocabManager, COCOManager
 from utils import get_device, prepare_dir
 
 
 # ## Step 1: Downloading the MS COCO images and annotations
 
-# In[3]:
-
-
-imgs_folder = '../data/images/val2017/'
+imgs_folder = '../data/coco/val2017/'
 
 coco_manager = COCOManager()
 coco_manager.download_data()
-
-
 # ## Step 2: Generating the captions via the Socratic pipeline
 # 
 
 # ### Set the device and instantiate managers
-
-# In[4]:
 
 
 # Set the device to use
@@ -68,6 +61,7 @@ vocab_manager = VocabManager()
 # In[5]:
 
 # Calculate the place features
+# print('calculating place feats...')
 file_path = '../data/cache/place_emb.npy'
 if not os.path.exists(file_path):
     prepare_dir(file_path)
@@ -79,6 +73,7 @@ else:
 
 
 # Calculate the object features
+# print('calculating object feats...')
 file_path = '../data/cache/object_emb.npy'
 if not os.path.exists(file_path):
     prepare_dir(file_path)
@@ -96,7 +91,8 @@ else:
 
 embed_imgs = {}
 
-for ix, file_name in enumerate(os.listdir(imgs_folder)): 
+for ix, file_name in enumerate(os.listdir(imgs_folder)):
+        print(file_name)
         # Getting image id
         file_name_strip = file_name.strip('.jpg')
         match = re.search('^0+', file_name_strip)

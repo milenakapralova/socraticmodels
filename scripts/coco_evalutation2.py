@@ -34,7 +34,7 @@
 # * `coco_captioning_baseline.ipynb`
 # * `coco_captioning_improved.ipynb`
 # 
-# Moreover, we assume you have pre-computed the image embeddings and have them stored and accessible from the current directory via `cache/embed_imgs.pickle`. If that is not the case, please run (either or both of) the following notebook:
+# Moreover, we assume you have pre-computed the image embeddings and have them stored and accessible from the current directory via `cache/image_emb.pickle`. If that is not the case, please run (either or both of) the following notebook:
 # * `coco_image_embedding.ipynb`
 
 # ### Set-up

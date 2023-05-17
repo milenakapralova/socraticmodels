@@ -16,7 +16,7 @@ from pycocoevalcap.rouge.rouge import Rouge
 import pickle
 import numpy as np
 import itertools
-from bert_score import score
+from bert_score import score as bert_func
 
 # Local imports
 from image_captioning import ClipManager
@@ -107,7 +107,7 @@ class SocraticEvalCap:
 
     def evaluate_cossim(self):
         # Get the clip embeddings for images and captions
-        with open('../data/cache/embed_imgs.pickle', 'rb') as handle:
+        with open('../data/cache/image_emb.pickle', 'rb') as handle:
             embed_imgs = pickle.load(handle)
 
         with open('../data/cache/embed_capt_gt.pickle', 'rb') as handle:
@@ -117,7 +117,6 @@ class SocraticEvalCap:
         for img_id in self.intersect_keys:
             # GT
             self.gts_sims[img_id] = (embed_capt_gt[img_id] @ embed_imgs[img_id].T).flatten().tolist()
-
         gts_list = list(itertools.chain(*self.gts_sims.values()))
 
         # Calculate aggregates
@@ -139,7 +138,7 @@ class SocraticEvalCap:
                 current_ref += ' ' + cpt_dict['caption']
             refs.append(current_ref)
 
-        P, R, F1 = score(cands, refs, lang="en", verbose=True)
+        P, R, F1 = bert_func(cands, refs, lang="en", verbose=True)
 
         self.bert_scores = {
             'P': [P.mean(), P.std()],
@@ -223,6 +222,8 @@ def compute_gts_caption_emb():
 
         with open(file_path, 'wb') as handle:
             pickle.dump(embed_capt_gt, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+compute_gts_caption_emb()
 
 
 # Evaluation
