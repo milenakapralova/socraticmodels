@@ -4,7 +4,17 @@ cosine similarity with the image. However, the caption generated did not perform
 Therefore, this pipeline idea was abandoned.
 """
 
-# In[4]:
+
+'''
+SocraticFlanT5 - Caption Generation (improved) | DL2 Project, May 2023
+This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
+and the corresponding ground-truth captions and generates captions based on the improved Socratic model pipeline:
+an improved baseline model where the template prompt filled by CLIP is processed before passing to FLAN-T5-xl
+
+'''
+# Set-up
+# If you haven't done so already, please activate the corresponding environment by running in the terminal: `conda env create -f environment.yml`. Then type `conda activate socratic`.
+
 # Package loading
 import os
 import numpy as np
@@ -22,19 +32,17 @@ from scripts.image_captioning import LmPromptGenerator as pg
 from scripts.image_captioning import CacheManager as cm
 from scripts.utils import get_device, prepare_dir, set_all_seeds, get_uuid_for_imgs
 
-# ### Set seeds for reproducible results
-
 
 # Set the seeds
 set_all_seeds(42)
 
 
-# ## Step 1: Downloading the MS COCO images and annotations
+# Step 1: Downloading the MS COCO images and annotations
 coco_manager = CocoManager()
 
-# ## Step 2: Generating the captions via the Socratic pipeline
+# Step 2: Generating the captions via the Socratic pipeline
 
-# ### Set the device and instantiate managers
+# Set the device and instantiate managers
 
 # Set the device to use
 device = get_device()
@@ -58,7 +66,7 @@ place_emb = cm.get_place_emb(clip_manager, vocab_manager)
 object_emb = cm.get_object_emb(clip_manager, vocab_manager)
 
 
-# ### Load images and compute image embedding
+# Load images and compute image embedding
 
 # Randomly select images from the COCO dataset
 N = 5
@@ -75,14 +83,10 @@ for img_file in img_files:
     img_feat_dic[img_file] = clip_manager.get_img_emb(img_dic[img_file]).flatten()
 
 
-# ### Zero-shot VLM (CLIP)
+# Zero-shot VLM (CLIP)
 # We zero-shot prompt CLIP to produce various inferences of an iage, such as image type or the number of people in an image:
 
-# #### Classify image type
-
-# In[10]:
-
-
+# Classify image type
 img_types = ['photo', 'cartoon', 'sketch', 'painting']
 img_types_emb = clip_manager.get_text_emb([f'This is a {t}.' for t in img_types])
 
@@ -93,11 +97,7 @@ for img_name, img_feat in img_feat_dic.items():
     img_type_dic[img_name] = sorted_img_types[0]
 
 
-# #### Classify number of people
-
-# In[ ]:
-
-
+# Classify number of people
 ppl_texts = [
     'are no people', 'is one person', 'are two people', 'are three people', 'are several people', 'are many people'
 ]
@@ -110,11 +110,7 @@ for img_name, img_feat in img_feat_dic.items():
     num_people_dic[img_name] = sorted_ppl_texts[0]
 
 
-# #### Classify image place
-
-# In[ ]:
-
-
+# Classify image place
 place_topk = 3
 
 # Create a dictionary to store the number of people
@@ -124,11 +120,7 @@ for img_name, img_feat in img_feat_dic.items():
     location_dic[img_name] = sorted_places[0]
 
 
-# #### Classify image object
-
-# In[ ]:
-
-
+# Classify image object
 obj_topk = 10
 
 # Create a dictionary to store the similarity of each object with the images
@@ -140,17 +132,13 @@ for img_name, img_feat in img_feat_dic.items():
     sorted_obj_dic[img_name] = sorted_obj_texts
 
 
-# #### Finding both relevant and different objects using cosine similarity
-
-# In[ ]:
-
+# Finding both relevant and different objects using cosine similarity
 
 # Create a dictionary that maps the objects to the cosine sim.
 object_embeddings = dict(zip(vocab_manager.object_list, object_emb))
 
 # Create a dictionary to store the terms to include
 terms_to_include = {}
-
 for img_name, sorted_obj_texts in sorted_obj_dic.items():
 
     # Create a list that contains the objects ordered by cosine sim.
@@ -216,6 +204,8 @@ for img_name, sorted_obj_texts in sorted_obj_dic.items():
         else:
             break
 
+
+# Generate captions
 num_captions = 50
 
 # Set LM params
@@ -242,6 +232,7 @@ for img_name in img_dic:
     caption_score_map[img_name] = dict(zip(sorted_captions, caption_scores))
 
 
+# Store the captions
 data_list = []
 for img_name in img_dic:
     generated_caption = sorted_caption_map[img_name][0]
@@ -253,10 +244,3 @@ for img_name in img_dic:
 file_path = f'../data/outputs/captions/improved_caption.csv'
 prepare_dir(file_path)
 pd.DataFrame(data_list).to_csv(file_path, index=False)
-
-
-# In[ ]:
-
-
-
-

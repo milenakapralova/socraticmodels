@@ -150,7 +150,7 @@ def load_caption_baseline():
         res_baseline = pd.read_csv(f'../data/outputs/captions/baseline_caption.csv')
     except FileNotFoundError:
         raise FileNotFoundError(
-            "baseline_outputs.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved_FAIL.py "
+            "baseline_caption.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved.py "
             "to obtain the generated captions before proceeding with the evaluation."
         )
     return res_baseline
@@ -164,7 +164,7 @@ def load_caption_improved():
         res_improved = pd.read_csv(f'../data/outputs/captions/improved_caption.csv')
     except FileNotFoundError:
         raise FileNotFoundError(
-            "improved_outputs.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved_FAIL.py "
+            "improved_caption.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved.py "
             "to obtain the generated captions before proceeding with the evaluation."
         )
     return res_improved

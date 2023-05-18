@@ -1,21 +1,10 @@
-#!/usr/bin/env python
-# coding: utf-8
+'''
+SocraticFlanT5 - Caption Generation (improved) | DL2 Project, May 2023
+This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
+and the corresponding ground-truth captions and generates captions based on the improved Socratic model pipeline:
+an improved baseline model where the template prompt filled by CLIP is processed before passing to FLAN-T5-xl
 
-# # SocraticFlanT5 - Caption Generation (improved) | DL2 Project, May 2023
-# ---
-# 
-# This notebook downloads the images from the validation split of the [MS COCO Dataset (2017 version)](https://cocodataset.org/#download) and the corresponding ground-truth captions and generates captions based on the Socratic model pipeline outlined below. In this notebook, we propose a new method to obtain image captions via the Socratic method:
-# * Improved prompting: an improved baseline model where the template prompt filled by CLIP is processed before passing to [FLAN-T5-xl](https://huggingface.co/docs/transformers/model_doc/flan-t5).
-# 
-# In other words, this is an improved pipeline that has for goal to generate similar or improved captions using open-source and free models.
-
-# ## Set-up
-# If you haven't done so already, please activate the corresponding environment by running in the terminal: `conda env create -f environment.yml`. Then type `conda activate socratic`.
-
-# ### Loading the required packages
-
-# In[4]:
-
+'''
 
 # Package loading
 from transformers import set_seed
