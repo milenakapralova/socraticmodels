@@ -10,7 +10,6 @@ an improved baseline model where the template prompt filled by CLIP is processed
 from transformers import set_seed
 import os
 import numpy as np
-import random
 import pandas as pd
 
 # Local imports
@@ -23,7 +22,7 @@ except:
 from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, CocoManager
 from scripts.image_captioning import LmPromptGenerator as pg
 from scripts.image_captioning import CacheManager as cm
-from scripts.utils import get_device, prepare_dir, set_all_seeds, get_uuid_for_imgs
+from scripts.utils import get_device, prepare_dir, set_all_seeds
 
 # ### Set seeds for reproducible results
 
@@ -148,9 +147,6 @@ for img_name, img_feat in img_feat_dic.items():
 
 
 # #### Finding both relevant and different objects using cosine similarity
-
-# In[ ]:
-
 
 # Create a dictionary that maps the objects to the cosine sim.
 object_embeddings = dict(zip(vocab_manager.object_list, object_emb))
