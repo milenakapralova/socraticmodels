@@ -24,7 +24,7 @@ from scripts.image_captioning import (
     ClipManager, ImageManager, VocabManager, FlanT5Manager, CocoManager, LmPromptGenerator
 )
 from scripts.image_captioning import CacheManager as cm
-from scripts.utils import get_device, prepare_dir, set_all_seeds
+from scripts.utils import get_device, prepare_dir, set_all_seeds, get_file_name_extension
 
 
 def main(
@@ -204,7 +204,10 @@ def main(
             'generated_caption': generated_caption,
             'cosine_similarity': caption_score_map[img_name][generated_caption]
         })
-    file_path = f'../data/outputs/captions/improved_caption.csv'
+    file_name_extension = get_file_name_extension(
+        lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy
+    )
+    file_path = f'../data/outputs/captions/improved_caption{file_name_extension}.csv'
     prepare_dir(file_path)
     pd.DataFrame(data_list).to_csv(file_path, index=False)
 

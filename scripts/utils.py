@@ -57,3 +57,19 @@ def get_uuid_for_imgs(img_list):
     """
     img_list.sort()
     return str(uuid.uuid3(uuid.NAMESPACE_DNS, ''.join(img_list)))
+
+
+def get_file_name_extension(lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy):
+    extension = ''
+    if lm_temperature != 0.9:
+        extension += f'_temp_{lm_temperature}'
+    if cos_sim_thres != 0.7:
+        extension += f'_costhres_{cos_sim_thres}'
+    if num_objects != 5:
+        extension += f'_nobj_{num_objects}'
+    if num_places != 2:
+        extension += f'_npl_{num_places}'
+    if caption_strategy != 'baseline':
+        extension += f'_strat_{caption_strategy}'
+    return extension
+

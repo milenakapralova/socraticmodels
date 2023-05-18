@@ -488,6 +488,7 @@ class LmPromptGenerator:
         else:
             return f'{", ".join(place_list[:-1])} or {place_list[-1]}'
 
+
 def num_params(model):
     """
     Calculates the number of parameters in the model.
