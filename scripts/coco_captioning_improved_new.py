@@ -75,8 +75,7 @@ object_emb = cm.get_object_emb(clip_manager, vocab_manager)
 # ### Load images and compute image embedding
 
 # Randomly select images from the COCO dataset
-N = 5
-img_files = coco_manager.get_random_image_paths(num_images=N)
+img_files = coco_manager.get_random_image_paths(num_images=5)
 
 # Create dictionaries to store the images features
 img_dic = {}
@@ -134,10 +133,6 @@ place_topk = 3
 # Create a dictionary to store the number of people
 location_dic = {}
 for img_name, img_feat in img_feat_dic.items():
-    print(img_name)
-    print(img_feat[0])
-    print(vocab_manager.object_list[0])
-    print(object_emb[0][0])
     sorted_places, places_scores = clip_manager.get_nn_text(vocab_manager.place_list, place_emb, img_feat)
     location_dic[img_name] = sorted_places[0]
 
@@ -215,6 +210,13 @@ for img_name in img_dic:
         This image is a {img_type_dic[img_name]}. There {num_people_dic[img_name]}.
         I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
         I think there might be a {', '.join(best_matches[img_name][:5])} in this {img_type_dic[img_name]}.
+        A creative short caption I can generate to describe this image is:'''
+
+
+    prompt_dic[img_name] = f'''I am a poetic writer that creates image captions.
+        This image is a {img_type_dic[img_name]}. There {num_people_dic[img_name]}.
+        This photo may have been taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
+        There might be a {', '.join(best_matches[img_name][:5])} in this {img_type_dic[img_name]}.
         A creative short caption I can generate to describe this image is:'''
 
     # Generate the caption using the language model

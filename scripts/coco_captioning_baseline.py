@@ -73,8 +73,7 @@ object_emb = cm.get_object_emb(clip_manager, vocab_manager)
 # ### Load images and compute image embedding
 
 # Randomly select images from the COCO dataset
-N = 5
-img_files = coco_manager.get_random_image_paths(num_images=N)
+img_files = coco_manager.get_random_image_paths(num_images=5)
 
 # Create dictionaries to store the images features
 img_dic = {}

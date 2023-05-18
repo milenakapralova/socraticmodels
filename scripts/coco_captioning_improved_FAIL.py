@@ -1,18 +1,8 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# # SocraticFlanT5 - Caption Generation (improved) | DL2 Project, May 2023
-# ---
-# 
-# This notebook downloads the images from the validation split of the [MS COCO Dataset (2017 version)](https://cocodataset.org/#download) and the corresponding ground-truth captions and generates captions based on the Socratic model pipeline outlined below. In this notebook, we propose a new method to obtain image captions via the Socratic method:
-# * Improved prompting: an improved baseline model where the template prompt filled by CLIP is processed before passing to [FLAN-T5-xl](https://huggingface.co/docs/transformers/model_doc/flan-t5).
-# 
-# In other words, this is an improved pipeline that has for goal to generate similar or improved captions using open-source and free models.
-
-# ## Set-up
-# If you haven't done so already, please activate the corresponding environment by running in the terminal: `conda env create -f environment.yml`. Then type `conda activate socratic`.
-
-# ### Loading the required packages
+"""
+This file contains the "failed" improved pipeline. This pipeline allows to create a prompt that maximises the CLIP
+cosine similarity with the image. However, the caption generated did not perform well when tested on the COCO dataset.
+Therefore, this pipeline idea was abandoned.
+"""
 
 # In[4]:
 # Package loading
@@ -72,7 +62,7 @@ object_emb = cm.get_object_emb(clip_manager, vocab_manager)
 
 # Randomly select images from the COCO dataset
 N = 5
-img_files = coco_manager.get_random_image_paths(num_images=N)
+img_files = coco_manager.get_random_image_paths(num_images=5)
 
 # Create dictionaries to store the images features
 img_dic = {}
@@ -145,11 +135,6 @@ obj_topk = 10
 object_score_map = {}
 sorted_obj_dic = {}
 for img_name, img_feat in img_feat_dic.items():
-    print(img_name)
-    print(img_feat[0])
-    print(vocab_manager.object_list[0])
-    print(object_emb[0][0])
-
     sorted_obj_texts, obj_scores = clip_manager.get_nn_text(vocab_manager.object_list, object_emb, img_feat)
     object_score_map[img_name] = dict(zip(sorted_obj_texts, obj_scores))
     sorted_obj_dic[img_name] = sorted_obj_texts
