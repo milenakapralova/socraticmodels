@@ -23,9 +23,10 @@ except:
 from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, CocoManager
 from scripts.image_captioning import LmPromptGenerator as pg
 from scripts.image_captioning import CacheManager as cm
-from scripts.utils import get_device, prepare_dir, set_all_seeds
+from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec
 
 
+@print_time_dec
 def main(num_images=50, num_captions=30, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, random_seed=42):
 
     """
