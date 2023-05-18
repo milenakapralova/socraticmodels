@@ -16,7 +16,6 @@ import zipfile
 import numpy as np
 
 
-
 class CocoManager:
     def __init__(self):
         """
@@ -56,31 +55,6 @@ class CocoManager:
 
     def get_random_image_paths(self, num_images):
         return np.random.choice(os.listdir(self.image_dir), size=num_images).tolist()
-
-
-
-
-        #     N = 100
-        # random_numbers = random.sample(range(len(os.listdir(imgs_folder))), N)
-        #
-        # # for ix, file_name in enumerate(os.listdir(imgs_folder)[:N]):
-        # for ix, file_name in enumerate(os.listdir(imgs_folder)):
-        #     # Consider only image files that are part of the random sample
-        #     if file_name.endswith(".jpg") and ix in random_numbers:
-        #         # Getting image id
-        #         file_name_strip = file_name.strip('.jpg')
-        #         match = re.search('^0+', file_name_strip)
-        #         sequence = match.group(0)
-        #         image_id = int(file_name_strip[len(sequence):])
-        #
-        #         img_path = os.path.join(imgs_folder, file_name)
-        #         img = image_manager.load_image(img_path)
-        #         img_emb = clip_manager.get_img_emb(img)
-        #         img_emb = img_emb.flatten()
-        #         img_paths[image_id] = file_name
-        #
-        #         img_dic[image_id] = img
-        #         img_feat_dic[image_id] = img_emb
 
 
 class ImageManager:
@@ -475,11 +449,18 @@ class Blip2Manager:
 
 class LmPromptGenerator:
     @staticmethod
-    def create_baseline_lm_prompt(img_type, ppl_result, sorted_places, object_list):
+    def create_baseline_lm_prompt(img_type, ppl_result, sorted_places, object_list_str):
         return f'''I am an intelligent image captioning bot.
         This image is a {img_type}. There {ppl_result}.
         I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
-        I think there might be a {object_list} in this {img_type}.
+        I think there might be a {object_list_str} in this {img_type}.
+        A creative short caption I can generate to describe this image is:'''
+
+    def create_baseline_lm_prompt2(self, img_type, ppl_result, sorted_places, object_list):
+        return f'''I am an intelligent image captioning bot.
+        This image is a {img_type}. There {ppl_result}.
+        I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
+        I think there might be a {', '.join(object_list)} in this {img_type}.
         A creative short caption I can generate to describe this image is:'''
 
     @staticmethod
@@ -496,6 +477,15 @@ class LmPromptGenerator:
         This photo may have been taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
         There might be a {', '.join(object_list)} in this {img_type}.
         A creative short caption I can generate to describe this image is:'''
+
+    @staticmethod
+    def get_places_string(place_list):
+        if len(place_list) == 1:
+            return place_list[0]
+        elif len(place_list) == 2:
+            return f'{place_list[0]} or {place_list[1]}'
+        else:
+            return f'{", ".join(place_list[:-1])} or {place_list[-1]}'
 
 def num_params(model):
     """
