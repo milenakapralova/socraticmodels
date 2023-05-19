@@ -27,7 +27,7 @@ from utils import get_device, prepare_dir, set_all_seeds, print_time_dec
 
 
 @print_time_dec
-def main(num_images=2, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, random_seed=42):
+def main(num_images=100, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, random_seed=42):
 
     """
     1. Set up
@@ -181,7 +181,7 @@ def main(num_images=2, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm
             'cosine_similarity': caption_score_map[img_name][generated_caption]
         })
 
-    file_path = f'data/outputs/captions/baseline_caption.csv'
+    file_path = f'data/outputs/captions/gpt_caption.csv'
     prepare_dir(file_path)
     pd.DataFrame(data_list).to_csv(file_path, index=False)
 

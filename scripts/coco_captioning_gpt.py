@@ -181,7 +181,7 @@ def main(num_images=50, num_captions=30, lm_temperature=0.9, lm_max_length=40, l
             'cosine_similarity': caption_score_map[img_name][generated_caption]
         })
 
-    file_path = f'../data/outputs/captions/baseline_caption.csv'
+    file_path = f'../data/outputs/captions/gpt_caption.csv'
     prepare_dir(file_path)
     pd.DataFrame(data_list).to_csv(file_path, index=False)
 
