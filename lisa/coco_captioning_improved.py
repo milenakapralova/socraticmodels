@@ -15,16 +15,16 @@ import pandas as pd
 # Local imports
 import sys
 
-sys.path.append('..')
-try:
-    os.chdir('scripts')
-except:
-    pass
-from scripts.image_captioning import (
+# sys.path.append('..')
+# try:
+#     os.chdir('scripts')
+# except:
+#     pass
+from image_captioning import (
     ClipManager, ImageManager, VocabManager, FlanT5Manager, CocoManager, LmPromptGenerator
 )
-from scripts.image_captioning import CacheManager as cm
-from scripts.utils import get_device, prepare_dir, set_all_seeds, get_file_name_extension, print_time_dec
+from image_captioning import CacheManager as cm
+from utils import get_device, prepare_dir, set_all_seeds, get_file_name_extension, print_time_dec
 
 
 @print_time_dec
@@ -208,7 +208,7 @@ def main(
     file_name_extension = get_file_name_extension(
         lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy
     )
-    file_path = f'../data/outputs/captions/improved_caption{file_name_extension}.csv'
+    file_path = f'data/outputs/captions/improved_caption{file_name_extension}.csv'
     prepare_dir(file_path)
     pd.DataFrame(data_list).to_csv(file_path, index=False)
 
@@ -227,23 +227,23 @@ if __name__ == '__main__':
     for t in (0.85, 0.95):
         temp_params = template_params.copy()
         temp_params['lm_temperature'] = t
-        main(**template_params)
+        main(**temp_params)
 
     # Cosine similarity threshold search
     for c in (0.6, 0.8):
         temp_params = template_params.copy()
         temp_params['cos_sim_thres'] = c
-        main(**template_params)
+        main(**temp_params)
 
     # Number of generated objects search
     for n in (4, 6, 7):
         temp_params = template_params.copy()
         temp_params['num_objects'] = n
-        main(**template_params)
+        main(**temp_params)
 
     # Number of places search
     for n in (1, 3):
         temp_params = template_params.copy()
         temp_params['num_places'] = n
-        main(**template_params)
+        main(**temp_params)
 
