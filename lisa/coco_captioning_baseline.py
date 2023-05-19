@@ -161,6 +161,8 @@ def main(num_images=50, num_captions=30, lm_temperature=0.9, lm_max_length=40, l
 
         # Generate the caption using the language model
         caption_texts = flan_manager.generate_response(num_captions * [prompt_dic[img_name]], model_params)
+        print(caption_texts)
+        print('t')
 
         # Zero-shot VLM: rank captions.
         caption_emb = clip_manager.get_text_emb(caption_texts)

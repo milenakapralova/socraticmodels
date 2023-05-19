@@ -14,6 +14,7 @@ import sys
 from utils import print_time_dec, prepare_dir
 import zipfile
 import numpy as np
+import openai
 
 
 class CocoManager:
@@ -420,6 +421,24 @@ class FlanT5Manager:
     def query(self, payload):
         response = requests.post(self.api_url, headers=self.headers, json=payload)
         return response.json()
+
+
+class GPTManager:
+    def __init__(self, version="text-davinci-002", openai_api_key='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'):
+        """
+           The GPT handles all the method related to the GPT-3 model.
+
+           :param version:
+           :param opeanai_api_key:
+       """
+        self.version = version
+        openai.api_key = openai_api_key
+
+    def generate_response(
+            self, prompt, max_tokens=64, temperature=0, stop=None
+    ):
+        response = openai.Completion.create(engine=self.version, prompt=prompt, max_tokens=max_tokens, temperature=temperature, stop=stop)
+        return response["choices"][0]["text"].strip()
 
 
 class Blip2Manager:
