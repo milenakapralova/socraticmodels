@@ -12,6 +12,7 @@ import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from utils import print_time_dec
 from dotenv import load_dotenv
+import json
 
 
 
@@ -264,6 +265,7 @@ class FlanT5Manager:
     def query(self, payload):
         response = requests.post(self.api_url, headers=self.headers, json=payload)
         return response.json()
+        # json.loads(response.content.decode("utf-8"))
 
 
 def num_params(model):
