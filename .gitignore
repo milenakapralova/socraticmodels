@@ -8,3 +8,5 @@
 /English-Morph.txt
 /fruit_bowl.jpg
 /__pycache__/
+.env
+data/
