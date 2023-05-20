@@ -1,8 +1,8 @@
 '''
-SocraticFlanT5 - Caption Generation (baseline) | DL2 Project, May 2023
+SocraticGPT-3 - Caption Generation | DL2 Project, May 2023
 This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
-and the corresponding ground-truth captions and generates captions based on the baseline Socratic model pipeline:
-a Socratic model based on the work by Zeng et al. (2022) where GPT-3 is replaced by FLAN-T5-xl.
+and the corresponding ground-truth captions and generates captions based on the original Socratic model pipeline:
+a Socratic model based on the work by Zeng et al. (2022) where GPT-3 is used as a LLM.
 
 Set-up
 If you haven't done so already, please activate the corresponding environment by running in the terminal:
@@ -12,22 +12,22 @@ If you haven't done so already, please activate the corresponding environment by
 # Package loading
 import pandas as pd
 import sys
-sys.path.append('..')
+# sys.path.append('..')
 import os
-try:
-    os.chdir('scripts')
-except:
-    pass
+# try:
+#     os.chdir('scripts')
+# except:
+#     pass
 
 # Local imports
-from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, CocoManager
-from scripts.image_captioning import LmPromptGenerator as pg
-from scripts.image_captioning import CacheManager as cm
-from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec
+from image_captioning import ClipManager, ImageManager, VocabManager, GPTManager, CocoManager
+from image_captioning import LmPromptGenerator as pg
+from image_captioning import CacheManager as cm
+from utils import get_device, prepare_dir, set_all_seeds, print_time_dec
 
 
 @print_time_dec
-def main(num_images=100, num_captions=50, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, random_seed=42):
+def main(num_images=100, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, random_seed=42):
 
     """
     1. Set up
@@ -54,7 +54,7 @@ def main(num_images=100, num_captions=50, lm_temperature=0.9, lm_max_length=40, 
     vocab_manager = VocabManager()
 
     # Instantiate the Flan T5 manager
-    flan_manager = FlanT5Manager()
+    gpt_manager = GPTManager()
 
     """
     2. Text embeddings
@@ -141,12 +141,11 @@ def main(num_images=100, num_captions=50, lm_temperature=0.9, lm_max_length=40, 
         obj_list_dic[img_name] = object_list
 
     """
-    5. Zero-shot LM (Flan-T5): We zero-shot prompt Flan-T5 to produce captions and use CLIP to rank the captions
+    5. Zero-shot LM (GPT-3): We zero-shot prompt GPT-3 to produce captions and use CLIP to rank the captions
     generated
     """
-
     # Set LM params
-    model_params = {'temperature': lm_temperature, 'max_length': lm_max_length, 'do_sample': lm_do_sample}
+    # model_params = {'temperature': lm_temperature, 'max_length': lm_max_length, 'do_sample': lm_do_sample}
 
     # Create dictionaries to store the outputs
     prompt_dic = {}
@@ -160,7 +159,7 @@ def main(num_images=100, num_captions=50, lm_temperature=0.9, lm_max_length=40, 
         )
 
         # Generate the caption using the language model
-        caption_texts = flan_manager.generate_response(num_captions * [prompt_dic[img_name]], model_params)
+        caption_texts = [gpt_manager.generate_response(prompt_dic[img_name]) for _ in range(num_captions)]
 
         # Zero-shot VLM: rank captions.
         caption_emb = clip_manager.get_text_emb(caption_texts)
@@ -182,7 +181,7 @@ def main(num_images=100, num_captions=50, lm_temperature=0.9, lm_max_length=40, 
             'cosine_similarity': caption_score_map[img_name][generated_caption]
         })
 
-    file_path = f'../data/outputs/captions/baseline_caption.csv'
+    file_path = f'data/outputs/captions/gpt_caption.csv'
     prepare_dir(file_path)
     pd.DataFrame(data_list).to_csv(file_path, index=False)
 

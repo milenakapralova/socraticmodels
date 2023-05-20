@@ -12,18 +12,18 @@ If you haven't done so already, please activate the corresponding environment by
 # Package loading
 import pandas as pd
 import sys
-sys.path.append('..')
+# sys.path.append('..')
 import os
-try:
-    os.chdir('scripts')
-except:
-    pass
+# try:
+#     os.chdir('scripts')
+# except:
+#     pass
 
 # Local imports
-from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, CocoManager
-from scripts.image_captioning import LmPromptGenerator as pg
-from scripts.image_captioning import CacheManager as cm
-from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec
+from image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, CocoManager
+from image_captioning import LmPromptGenerator as pg
+from image_captioning import CacheManager as cm
+from utils import get_device, prepare_dir, set_all_seeds, print_time_dec
 
 
 @print_time_dec
@@ -182,7 +182,7 @@ def main(num_images=100, num_captions=50, lm_temperature=0.9, lm_max_length=40, 
             'cosine_similarity': caption_score_map[img_name][generated_caption]
         })
 
-    file_path = f'../data/outputs/captions/baseline_caption.csv'
+    file_path = f'data/outputs/captions/baseline_caption.csv'
     prepare_dir(file_path)
     pd.DataFrame(data_list).to_csv(file_path, index=False)
 

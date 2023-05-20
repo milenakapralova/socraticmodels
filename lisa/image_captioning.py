@@ -10,8 +10,8 @@ from profanity_filter import ProfanityFilter
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration
 import sys
-sys.path.append('..')
-from scripts.utils import print_time_dec, prepare_dir
+# sys.path.append('..')
+from utils import print_time_dec, prepare_dir
 import zipfile
 import numpy as np
 import openai
@@ -22,10 +22,10 @@ class CocoManager:
         """
         dataset: dataset to download
         """
-        self.image_dir = '../data/coco/val2017/'
+        self.image_dir = 'data/coco/val2017/'
         self.dataset_to_download = {
-            '../data/coco/val2017': 'http://images.cocodataset.org/zips/val2017.zip',
-            '../data/coco/annotations': 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
+            'data/coco/val2017': 'http://images.cocodataset.org/zips/val2017.zip',
+            'data/coco/annotations': 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
         }
         self.download_data()
 
@@ -63,7 +63,7 @@ class ImageManager:
         """
         images_to_download: image_path to download_url map
         """
-        self.image_folder = '../data/images/example_images/'
+        self.image_folder = 'data/images/example_images/'
         self.images_to_download = {
             'demo_img.png': 'https://github.com/rmokady/CLIP_prefix_caption/raw/main/Images/COCO_val2014_000000165547.jpg',
             'monkey_with_gun.jpg': 'https://drive.google.com/uc?export=download&id=1iG0TJTZ0yRJEC8dA-WwS7X-GhuX8sfy8',
@@ -108,8 +108,8 @@ class ImageManager:
 
 class VocabManager:
     def __init__(self):
-        self.vocab_folder = '../data/vocabulary/'
-        self.cache_folder = '../data/cache/'
+        self.vocab_folder = 'data/vocabulary/'
+        self.cache_folder = 'data/cache/'
         self.files_to_download = {
             'categories_places365.txt': "https://raw.githubusercontent.com/zhoubolei/places_devkit/master/categories_pl"
             "aces365.txt",
@@ -297,7 +297,7 @@ class ClipManager:
 class CacheManager:
     @staticmethod
     def get_place_emb(clip_manager, vocab_manager):
-        place_emb_path = '../data/cache/place_emb.npy'
+        place_emb_path = 'data/cache/place_emb.npy'
         if not os.path.exists(place_emb_path):
             # Ensure the directory exists
             prepare_dir(place_emb_path)
@@ -311,7 +311,7 @@ class CacheManager:
 
     @staticmethod
     def get_object_emb(clip_manager, vocab_manager):
-        object_emb_path = '../data/cache/object_emb.npy'
+        object_emb_path = 'data/cache/object_emb.npy'
         if not os.path.exists(object_emb_path):
             # Ensure the directory exists
             prepare_dir(object_emb_path)
@@ -325,7 +325,7 @@ class CacheManager:
 
     @staticmethod
     def get_img_emb(clip_manager, vocab_manager):
-        object_emb_path = '../data/cache/object_emb.npy'
+        object_emb_path = 'data/cache/object_emb.npy'
         if not os.path.exists(object_emb_path):
             # Ensure the directory exists
             prepare_dir(object_emb_path)
@@ -425,16 +425,14 @@ class FlanT5Manager:
 
 class GPTManager:
     def __init__(self, version="text-davinci-002"):
-        """
+       """
            The GPT handles all the method related to the GPT-3 model.
 
            :param version:
        """
-        self.version = version
-
-        if 'OPENAI_API_KEY' in os.environ:
-            openai.api_key = os.environ['OPENAI_API_KEY']
-
+       self.version = version
+       if 'OPENAI_API_KEY' in os.environ:
+           openai.api_key = os.environ['OPENAI_API_KEY']
 
     def generate_response(
             self, prompt, max_tokens=64, temperature=0, stop=None
