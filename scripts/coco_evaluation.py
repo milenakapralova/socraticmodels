@@ -165,6 +165,7 @@ def load_all_captions():
     caption_dir = '../data/outputs/captions/'
     return {c.split('.')[0]: load_caption(caption_dir + c) for c in os.listdir(caption_dir)}
 
+
 def load_gts_captions():
     # Load the ground truth annotations
     annotation_file = '../data/coco/annotations/captions_val2017.json'
@@ -272,10 +273,43 @@ def evaluate_captions(data_to_analyse, gt_caption_emb, image_emb):
             })
     return pd.DataFrame(data_list)
 
+
+def perform_agg(analysis_df, numerical_cols, agg_type):
+    """
+    Performs a group by operation on analysis df.
+
+    :param analysis_df: The dataframe to group.
+    :param numerical_cols: The numerical columns to be grouped.
+    :param agg_type: The aggregation operator as a string.
+    :return:
+    """
+    # Define a function map for the aggregation
+    agg_func_map = {
+        'mean': np.mean,
+        'std': np.std,
+    }
+    # Calculate the ground truth column aggregation
+    gts_sims_map = {}
+    for approach in analysis_df['approach'].unique():
+        temp_df = analysis_df[analysis_df['approach'] == approach]
+        temp_gts = np.concatenate(temp_df['gts_sims'].map(lambda x: np.array(x)).tolist())
+        gts_sims_map[approach] = agg_func_map[agg_type](temp_gts)
+    # Aggregate the other columns
+    agg_df = analysis_df.groupby('approach').agg({c: agg_func_map[agg_type] for c in numerical_cols})
+    agg_df.columns = [f'{c}_{agg_type}' for c in agg_df.columns]
+    # Reset the index
+    agg_df = agg_df.reset_index()
+    # Set the ground truth value
+    agg_df[f'gts_sims_{agg_type}'] = agg_df['approach'].map(gts_sims_map)
+    # Return the dataframe
+    return agg_df.reset_index()
+
+
 def summarise_analysis(analysis_df):
-    analysis_df['gts_sims'] = analysis_df['gts_sims'].map(lambda x: np.mean(x))
-    numerical_cols = [c for c in analysis_df.columns if c not in ('approach', 'caption', 'image_id')]
-    return analysis_df.groupby('approach')[numerical_cols].mean().reset_index()
+    numerical_cols = [c for c in analysis_df.columns if c not in ('approach', 'caption', 'image_id', 'gts_sims')]
+    mean_df = perform_agg(analysis_df, numerical_cols, agg_type='mean')
+    std_df = perform_agg(analysis_df, numerical_cols, agg_type='std')
+    return pd.concat([mean_df, std_df], axis=1)
 
 # Load the generated captions
 caption_dic = load_all_captions()
