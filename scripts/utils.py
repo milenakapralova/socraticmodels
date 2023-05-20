@@ -62,9 +62,9 @@ def get_uuid_for_imgs(img_list):
 def get_file_name_extension(lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy):
     extension = ''
     if lm_temperature != 0.9:
-        extension += f'_temp_{lm_temperature}'
+        extension += f'_temp_{lm_temperature}'.replace('.', '')
     if cos_sim_thres != 0.7:
-        extension += f'_costhres_{cos_sim_thres}'
+        extension += f'_costhres_{cos_sim_thres}'.replace('.', '')
     if num_objects != 5:
         extension += f'_nobj_{num_objects}'
     if num_places != 2:

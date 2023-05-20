@@ -172,6 +172,7 @@ def main(
     # Set up the prompt generator map
     pg_map = {
         'baseline': prompt_generator.create_baseline_lm_prompt2,
+        'creative': prompt_generator.create_improved_lm_prompt_alt1,
     }
 
     # Set LM params
@@ -217,7 +218,7 @@ if __name__ == '__main__':
 
     template_params = dict(
         num_images=50, num_captions=30, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
-        num_objects=5, num_places=2, caption_strategy='baseline', random_seed=42
+        num_objects=5, num_places=2, caption_strategy='creative', random_seed=42
     )
 
     # Run with the base parameters
@@ -227,23 +228,23 @@ if __name__ == '__main__':
     for t in (0.85, 0.95):
         temp_params = template_params.copy()
         temp_params['lm_temperature'] = t
-        main(**template_params)
+        main(**temp_params)
 
     # Cosine similarity threshold search
     for c in (0.6, 0.8):
         temp_params = template_params.copy()
         temp_params['cos_sim_thres'] = c
-        main(**template_params)
+        main(**temp_params)
 
     # Cosine similarity threshold search
     for n in (4, 6, 7):
         temp_params = template_params.copy()
         temp_params['num_objects'] = n
-        main(**template_params)
+        main(**temp_params)
 
     # Cosine similarity threshold search
     for n in (1, 3):
         temp_params = template_params.copy()
         temp_params['num_places'] = n
-        main(**template_params)
+        main(**temp_params)
 
