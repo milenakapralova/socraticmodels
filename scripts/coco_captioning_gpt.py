@@ -27,7 +27,7 @@ from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec
 
 
 @print_time_dec
-def main(num_images=50, num_captions=30, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, random_seed=42):
+def main(num_images=100, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, random_seed=42):
 
     """
     1. Set up

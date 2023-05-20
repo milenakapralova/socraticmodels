@@ -425,15 +425,14 @@ class FlanT5Manager:
 
 class GPTManager:
     def __init__(self, version="text-davinci-002"):
-        """
+       """
            The GPT handles all the method related to the GPT-3 model.
 
            :param version:
        """
-        self.version = version
-
-        if 'OPENAI_API_KEY' in os.environ:
-            openai.api_key = os.environ['OPENAI_API_KEY']
+       self.version = version
+       if 'OPENAI_API_KEY' in os.environ:
+           openai.api_key = os.environ['OPENAI_API_KEY']
 
     def generate_response(
             self, prompt, max_tokens=64, temperature=0, stop=None
