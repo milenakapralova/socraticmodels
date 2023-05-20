@@ -277,6 +277,11 @@ def summarise_analysis(analysis_df):
     numerical_cols = [c for c in analysis_df.columns if c not in ('approach', 'caption', 'image_id')]
     return analysis_df.groupby('approach')[numerical_cols].mean().reset_index()
 
+def summarise_analysis_std(analysis_df):
+    analysis_df['gts_sims'] = analysis_df['gts_sims'].map(lambda x: np.mean(x))
+    numerical_cols = [c for c in analysis_df.columns if c not in ('approach', 'caption', 'image_id')]
+    return analysis_df.groupby('approach')[numerical_cols].std().reset_index()
+
 # Load the generated captions
 caption_dic = load_all_captions()
 
@@ -299,7 +304,10 @@ gt_caption_emb = load_caption_emb(clip_manager, gts, img_list)
 image_emb = load_image_emb(clip_manager, img_list)
 
 analysis_df = evaluate_captions(caption_dic, gt_caption_emb, image_emb)
+print('t')
 analysis_df_gr = summarise_analysis(analysis_df)
+print('t')
+analysis_df_gr_std = summarise_analysis_std(analysis_df)
 
 # Prepare output folder
 out_folder = '../data/outputs/analysis/'
@@ -308,4 +316,5 @@ prepare_dir(out_folder)
 # Output analysis
 analysis_df.to_csv(out_folder + 'caption_eval.csv', index=False)
 analysis_df_gr.to_csv(out_folder + 'caption_eval_summary.csv', index=False)
+analysis_df_gr_std.to_csv(out_folder + 'caption_eval_summary_std.csv', index=False)
 
