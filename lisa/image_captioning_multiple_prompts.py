@@ -479,7 +479,7 @@ class LmPromptGenerator:
         There might be a {', '.join(object_list)} in this {img_type}.
         A creative short caption I can generate to describe this image is:'''
 
-    def create_multiple_prompts(self, img_type, ppl_result, sorted_places, object_list):
+    def create_multiple_prompts(self, img_type, ppl_result, sorted_places, object_list, terms_to_include):
         prompt_list = []
         places_string = self.get_places_string(sorted_places)
         
