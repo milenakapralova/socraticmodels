@@ -490,11 +490,11 @@ class LmPromptGenerator:
         The context is: {', '.join(terms_to_include)}.
         A creative short caption I can generate to describe this image is:'''
 
-    @staticmethod
-    def create_improved_lm_prompt_alt1(img_type, ppl_result, sorted_places, object_list):
+    def create_improved_lm_prompt_alt1(self, img_type, ppl_result, sorted_places, object_list):
+        places_string = self.get_places_string(sorted_places)
         return f'''I am a poetic writer that creates image captions.
         This image is a {img_type}. There {ppl_result}.
-        This photo may have been taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
+        This photo may have been taken at a {places_string}.
         There might be a {', '.join(object_list)} in this {img_type}.
         A creative short caption I can generate to describe this image is:'''
 

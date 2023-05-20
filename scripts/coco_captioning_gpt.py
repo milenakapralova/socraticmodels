@@ -54,7 +54,7 @@ def main(num_images=100, num_captions=10, lm_temperature=0.9, lm_max_length=40, 
     vocab_manager = VocabManager()
 
     # Instantiate the Flan T5 manager
-    flan_manager = GPTManager()
+    gpt_manager = GPTManager()
 
     """
     2. Text embeddings

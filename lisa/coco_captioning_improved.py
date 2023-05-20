@@ -15,16 +15,16 @@ import pandas as pd
 # Local imports
 import sys
 
-# sys.path.append('..')
-# try:
-#     os.chdir('scripts')
-# except:
-#     pass
-from image_captioning import (
+sys.path.append('..')
+try:
+    os.chdir('scripts')
+except:
+    pass
+from scripts.image_captioning import (
     ClipManager, ImageManager, VocabManager, FlanT5Manager, CocoManager, LmPromptGenerator
 )
-from image_captioning import CacheManager as cm
-from utils import get_device, prepare_dir, set_all_seeds, get_file_name_extension, print_time_dec
+from scripts.image_captioning import CacheManager as cm
+from scripts.utils import get_device, prepare_dir, set_all_seeds, get_file_name_extension, print_time_dec
 
 
 @print_time_dec
@@ -172,6 +172,7 @@ def main(
     # Set up the prompt generator map
     pg_map = {
         'baseline': prompt_generator.create_baseline_lm_prompt2,
+        'creative': prompt_generator.create_improved_lm_prompt_alt1,
     }
 
     # Set LM params
@@ -208,7 +209,7 @@ def main(
     file_name_extension = get_file_name_extension(
         lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy
     )
-    file_path = f'data/outputs/captions/improved_caption{file_name_extension}.csv'
+    file_path = f'../data/outputs/captions/improved_caption{file_name_extension}.csv'
     prepare_dir(file_path)
     pd.DataFrame(data_list).to_csv(file_path, index=False)
 
@@ -217,7 +218,7 @@ if __name__ == '__main__':
 
     template_params = dict(
         num_images=50, num_captions=30, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
-        num_objects=5, num_places=2, caption_strategy='baseline', random_seed=42
+        num_objects=5, num_places=2, caption_strategy='creative', random_seed=42
     )
 
     # Run with the base parameters

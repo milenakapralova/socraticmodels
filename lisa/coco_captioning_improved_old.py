@@ -13,8 +13,8 @@ import numpy as np
 import pandas as pd
 
 # Local imports
-# import sys
-#
+import sys
+
 # sys.path.append('..')
 # try:
 #     os.chdir('scripts')
@@ -172,7 +172,6 @@ def main(
     # Set up the prompt generator map
     pg_map = {
         'baseline': prompt_generator.create_baseline_lm_prompt2,
-        'creative': prompt_generator.create_improved_lm_prompt_alt1,
     }
 
     # Set LM params
@@ -218,7 +217,7 @@ if __name__ == '__main__':
 
     template_params = dict(
         num_images=50, num_captions=30, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
-        num_objects=5, num_places=2, caption_strategy='creative', random_seed=42
+        num_objects=5, num_places=2, caption_strategy='baseline', random_seed=42
     )
 
     # Run with the base parameters
