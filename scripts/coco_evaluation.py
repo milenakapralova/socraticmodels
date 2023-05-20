@@ -142,33 +142,28 @@ class SocraticEvalCap:
         }
 
 
-def load_caption_baseline():
+def load_caption(caption):
     """
-    Load the captions
-    """
-    try:
-        res_baseline = pd.read_csv(f'../data/outputs/captions/baseline_caption.csv')
-    except FileNotFoundError:
-        raise FileNotFoundError(
-            "baseline_caption.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved.py "
-            "to obtain the generated captions before proceeding with the evaluation."
-        )
-    return res_baseline
-
-
-def load_caption_improved():
-    """
-    Load the captions
+    Loads a caption csv file from the csv name passed.
     """
     try:
-        res_improved = pd.read_csv(f'../data/outputs/captions/improved_caption.csv')
+        caption_df = pd.read_csv(caption)
     except FileNotFoundError:
         raise FileNotFoundError(
-            "improved_caption.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved.py "
+            f"{caption} not found! Please run the coco_captioning_baseline.py and coco_captioning_improved.py "
             "to obtain the generated captions before proceeding with the evaluation."
         )
-    return res_improved
+    return caption_df
 
+
+def load_all_captions():
+    """
+    Load all the captions in the '../data/outputs/captions/' directory.
+
+    :return: Dictionary mapping caption csv file names to the loaded dataframe.
+    """
+    caption_dir = '../data/outputs/captions/'
+    return {c.split('.')[0]: load_caption(caption_dir + c) for c in os.listdir(caption_dir)}
 
 def load_gts_captions():
     # Load the ground truth annotations
@@ -279,18 +274,17 @@ def evaluate_captions(data_to_analyse, gt_caption_emb, image_emb):
 
 def summarise_analysis(analysis_df):
     analysis_df['gts_sims'] = analysis_df['gts_sims'].map(lambda x: np.mean(x))
-    numerical_cols = [c for c in analysis_df.columns if c not in ('approach', 'caption')]
+    numerical_cols = [c for c in analysis_df.columns if c not in ('approach', 'caption', 'image_id')]
     return analysis_df.groupby('approach')[numerical_cols].mean().reset_index()
 
 # Load the generated captions
-caption_baseline = load_caption_baseline()
-caption_improved = load_caption_improved()
+caption_dic = load_all_captions()
 
 # Load the ground truth captions
 gts = load_gts_captions()
 
 # Extract the list of images
-img_list = caption_baseline['image_name'].tolist()
+img_list = caption_dic['baseline_caption']['image_name'].tolist()
 
 # Set the device to use
 device = get_device()
@@ -304,12 +298,7 @@ gt_caption_emb = load_caption_emb(clip_manager, gts, img_list)
 # Retrieve the embeddings of the images
 image_emb = load_image_emb(clip_manager, img_list)
 
-# Perform analysis
-data_to_analyse = {
-    'baseline': caption_baseline,
-    'improved': caption_improved
-}
-analysis_df = evaluate_captions(data_to_analyse, gt_caption_emb, image_emb)
+analysis_df = evaluate_captions(caption_dic, gt_caption_emb, image_emb)
 analysis_df_gr = summarise_analysis(analysis_df)
 
 # Prepare output folder
@@ -317,6 +306,6 @@ out_folder = '../data/outputs/analysis/'
 prepare_dir(out_folder)
 
 # Output analysis
-analysis_df.to_csv(out_folder + 'caption_eval3.csv', index=False)
+analysis_df.to_csv(out_folder + 'caption_eval.csv', index=False)
 analysis_df_gr.to_csv(out_folder + 'caption_eval_summary.csv', index=False)
 
