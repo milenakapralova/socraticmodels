@@ -274,7 +274,7 @@ def evaluate_captions(data_to_analyse, gt_caption_emb, image_emb):
 
 def summarise_analysis(analysis_df):
     analysis_df['gts_sims'] = analysis_df['gts_sims'].map(lambda x: np.mean(x))
-    numerical_cols = [c for c in analysis_df.columns if c not in ('approach', 'caption')]
+    numerical_cols = [c for c in analysis_df.columns if c not in ('approach', 'caption', 'image_id')]
     return analysis_df.groupby('approach')[numerical_cols].mean().reset_index()
 
 # Load the generated captions
