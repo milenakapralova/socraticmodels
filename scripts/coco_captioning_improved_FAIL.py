@@ -57,7 +57,7 @@ image_manager = ImageManager()
 vocab_manager = VocabManager()
 
 # Instantiate the Flan T5 manager
-flan_manager = LmManager(device=device)
+flan_manager = LmManager()
 
 # Calculate the place features
 place_emb = cm.get_place_emb(clip_manager, vocab_manager)

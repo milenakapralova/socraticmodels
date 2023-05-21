@@ -383,7 +383,7 @@ class CacheManager:
 
 
 class LmManager:
-    def __init__(self, version="google/flan-t5-xl", use_api=False, device='cpu'):
+    def __init__(self, version="google/flan-t5-xl", use_api=False):
         """
         The LMManager handles all the method related to the LM.
 
@@ -395,7 +395,6 @@ class LmManager:
         self.api_url = None
         self.headers = None
         self.use_api = use_api
-        self.device = device
         if use_api:
             load_dotenv()
             if 'HUGGINGFACE_API' in os.environ:
@@ -410,7 +409,6 @@ class LmManager:
         else:
             # Instantiate the model
             self.model = AutoModelForSeq2SeqLM.from_pretrained(version)
-            self.model.to(self.device)
             # Instantiate the tokenizer
             self.tokenizer = AutoTokenizer.from_pretrained(version)
 
@@ -438,7 +436,7 @@ class LmManager:
         """
         if model_params is None:
             model_params = {}
-        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+        inputs = self.tokenizer(prompt, return_tensors="pt")
         outputs = self.model.generate(**inputs, **model_params)
         decoded = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
         if len(decoded) == 1:
@@ -539,11 +537,11 @@ class LmPromptGenerator:
         The context is: {', '.join(terms_to_include)}.
         A creative short caption I can generate to describe this image is:'''
 
-    @staticmethod
-    def create_improved_lm_prompt_alt1(img_type, ppl_result, sorted_places, object_list):
+    def create_improved_lm_prompt_alt1(self, img_type, ppl_result, sorted_places, object_list):
+        places_string = self.get_places_string(sorted_places)
         return f'''I am a poetic writer that creates image captions.
         This image is a {img_type}. There {ppl_result}.
-        This photo may have been taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
+        This photo may have been taken at a {places_string}.
         There might be a {', '.join(object_list)} in this {img_type}.
         A creative short caption I can generate to describe this image is:'''
 

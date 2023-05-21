@@ -5,6 +5,12 @@ import torch
 from image_captioning import ClipManager, ImageManager, VocabManager, LmManager, print_clip_info
 from utils import get_device
 
+
+image_folder = '../data/coco/val2017/'
+img_file = '000000244750.jpg'
+img_path = image_folder + img_file
+verbose = True
+
 #
 # def main(img_path='demo_img.png', verbose=True):
 # Set the device to use
@@ -20,7 +26,7 @@ image_manager = ImageManager()
 vocab_manager = VocabManager()
 
 # Instantiate the Flan T5 manager
-flan_manager = LmManager(device=device)
+flan_manager = LmManager()
 
 # Print out clip model info
 print_clip_info(clip_manager.model)
@@ -32,6 +38,7 @@ place_emb = clip_manager.get_text_emb([f'Photo of a {p}.' for p in vocab_manager
 object_emb = clip_manager.get_text_emb([f'Photo of a {o}.' for o in vocab_manager.object_list])
 
 # Load image.
+
 img = image_manager.load_image(img_path)
 img_emb = clip_manager.get_img_emb(img)
 plt.imshow(img)
