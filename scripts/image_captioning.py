@@ -1,15 +1,18 @@
 # Package loading
+import sys
 import os
 from typing import List, Union
-
+import numpy as np
+import pandas as pd
 import requests
 import clip
 import cv2
+import zipfile
 from PIL import Image
+from dotenv import load_dotenv
 from profanity_filter import ProfanityFilter
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration
-import sys
 sys.path.append('..')
 from scripts.utils import print_time_dec, prepare_dir
 import zipfile
@@ -293,6 +296,47 @@ class ClipManager:
         text_emb = self.get_text_emb([caption])
         return float(text_emb @ img_emb.T)
 
+    def get_img_info(self, img, place_feats, obj_feats, vocab_manager, obj_topk=10):
+        # get image features
+        img_feats = self.get_img_emb(img)
+        # classify image type
+        img_types = ['photo', 'cartoon', 'sketch', 'painting']
+        img_types_feats = self.get_text_emb([f'This is a {t}.' for t in img_types])
+        sorted_img_types, img_type_scores = self.get_nn_text(img_types, img_types_feats, img_feats)
+        img_type = sorted_img_types[0]
+        print(f'This is a {img_type}.')
+
+        # classify number of people
+        ppl_texts = [
+            'are no people', 'is one person', 'are two people', 'are three people', 'are several people', 'are many people'
+        ]
+        ppl_feats = self.get_text_emb([f'There {p} in this photo.' for p in ppl_texts])
+        sorted_ppl_texts, ppl_scores = self.get_nn_text(ppl_texts, ppl_feats, img_feats)
+        num_people = sorted_ppl_texts[0]
+        print(f'There {num_people} in this photo.')
+
+        # classify places
+        sorted_places, places_scores = self.get_nn_text(vocab_manager.place_list, place_feats, img_feats)
+        location = sorted_places[0]
+        print(f'It was taken in {location}.')
+
+        # classify objects
+        sorted_obj_texts, obj_scores = self.get_nn_text(vocab_manager.object_list, obj_feats, img_feats)
+        object_list = ''
+        for i in range(obj_topk):
+            object_list += f'{sorted_obj_texts[i]}, '
+        object_list = object_list[:-2]
+        print(f'Top 10 objects in the image: \n{sorted_obj_texts[:10]}')
+
+        return img_type, num_people, location, sorted_obj_texts, object_list, obj_scores
+
+    def rank_gen_outputs(self, img, output_texts, k=5):
+        img_feats = self.get_img_emb(img)
+        output_feats = self.get_text_emb(output_texts)
+        sorted_outputs, output_scores = self.get_nn_text(output_texts, output_feats, img_feats)
+        output_score_map = dict(zip(sorted_outputs, output_scores))
+        for i, output in enumerate(sorted_outputs[:k]):
+            print(f'{i + 1}. {output} ({output_score_map[output]:.2f})')
 
 class CacheManager:
     @staticmethod
@@ -338,10 +382,10 @@ class CacheManager:
         return object_emb
 
 
-class FlanT5Manager:
-    def __init__(self, version="google/flan-t5-xl", use_api=False):
+class LmManager:
+    def __init__(self, version="google/flan-t5-xl", use_api=False, device='cpu'):
         """
-        The FlanT5Manager handles all the method related to the Flan T5 model.
+        The LMManager handles all the method related to the LM.
 
         :param version:
         :param use_api:
@@ -351,7 +395,9 @@ class FlanT5Manager:
         self.api_url = None
         self.headers = None
         self.use_api = use_api
+        self.device = device
         if use_api:
+            load_dotenv()
             if 'HUGGINGFACE_API' in os.environ:
                 hf_api = os.environ['HUGGINGFACE_API']
             else:
@@ -364,6 +410,7 @@ class FlanT5Manager:
         else:
             # Instantiate the model
             self.model = AutoModelForSeq2SeqLM.from_pretrained(version)
+            self.model.to(self.device)
             # Instantiate the tokenizer
             self.tokenizer = AutoTokenizer.from_pretrained(version)
 
@@ -391,7 +438,7 @@ class FlanT5Manager:
         """
         if model_params is None:
             model_params = {}
-        inputs = self.tokenizer(prompt, return_tensors="pt")
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         outputs = self.model.generate(**inputs, **model_params)
         decoded = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
         if len(decoded) == 1:
@@ -527,3 +574,130 @@ def print_clip_info(model):
     print("Input image resolution:", model.visual.input_resolution)
     print("Context length:", model.context_length)
     print("Vocab size:", model.vocab_size)
+
+
+def filter_objs(sorted_obj_texts, obj_scores, clip_manager, obj_topk=10, sim_threshold=0.7):
+    """
+    Filter unique objects in image using cosine similarity between object embeddings.
+
+
+    :param sorted_obj_texts: list of objects in image sorted by scores
+    :param obj_scores: clip scores for objects
+    :param clip_manager: clip manager
+    :param obj_topk: number of objects to keep
+    :param sim_threshold: cosine similarity threshold for similarity
+    :return: list of filtered objects
+    """
+    sorted_obj_indices = np.argsort(obj_scores)[::-1]
+
+    unique_obj_indices = []
+    # Rest of the code...
+
+    # Extract individual words
+    individual_obj_texts = []
+    for obj in sorted_obj_texts:
+        individual_obj_texts.extend([word.strip() for word in obj.split(',')])
+    # individual_obj_texts = extract_individual_words(sorted_obj_texts)
+    individual_obj_feats = clip_manager.get_text_emb([f'Photo of a {o}.' for o in individual_obj_texts])
+
+    for obj_idx in sorted_obj_indices:
+        if len(unique_obj_indices) == obj_topk:
+            break
+
+        is_similar = False
+        for unique_obj_idx in unique_obj_indices:
+            similarity = individual_obj_feats[obj_idx].dot(individual_obj_feats[unique_obj_idx])
+            if similarity >= sim_threshold:
+                is_similar = True
+                break
+
+        if not is_similar:
+            unique_obj_indices.append(obj_idx)
+
+    unique_objects = [individual_obj_texts[i] for i in unique_obj_indices]
+    object_list = ', '.join(unique_objects)
+    # print(f'objects in image: {object_list}')
+
+    return unique_objects
+
+
+def filter_objs_alt(obj_list, sorted_obj_texts, obj_feats, img_feats, clip_manager, obj_topk=10, sim_threshold=0.7):
+    """
+    Filter unique objects in image using cosine similarity between object embeddings.
+
+    :param obj_list: list of objects in vocabulary
+    :param sorted_obj_texts: list of objects in image sorted by scores
+    :param obj_feats: object embeddings
+    :param img_feats: image embeddings
+    :param clip_manager: clip manager
+    :param obj_topk: number of objects to keep
+    :param sim_threshold: cosine similarity threshold for similarity
+    :return: list of filtered objects
+    """
+    # Create a dictionary that maps the objects to the cosine sim.
+    obj_embeddings = dict(zip(obj_list, obj_feats))
+
+    # Create a list that contains the objects ordered by cosine sim.
+    embeddings_sorted = [obj_embeddings[w] for w in sorted_obj_texts]
+
+    # Create a list to store the best matches
+    best_matches = [sorted_obj_texts[0]]
+
+    # Create an array to store the embeddings of the best matches
+    unique_embeddings = embeddings_sorted[0].reshape(-1, 1)
+
+    # Loop through the 100 best objects by cosine similarity
+    for i in range(1, 100):
+        # Obtain the maximum cosine similarity when comparing object i to the embeddings of the current best matches
+        max_cos_sim = (unique_embeddings.T @ embeddings_sorted[i]).max()
+        # If object i is different enough to the current best matches, add it to the best matches
+        if max_cos_sim < sim_threshold:
+            unique_embeddings = np.concatenate([unique_embeddings, embeddings_sorted[i].reshape(-1, 1)], 1)
+            best_matches.append(sorted_obj_texts[i])
+
+    # Looping through the best matches, consider each terms separately by splitting the commas and spaces.
+    data_list = []
+    for terms in best_matches:
+        for term_split in terms.split(', '):
+            score = clip_manager.get_image_caption_score(term_split, img_feats)
+            data_list.append({
+                'term': term_split, 'score': score, 'context': terms
+            })
+            term_split_split = term_split.split(' ')
+            if len(term_split_split) > 1:
+                for term_split2 in term_split_split:
+                    score = clip_manager.get_image_caption_score(term_split2, img_feats)
+                    data_list.append({
+                        'term': term_split2, 'score': score, 'context': terms
+                    })
+
+    # Create a dataframe with the terms and scores and only keep the top term per context.
+    term_df = pd.DataFrame(data_list).sort_values('score', ascending=False).drop_duplicates('context').reset_index(drop=True)
+
+    # Prepare loop to find if additional terms can improve cosine similarity
+    best_terms_sorted = term_df['term'].tolist()
+    best_term = best_terms_sorted[0]
+    terms_to_check = list(set(best_terms_sorted[1:]))
+    best_cos_sim = term_df['score'].iloc[0]
+    filtered_objs = [best_term]
+
+    # Perform a loop to find if additional terms can improve the cosine similarity
+    n_iteration = 5
+    for iteration in range(n_iteration):
+        data_list = []
+        for term_to_test in terms_to_check:
+            new_term = f"{best_term} {term_to_test}"
+            score = clip_manager.get_image_caption_score(new_term, img_feats)
+            data_list.append({
+                'term': new_term, 'candidate': term_to_test, 'score': score
+            })
+        combined_df = pd.DataFrame(data_list).sort_values('score', ascending=False)
+        if combined_df['score'].iloc[0] > best_cos_sim:
+            best_cos_sim = combined_df['score'].iloc[0]
+            filtered_objs.append(combined_df['candidate'].iloc[0])
+            terms_to_check = combined_df['candidate'].tolist()[1:]
+            best_term += f" {combined_df['candidate'].iloc[0]}"
+        else:
+            break
+
+    return filtered_objs
