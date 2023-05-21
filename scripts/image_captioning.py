@@ -379,7 +379,7 @@ class CacheManager:
         return object_emb
 
 
-class LMManager:
+class LmManager:
     def __init__(self, version="google/flan-t5-xl", use_api=False, device='cpu'):
         """
         The LMManager handles all the method related to the LM.
@@ -394,16 +394,14 @@ class LMManager:
         self.use_api = use_api
         self.device = device
         if use_api:
-            # if 'HUGGINGFACE_API' in os.environ:
-                # hf_api = os.environ['HUGGINGFACE_API']
-            # else:
-                # raise ValueError(
             load_dotenv()
-            try:
-                hf_api = os.getenv('HUGGINGFACE_API')
-            except ValueError:
+            if 'HUGGINGFACE_API' in os.environ:
+                hf_api = os.environ['HUGGINGFACE_API']
+            else:
+                raise ValueError(
                     "You need to store your huggingface api key in your environment under "
                     "'HUGGINGFACE_API' if you want to use the API. Otherwise, set 'use_api' to False."
+                )
             self.api_url = f"https://api-inference.huggingface.co/models/{version}"
             self.headers = {"Authorization": f"Bearer {hf_api}"}
         else:
@@ -554,18 +552,19 @@ def print_clip_info(model):
     print("Context length:", model.context_length)
     print("Vocab size:", model.vocab_size)
 
+
 def filter_objs(sorted_obj_texts, obj_scores, clip_manager, obj_topk=10, sim_threshold=0.7):
-    '''
+    """
     Filter unique objects in image using cosine similarity between object embeddings.
-    Input:
-        sorted_obj_texts: list of objects in image sorted by scores
-        obj_scores: clip scores for objects
-        clip_manager: clip manager
-        obj_topk: number of objects to keep
-        sim_threshold: cosine similarity threshold for similarity
-    Output:
-        filtered_objs: list of filtered objects
-    '''
+
+
+    :param sorted_obj_texts: list of objects in image sorted by scores
+    :param obj_scores: clip scores for objects
+    :param clip_manager: clip manager
+    :param obj_topk: number of objects to keep
+    :param sim_threshold: cosine similarity threshold for similarity
+    :return: list of filtered objects
+    """
     sorted_obj_indices = np.argsort(obj_scores)[::-1]
 
     unique_obj_indices = []
@@ -598,85 +597,84 @@ def filter_objs(sorted_obj_texts, obj_scores, clip_manager, obj_topk=10, sim_thr
 
     return unique_objects
 
+
 def filter_objs_alt(obj_list, sorted_obj_texts, obj_feats, img_feats, clip_manager, obj_topk=10, sim_threshold=0.7):
-	'''
-	Filter unique objects in image using cosine similarity between object embeddings.
-	Input:
-		obj_list: list of objects in vocabulary
-		sorted_obj_texts: list of objects in image sorted by scores
-		obj_feats: object embeddings
-		img_feats: image embeddings
-		clip_manager: clip manager
-		obj_topk: number of objects to keep
-		sim_threshold: cosine similarity threshold for similarity
-	Output:
-		filtered_objs: list of filtered objects
-	'''
-	# Create a dictionary that maps the objects to the cosine sim.
-	obj_embeddings = dict(zip(obj_list, obj_feats))
+    """
+    Filter unique objects in image using cosine similarity between object embeddings.
+    
+    :param obj_list: list of objects in vocabulary
+    :param sorted_obj_texts: list of objects in image sorted by scores
+    :param obj_feats: object embeddings
+    :param img_feats: image embeddings
+    :param clip_manager: clip manager
+    :param obj_topk: number of objects to keep
+    :param sim_threshold: cosine similarity threshold for similarity
+    :return: list of filtered objects
+    """
+    # Create a dictionary that maps the objects to the cosine sim.
+    obj_embeddings = dict(zip(obj_list, obj_feats))
 
-	# Create a list that contains the objects ordered by cosine sim.
-	embeddings_sorted = [obj_embeddings[w] for w in sorted_obj_texts]
+    # Create a list that contains the objects ordered by cosine sim.
+    embeddings_sorted = [obj_embeddings[w] for w in sorted_obj_texts]
 
-	# Create a list to store the best matches
-	best_matches = [sorted_obj_texts[0]]
+    # Create a list to store the best matches
+    best_matches = [sorted_obj_texts[0]]
 
-	# Create an array to store the embeddings of the best matches
-	unique_embeddings = embeddings_sorted[0].reshape(-1, 1)
+    # Create an array to store the embeddings of the best matches
+    unique_embeddings = embeddings_sorted[0].reshape(-1, 1)
 
-	# Loop through the 100 best objects by cosine similarity
-	for i in range(1, 100):
-		# Obtain the maximum cosine similarity when comparing object i to the embeddings of the current best matches
-		max_cos_sim = (unique_embeddings.T @ embeddings_sorted[i]).max()
-		# If object i is different enough to the current best matches, add it to the best matches
-		if max_cos_sim < sim_threshold:
-			unique_embeddings = np.concatenate([unique_embeddings, embeddings_sorted[i].reshape(-1, 1)], 1)
-			best_matches.append(sorted_obj_texts[i])
+    # Loop through the 100 best objects by cosine similarity
+    for i in range(1, 100):
+        # Obtain the maximum cosine similarity when comparing object i to the embeddings of the current best matches
+        max_cos_sim = (unique_embeddings.T @ embeddings_sorted[i]).max()
+        # If object i is different enough to the current best matches, add it to the best matches
+        if max_cos_sim < sim_threshold:
+            unique_embeddings = np.concatenate([unique_embeddings, embeddings_sorted[i].reshape(-1, 1)], 1)
+            best_matches.append(sorted_obj_texts[i])
 
-	# Looping through the best matches, consider each terms separately by splitting the commas and spaces.
-	data_list = []
-	for terms in best_matches:
-		for term_split in terms.split(', '):
-			score = clip_manager.get_image_caption_score(term_split, img_feats)
-			data_list.append({
-				'term': term_split, 'score': score, 'context': terms
-			})
-			term_split_split = term_split.split(' ')
-			if len(term_split_split) > 1:
-				for term_split2 in term_split_split:
-					score = clip_manager.get_image_caption_score(term_split2, img_feats)
-					data_list.append({
-						'term': term_split2, 'score': score, 'context': terms
-					})
+    # Looping through the best matches, consider each terms separately by splitting the commas and spaces.
+    data_list = []
+    for terms in best_matches:
+        for term_split in terms.split(', '):
+            score = clip_manager.get_image_caption_score(term_split, img_feats)
+            data_list.append({
+                'term': term_split, 'score': score, 'context': terms
+            })
+            term_split_split = term_split.split(' ')
+            if len(term_split_split) > 1:
+                for term_split2 in term_split_split:
+                    score = clip_manager.get_image_caption_score(term_split2, img_feats)
+                    data_list.append({
+                        'term': term_split2, 'score': score, 'context': terms
+                    })
 
-	# Create a dataframe with the terms and scores and only keep the top term per context.
-	term_df = pd.DataFrame(data_list).sort_values('score', ascending=False).drop_duplicates('context').reset_index(drop=True)
+    # Create a dataframe with the terms and scores and only keep the top term per context.
+    term_df = pd.DataFrame(data_list).sort_values('score', ascending=False).drop_duplicates('context').reset_index(drop=True)
 
-	# Prepare loop to find if additional terms can improve cosine similarity
-	best_terms_sorted = term_df['term'].tolist()
-	best_term = best_terms_sorted[0]
-	terms_to_check = list(set(best_terms_sorted[1:]))
-	best_cos_sim = term_df['score'].iloc[0]
-	filtered_objs = [best_term]
+    # Prepare loop to find if additional terms can improve cosine similarity
+    best_terms_sorted = term_df['term'].tolist()
+    best_term = best_terms_sorted[0]
+    terms_to_check = list(set(best_terms_sorted[1:]))
+    best_cos_sim = term_df['score'].iloc[0]
+    filtered_objs = [best_term]
 
-	# Perform a loop to find if additional terms can improve the cosine similarity
-	n_iteration = 5
-	for iteration in range(n_iteration):
-		data_list = []
-		for term_to_test in terms_to_check:
-			new_term = f"{best_term} {term_to_test}"
-			score = clip_manager.get_image_caption_score(new_term, img_feats)
-			data_list.append({
-				'term': new_term, 'candidate': term_to_test, 'score': score
-			})
-		combined_df = pd.DataFrame(data_list).sort_values('score', ascending=False)
-		if combined_df['score'].iloc[0] > best_cos_sim:
-			best_cos_sim = combined_df['score'].iloc[0]
-			filtered_objs.append(combined_df['candidate'].iloc[0])
-			terms_to_check = combined_df['candidate'].tolist()[1:]
-			best_term += f" {combined_df['candidate'].iloc[0]}"
-		else:
-			break
-	# print(f'filtered terms: {filtered_objs}')
+    # Perform a loop to find if additional terms can improve the cosine similarity
+    n_iteration = 5
+    for iteration in range(n_iteration):
+        data_list = []
+        for term_to_test in terms_to_check:
+            new_term = f"{best_term} {term_to_test}"
+            score = clip_manager.get_image_caption_score(new_term, img_feats)
+            data_list.append({
+                'term': new_term, 'candidate': term_to_test, 'score': score
+            })
+        combined_df = pd.DataFrame(data_list).sort_values('score', ascending=False)
+        if combined_df['score'].iloc[0] > best_cos_sim:
+            best_cos_sim = combined_df['score'].iloc[0]
+            filtered_objs.append(combined_df['candidate'].iloc[0])
+            terms_to_check = combined_df['candidate'].tolist()[1:]
+            best_term += f" {combined_df['candidate'].iloc[0]}"
+        else:
+            break
 
-	return filtered_objs 
+    return filtered_objs
