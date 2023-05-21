@@ -9,7 +9,6 @@
 /fruit_bowl.jpg
 /__pycache__/
 .env
-data/
 /annotations/captions_train2014.json
 /annotations/captions_val2014.json
 /captions_val2014_fakecap_results.json
