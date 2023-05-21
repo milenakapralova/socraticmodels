@@ -21,7 +21,7 @@ try:
 except:
     pass
 from scripts.image_captioning import (
-    ClipManager, ImageManager, VocabManager, LMManager, CocoManager, LmPromptGenerator
+    ClipManager, ImageManager, VocabManager, LmManager, CocoManager, LmPromptGenerator
 )
 from scripts.image_captioning import CacheManager as cm
 from scripts.utils import get_device, prepare_dir, set_all_seeds, get_file_name_extension, print_time_dec
@@ -58,7 +58,7 @@ def main(
     vocab_manager = VocabManager()
 
     # Instantiate the Flan T5 manager
-    flan_manager = LMManager()
+    flan_manager = LmManager()
 
     # Instantiate the prompt generator
     prompt_generator = LmPromptGenerator()

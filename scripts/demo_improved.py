@@ -11,7 +11,7 @@ try:
     os.chdir('scripts')
 except:
     pass
-from scripts.image_captioning import ClipManager, ImageManager, VocabManager, LMManager, print_clip_info
+from scripts.image_captioning import ClipManager, ImageManager, VocabManager, LmManager, print_clip_info
 from scripts.image_captioning import CacheManager as cm
 from scripts.utils import get_device
 
@@ -39,7 +39,7 @@ image_manager = ImageManager()
 vocab_manager = VocabManager()
 
 # Instantiate the Flan T5 manager
-flan_manager = LMManager(version="google/flan-t5-xl", use_api=False)
+flan_manager = LmManager(version="google/flan-t5-xl", use_api=False)
 
 # Print out clip model info
 print_clip_info(clip_manager.model)
