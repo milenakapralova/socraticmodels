@@ -2,248 +2,181 @@
 SocraticFlanT5 - Caption Generation (improved) | DL2 Project, May 2023
 This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
 and the corresponding ground-truth captions and generates captions based on the improved Socratic model pipeline:
-an improved baseline model where the template prompt filled by CLIP is processed before passing to FLAN-T5-xl
+an improved baseline model where the template prompt filled by CLIP is processed before passing to the LM.
 
 '''
 
 # Package loading
-from transformers import set_seed
 import os
-import numpy as np
 import pandas as pd
-
-# Local imports
 import sys
-
 sys.path.append('..')
 try:
     os.chdir('scripts')
 except:
     pass
-from scripts.image_captioning import (
-    ClipManager, ImageManager, VocabManager, LmManager, CocoManager, LmPromptGenerator
-)
-from scripts.image_captioning import CacheManager as cm
-from scripts.utils import get_device, prepare_dir, set_all_seeds, get_file_name_extension, print_time_dec
+import argparse
+import json
+# Local imports
+import scripts.image_captioning as ic
+from scripts.utils import get_device, set_all_seeds, get_file_name_extension, print_time_dec
 
 
 @print_time_dec
-def main(
-        num_images=50, num_captions=30, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
-        num_objects=5, num_places=2, caption_strategy='baseline', random_seed=42
-):
-    """
-    1. Set up
-    """
-    # Set the seeds
-    set_all_seeds(random_seed)
+def main(args):
+    '''1. Set up'''
 
-    # ## Step 1: Downloading the MS COCO images and annotations
-    coco_manager = CocoManager()
+    # seed random seeds for reproducibility
+    set_all_seeds(args.rand_seed)
 
-    # ## Step 2: Generating the captions via the Socratic pipeline
+    # download the MS COCO images and annotations
+    coco_manager = ic.CocoManager()
 
-    # ### Set the device and instantiate managers
-
-    # Set the device to use
+    # set device
     device = get_device()
 
-    # Instantiate the clip manager
-    clip_manager = ClipManager(device)
+    # instantiate managers
+    clip_manager = ic.ClipManager(device)
+    image_manager = ic.ImageManager()
+    vocab_manager = ic.VocabManager()
+    lm_manager = ic.LmManager(version=args.lm_model, use_api=args.use_api, device=device)
+    cache_manager = ic.CacheManager()
+    
+    # instantiate prompt generator
+    prompt_generator = ic.LmPromptGenerator()
 
-    # Instantiate the image manager
-    image_manager = ImageManager()
+    # compute place & object features
+    place_emb = cache_manager.get_place_emb(clip_manager, vocab_manager)
+    object_emb = cache_manager.get_object_emb(clip_manager, vocab_manager)
 
-    # Instantiate the vocab manager
-    vocab_manager = VocabManager()
+    # randomly select images from the COCO dataset
+    img_files = coco_manager.get_random_image_paths(num_images=args.num_imgs)
 
-    # Instantiate the Flan T5 manager
-    flan_manager = LmManager(device=device)
-
-    # Instantiate the prompt generator
-    prompt_generator = LmPromptGenerator()
-
-    """
-    2. Text embeddings
-    """
-
-    # Calculate the place features
-    place_emb = cm.get_place_emb(clip_manager, vocab_manager)
-
-    # Calculate the object features
-    object_emb = cm.get_object_emb(clip_manager, vocab_manager)
-
-    """
-    3. Load images and compute image embedding
-    """
-
-    # Randomly select images from the COCO dataset
-    img_files = coco_manager.get_random_image_paths(num_images=num_images)
-
-    # Create dictionaries to store the images features
-    img_dic = {}
-    img_feat_dic = {}
-
+    # dict to store image info
+    img_dict = dict.fromkeys(['name', 'img', 'feats', 'img_type', 'num_ppl', 'location', 'objs'])
+    # list of dicts to store results
+    results = []    
+    
+    # set LM params
+    lm_params = {"min_new_tokens": args.min_new_tokens, "max_new_tokens": args.max_new_tokens, "length_penalty": args.length_penalty, "num_beams": args.num_beams, "no_repeat_ngram_size": args.no_repeat_ngram_size, "temperature": args.temperature,  "early_stopping": args.early_stopping, "do_sample": args.do_sample, "num_return_sequences": args.num_return_sequences}
+    
+    '''2. Generate captions for each image'''
+    
     for img_file in img_files:
-        # Load the image
-        img_dic[img_file] = image_manager.load_image(coco_manager.image_dir + img_file)
-        # Generate the CLIP image embedding
-        img_feat_dic[img_file] = clip_manager.get_img_emb(img_dic[img_file]).flatten()
+        # load  image
+        img_dict['name'] = img_file
+        img = image_manager.load_image(coco_manager.image_dir + img_file)
+        img_dict['img'] = img
+        # generate the CLIP image embedding
+        img_feats = clip_manager.get_img_emb(img_dict['img']).flatten()
+        img_dict['feats'] = img_feats
 
-    """
-    4. Zero-shot VLM (CLIP): We zero-shot prompt CLIP to produce various inferences of an image, such as image type or 
-    the number of people in the image.
-    """
-
-    # Classify image type
-    img_types = ['photo', 'cartoon', 'sketch', 'painting']
-    img_types_emb = clip_manager.get_text_emb([f'This is a {t}.' for t in img_types])
-
-    # Create a dictionary to store the image types
-    img_type_dic = {}
-    for img_name, img_feat in img_feat_dic.items():
-        sorted_img_types, img_type_scores = clip_manager.get_nn_text(img_types, img_types_emb, img_feat)
-        img_type_dic[img_name] = sorted_img_types[0]
-
-    # Classify number of people
-    ppl_texts = [
-        'are no people', 'is one person', 'are two people', 'are three people', 'are several people', 'are many people'
-    ]
-    ppl_emb = clip_manager.get_text_emb([f'There {p} in this photo.' for p in ppl_texts])
-
-    # Create a dictionary to store the number of people
-    num_people_dic = {}
-    for img_name, img_feat in img_feat_dic.items():
-        sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts, ppl_emb, img_feat)
-        num_people_dic[img_name] = sorted_ppl_texts[0]
-
-    # Classify image place
-
-    # Create a dictionary to store the location
-    location_dic = {}
-    for img_name, img_feat in img_feat_dic.items():
-        sorted_places, places_scores = clip_manager.get_nn_text(vocab_manager.place_list, place_emb, img_feat)
-        location_dic[img_name] = sorted_places
-
-    # Classify image object
-
-    # Create a dictionary to store the similarity of each object with the images
-    object_score_map = {}
-    sorted_obj_dic = {}
-    for img_name, img_feat in img_feat_dic.items():
-        sorted_obj_texts, obj_scores = clip_manager.get_nn_text(vocab_manager.object_list, object_emb, img_feat)
-        object_score_map[img_name] = dict(zip(sorted_obj_texts, obj_scores))
-        sorted_obj_dic[img_name] = sorted_obj_texts
-
-    """
-    5. Finding both relevant and different objects using cosine similarity
-    """
-
-    # Create a dictionary that maps the objects to the cosine sim.
-    object_embeddings = dict(zip(vocab_manager.object_list, object_emb))
-
-    # Create a dictionary to store the best object matches
-    best_matches = {}
-
-    for img_name, sorted_obj_texts in sorted_obj_dic.items():
-
-        # Create a list that contains the objects ordered by cosine sim.
-        embeddings_sorted = [object_embeddings[w] for w in sorted_obj_texts]
-
-        # Create a list to store the best matches
-        best_matches[img_name] = [sorted_obj_texts[0]]
-
-        # Create an array to store the embeddings of the best matches
-        unique_embeddings = embeddings_sorted[0].reshape(-1, 1)
-
-        # Loop through the 100 best objects by cosine similarity
-        for i in range(1, 100):
-            # Obtain the maximum cosine similarity when comparing object i to the embeddings of the current best matches
-            max_cos_sim = (unique_embeddings.T @ embeddings_sorted[i]).max()
-            # If object i is different enough to the current best matches, add it to the best matches
-            if max_cos_sim < cos_sim_thres:
-                unique_embeddings = np.concatenate([unique_embeddings, embeddings_sorted[i].reshape(-1, 1)], 1)
-                best_matches[img_name].append(sorted_obj_texts[i])
-
-    """
-    6. Zero-shot LM (Flan-T5): We zero-shot prompt Flan-T5 to produce captions and use CLIP to rank the captions
-    generated
-    """
-    # Set up the prompt generator map
-    pg_map = {
-        'baseline': prompt_generator.create_baseline_lm_prompt2,
-    }
-
-    # Set LM params
-    model_params = {'temperature': lm_temperature, 'max_length': lm_max_length, 'do_sample': lm_do_sample}
-
-    # Create dictionaries to store the outputs
-    prompt_dic = {}
-    sorted_caption_map = {}
-    caption_score_map = {}
-
-    for img_name in img_dic:
-        prompt_dic[img_name] = pg_map[caption_strategy](
-            img_type_dic[img_name], num_people_dic[img_name], location_dic[img_name][:num_places],
-            object_list=best_matches[img_name][:num_objects]
-        )
-
-        # Generate the caption using the language model
-        caption_texts = flan_manager.generate_response(num_captions * [prompt_dic[img_name]], model_params)
-
-        # Zero-shot VLM: rank captions.
-        caption_emb = clip_manager.get_text_emb(caption_texts)
-        sorted_captions, caption_scores = clip_manager.get_nn_text(caption_texts, caption_emb, img_feat_dic[img_name])
-        sorted_caption_map[img_name] = sorted_captions
-        caption_score_map[img_name] = dict(zip(sorted_captions, caption_scores))
-
-    data_list = []
-    for img_name in img_dic:
-        generated_caption = sorted_caption_map[img_name][0]
-        data_list.append({
-            'image_name': img_name,
-            'generated_caption': generated_caption,
-            'cosine_similarity': caption_score_map[img_name][generated_caption]
+        # get image info (type, # ppl, location, objects) using CLIP w/ zero-shot classification
+        img_type, num_ppl, locations, sorted_objs, topk_objs, obj_scores = clip_manager.get_img_info(img, place_emb, object_emb, vocab_manager, args.obj_topk)
+        img_dict['img_type'] = img_type
+        img_dict['num_ppl'] = num_ppl
+        img_dict['locations'] = locations
+        
+        # filter unique objects
+        filtered_objs = ic.filter_objs(sorted_objs, obj_scores, clip_manager, obj_topk=10, sim_threshold=args.sim_threshold)
+        # filtered_objs = ic.filter_objs_alt(vocab_manager.object_list, sorted_obj_texts, obj_feats, img_feats, clip_manager, obj_top=10)
+        print(f'filtered objects: {filtered_objs}')
+        img_dict['objs'] = filtered_objs
+        
+         # generate prompt
+        prompt = prompt_generator.create_baseline_lm_prompt(img_type, num_ppl, locations, topk_objs)
+        
+        # generate captions by propmting LM (zero-shot)
+        caption_texts = lm_manager.generate_response(args.num_captions * [prompt], lm_params)
+        
+        # rank captions by CLIP
+        sorted_captions = clip_manager.rank_gen_outputs(img_feats, caption_texts)
+        best_caption, best_score = next(iter(sorted_captions.items()))
+        
+        # store best caption & score
+        results.append({
+            'img_name': img_file,
+            'best_caption': best_caption,
+            'cos_sim': best_score,
         })
-    file_name_extension = get_file_name_extension(
-        lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy
-    )
-    file_path = f'../data/outputs/captions/improved_caption{file_name_extension}.csv'
-    prepare_dir(file_path)
-    pd.DataFrame(data_list).to_csv(file_path, index=False)
-
+    
+    # save results & params
+    res_dir = f'{args.output_dir}/{args.lm_model}/'
+    os.makedirs(res_dir, exist_ok=True)
+    res_path = f'{res_dir}/res_improved_{args.output_file_suffix}.csv'
+    # file_name_extension = get_file_name_extension(
+    #     args.temperature, args.sim_threshold, args.num_objects, args.num_places, args.caption_strategy
+    # )
+    # file_path = f'../data/outputs/captions/improved_caption{file_name_extension}.csv'
+    pd.DataFrame(results).to_csv(res_path, index=False)
+    args_path = f'{res_dir}/params_improved_{args.output_file_suffix}.json'
+    with open(args_path, 'w') as f:
+        json.dump(vars(args), f)
 
 if __name__ == '__main__':
+    # init argparser
+    parser = argparse.ArgumentParser(description='Image Captioning')
+    # add args
+    parser.add_argument('--output-dir', type=str, default='../outputs/captions', help='path to output directory')
+    parser.add_argument('--output-file-suffix',  type=str, default='1', help='suffix for output file')
+    parser.add_argument('--num-imgs', type=int, default=50, help='# imgs to sample randomly from MS-COCO')
+    parser.add_argument('--num-captions', type=int, default=10, help='# captions to generate per img')
+    parser.add_argument('--rand-seed', type=int, default=42, help='random seed for sampling & inference')
+    parser.add_argument('--obj-topk', type=int, default=10, help='# top objects detected to keep per img (CLIP)')
+    parser.add_argument('--places-topk', type=int, default=3, help='# top places detected to keep per img (CLIP)')
+    parser.add_argument('--sim-threshold', type=float, default=0.7, help='cosine similarity threshold for filtering objects')
+    parser.add_argument('--caption-strategy', type=str, default='baseline', help='caption strategy to use')
+    parser.add_argument('--param-search', type=bool, default=False, help='whether to run parameter search')
 
-    template_params = dict(
-        num_images=50, num_captions=30, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
-        num_objects=5, num_places=2, caption_strategy='baseline', random_seed=42
-    )
+    # LM params
+    parser.add_argument('--lm-model', type=str, default='google/flan-t5-xl', help='name of the LM model to use on HuggingFace')
+    parser.add_argument('--use-api', type=bool, default=False, help='whether to use the HuggingFace API for inference')
+    parser.add_argument('--temperature', type=float, default=0.9, help='temperature param for inference')
+    parser.add_argument('--max-length', type=int, default=None, help='max length (tokens) of generated caption')
+    parser.add_argument('--min-length', type=int, default=None, help='minimum length (tokens) of generated caption')
+    parser.add_argument('--max-new-tokens', type=int, default=20, help='max amount of new tokens to be generated, not including input tokens')
+    parser.add_argument('--min-new-tokens', type=int, default=None, help='minimum amount of new tokens to be generated, not including input tokens')
+    parser.add_argument('--num-beams', type=int, default=8, help='# beams for beam search')
+    parser.add_argument('--do-sample', type=bool, default=True, help='whether to use sampling during generation')
+    parser.add_argument('--num-return-sequences', type=int, default=1, help='# of sequences to generate')
+    parser.add_argument('--early-stopping', type=bool, default=True, help='whether to enable early stopping')
+    parser.add_argument('--no-repeat-ngram-size', type=int, default=3, help='size of n-grams to avoid repeating')
+    parser.add_argument('--length-penalty', type=float, default=2.0, help='length penalty applied during generation')
+
+    # call main with args
+    args = parser.parse_args()
+    print(f'args: {args}')
 
     # Run with the base parameters
-    main(**template_params)
+    main(args)
 
-    # Temperature search
-    for t in (0.85, 0.95):
-        temp_params = template_params.copy()
-        temp_params['lm_temperature'] = t
-        main(**template_params)
+    # parameter search
+    if args.param_search:
+        # Temperature search
+        for t in (0.85, 0.95):
+            temp_args = args
+            temp_args.temperature = t
+            temp_args.output_file_suffix = f'{args.output_file_suffix}_temp_{t}'
+            main(temp_args)
 
-    # Cosine similarity threshold search
-    for c in (0.6, 0.8):
-        temp_params = template_params.copy()
-        temp_params['cos_sim_thres'] = c
-        main(**template_params)
+        # Cosine similarity threshold search
+        for c in (0.6, 0.8):
+            temp_args = args
+            temp_args.sim_threshold = c
+            temp_args.output_file_suffix = f'{args.output_file_suffix}_sim_{c}'
+            main(temp_args)
 
-    # Cosine similarity threshold search
-    for n in (4, 6, 7):
-        temp_params = template_params.copy()
-        temp_params['num_objects'] = n
-        main(**template_params)
+        # Cosine similarity threshold search
+        for n in (4, 6, 7):
+            temp_args = args
+            temp_args.objs_topk = n
+            temp_args.output_file_suffix = f'{args.output_file_suffix}_objs_{n}'
+            main(temp_args)
 
-    # Cosine similarity threshold search
-    for n in (1, 3):
-        temp_params = template_params.copy()
-        temp_params['num_places'] = n
-        main(**template_params)
+        # Cosine similarity threshold search
+        for n in (1, 3):
+            temp_args = args
+            temp_args.places_topk = n
+            temp_args.output_file_suffix = f'{args.output_file_suffix}_places_{n}'
+            main(temp_args)
 
