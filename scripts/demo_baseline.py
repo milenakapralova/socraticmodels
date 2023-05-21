@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import torch
 
-from image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, print_clip_info
+from image_captioning import ClipManager, ImageManager, VocabManager, LMManager, print_clip_info
 from utils import get_device
 
 #
@@ -20,7 +20,7 @@ image_manager = ImageManager()
 vocab_manager = VocabManager()
 
 # Instantiate the Flan T5 manager
-flan_manager = FlanT5Manager()
+flan_manager = LMManager()
 
 # Print out clip model info
 print_clip_info(clip_manager.model)

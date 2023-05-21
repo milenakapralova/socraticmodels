@@ -10,7 +10,7 @@ import cv2
 import zipfile
 from PIL import Image
 from dotenv import load_dotenv
-# from profanity_filter import ProfanityFilter
+from profanity_filter import ProfanityFilter
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration
 sys.path.append('..')
@@ -200,22 +200,22 @@ class VocabManager:
             with open(file_path) as fid:
                 object_categories = fid.readlines()
             object_texts = []
-            # pf = ProfanityFilter()
+            pf = ProfanityFilter()
             for object_text in object_categories[1:]:
                 object_text = object_text.strip()
                 object_text = object_text.split('\t')[3]
-                # if remove_profanity:
-                #     safe_list = ''
-                #     for variant in object_text.split(','):
-                #         text = variant.strip()
-                #         if pf.is_clean(text):
-                #             safe_list += f'{text}, '
+                if remove_profanity:
+                    safe_list = ''
+                    for variant in object_text.split(','):
+                        text = variant.strip()
+                        if pf.is_clean(text):
+                            safe_list += f'{text}, '
 
-                #     safe_list = safe_list[:-2]
-                #     if len(safe_list) > 0:
-                #         object_texts.append(safe_list)
-                # else:
-                object_texts.append(object_text)
+                    safe_list = safe_list[:-2]
+                    if len(safe_list) > 0:
+                        object_texts.append(safe_list)
+                else:
+                    object_texts.append(object_text)
             # Cache the file for the next run
             with open(cache_path, 'w') as f:
                 for obj in object_texts:
@@ -382,7 +382,7 @@ class CacheManager:
 class LMManager:
     def __init__(self, version="google/flan-t5-xl", use_api=False, device='cpu'):
         """
-        The FlanT5Manager handles all the method related to the Flan T5 model.
+        The LMManager handles all the method related to the LM.
 
         :param version:
         :param use_api:
