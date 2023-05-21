@@ -5,6 +5,7 @@ import requests
 import clip
 import cv2
 import numpy as np
+import pandas as pd
 from PIL import Image
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
@@ -171,6 +172,48 @@ class ClipManager:
     def get_image_caption_score(self, caption, img_feats):
         text_feats = self.get_text_feats([caption])
         return float(text_feats @ img_feats.T)
+    
+    def get_img_info(self, img, place_feats, obj_feats, vocab_manager, place_topk=3, obj_topk=10):
+        # get image features
+        img_feats = self.get_img_feats(img)
+        # classify image type
+        img_types = ['photo', 'cartoon', 'sketch', 'painting']
+        img_types_feats = self.get_text_feats([f'This is a {t}.' for t in img_types])
+        sorted_img_types, img_type_scores = self.get_nn_text(img_types, img_types_feats, img_feats)
+        img_type = sorted_img_types[0]
+        print(f'This is a {img_type}.')
+
+        # classify number of people
+        ppl_texts = [
+            'are no people', 'is one person', 'are two people', 'are three people', 'are several people', 'are many people'
+        ]
+        ppl_feats = self.get_text_feats([f'There {p} in this photo.' for p in ppl_texts])
+        sorted_ppl_texts, ppl_scores = self.get_nn_text(ppl_texts, ppl_feats, img_feats)
+        num_people = sorted_ppl_texts[0]
+        print(f'There {num_people} in this photo.')
+
+        # classify places
+        sorted_places, places_scores = self.get_nn_text(vocab_manager.place_list, place_feats, img_feats)
+        location = sorted_places[0]
+        print(f'It was taken in {location}.')
+
+        # classify objects
+        sorted_obj_texts, obj_scores = self.get_nn_text(vocab_manager.object_list, obj_feats, img_feats)
+        object_list = ''
+        for i in range(obj_topk):
+            object_list += f'{sorted_obj_texts[i]}, '
+        object_list = object_list[:-2]
+        print(f'Top 10 objects in the image: \n{sorted_obj_texts[:10]}')
+        
+        return img_type, num_people, location, sorted_obj_texts, object_list, obj_scores
+    
+    def rank_gen_outputs(self, img, output_texts, k=5):
+        img_feats = self.get_img_feats(img)
+        output_feats = self.get_text_feats(output_texts)
+        sorted_outputs, output_scores = self.get_nn_text(output_texts, output_feats, img_feats)
+        output_score_map = dict(zip(sorted_outputs, output_scores))
+        for i, output in enumerate(sorted_outputs[:k]):
+            print(f'{i + 1}. {output} ({output_score_map[output]:.2f})')
     
 class LMManager:
     def __init__(self, version, use_api=False, device='cpu'):
