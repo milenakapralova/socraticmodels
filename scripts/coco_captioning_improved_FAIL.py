@@ -27,7 +27,7 @@ except:
 # Local imports
 import sys
 sys.path.append('..')
-from scripts.image_captioning import ClipManager, ImageManager, VocabManager, FlanT5Manager, CocoManager
+from scripts.image_captioning import ClipManager, ImageManager, VocabManager, LmManager, CocoManager
 from scripts.image_captioning import LmPromptGenerator as pg
 from scripts.image_captioning import CacheManager as cm
 from scripts.utils import get_device, prepare_dir, set_all_seeds, get_uuid_for_imgs
@@ -57,7 +57,7 @@ image_manager = ImageManager()
 vocab_manager = VocabManager()
 
 # Instantiate the Flan T5 manager
-flan_manager = FlanT5Manager()
+flan_manager = LmManager(device=device)
 
 # Calculate the place features
 place_emb = cm.get_place_emb(clip_manager, vocab_manager)
