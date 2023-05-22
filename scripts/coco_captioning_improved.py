@@ -47,13 +47,13 @@ def main(args):
 
     # compute place & object features
     place_emb = cache_manager.get_place_emb(clip_manager, vocab_manager)
-    object_emb = cache_manager.get_object_emb(clip_manager, vocab_manager)
+    obj_emb = cache_manager.get_object_emb(clip_manager, vocab_manager)
 
     # randomly select images from the COCO dataset
-    img_files = coco_manager.get_random_image_paths(num_images=args.num_imgs)
+    img_fnames = coco_manager.get_random_image_paths(num_images=args.num_imgs)
 
     # dict to store image info
-    img_dict = dict.fromkeys(['name', 'img', 'feats', 'img_type', 'num_ppl', 'location', 'objs'])
+    # img_dict = dict.fromkeys(['name', 'img', 'feats', 'img_type', 'num_ppl', 'location', 'objs'])
     # list of dicts to store results
     results = []    
     
@@ -62,33 +62,35 @@ def main(args):
     
     '''2. Generate captions for each image'''
     
-    for img_idx, img_file in enumerate(img_files):
-        print(f'generating captions for img {img_idx + 1}/{len(img_files)}...')
+    for img_idx, img_fname in enumerate(img_fnames):
+        print(f'generating captions for img {img_idx + 1}/{len(img_fnames)}...')
         # load  image
-        img_dict['name'] = img_file
-        img = image_manager.load_image(coco_manager.image_dir + img_file)
-        img_dict['img'] = img
+        img = image_manager.load_image(coco_manager.image_dir + img_fname)
         # generate the CLIP image embedding
-        img_feats = clip_manager.get_img_emb(img_dict['img']).flatten()
-        img_dict['feats'] = img_feats
+        img_feats = clip_manager.get_img_emb(img).flatten()
 
         # get image info (type, # ppl, location, objects) using CLIP w/ zero-shot classification
-        img_type, num_ppl, locations, sorted_objs, topk_objs, obj_scores = clip_manager.get_img_info(img, place_emb, object_emb, vocab_manager, args.obj_topk)
-        img_dict['img_type'] = img_type
-        img_dict['num_ppl'] = num_ppl
-        img_dict['locations'] = locations
+        img_type, num_ppl, locations, sorted_objs, topk_objs, obj_scores = clip_manager.get_img_info(img, place_emb, obj_emb, vocab_manager, args.obj_topk)
         
         # filter unique objects
-        filtered_objs = ic.filter_objs(sorted_objs, obj_scores, clip_manager, obj_topk=10, sim_threshold=args.sim_threshold)
-        # filtered_objs = ic.filter_objs_alt(vocab_manager.object_list, sorted_obj_texts, obj_feats, img_feats, clip_manager, obj_top=10)
+        if args.filter_mode == 'default':
+            filtered_objs = ic.filter_objs(sorted_objs, obj_scores, clip_manager, args.obj_topk, args.sim_threshold)
+        elif args.filter_mode == 'alt':
+            filtered_objs = ic.filter_objs_alt(vocab_manager.object_list, sorted_objs, obj_emb, img_feats, clip_manager, args.obj_topk, args.sim_threshold)
+        else:
+            raise ValueError(f'Invalid filter mode: {args.filter_mode}. Must be one of: default, alt')
         print(f'filtered objects: {filtered_objs}')
-        img_dict['objs'] = filtered_objs
         
         if args.verbose:
             print(f'img type: {img_type} | # ppl: {num_ppl} | locations: {locations}\n | objs: {filtered_objs}\n')
         
          # generate prompt
-        prompt = prompt_generator.create_baseline_lm_prompt(img_type, num_ppl, locations, filtered_objs)
+        if args.caption_mode == 'baseline':
+            prompt = prompt_generator.create_baseline_lm_prompt(img_type, num_ppl, locations, filtered_objs) 
+        elif args.caption_strategy == 'improved':
+            prompt = prompt_generator.create_improved_lm_prompt(img_type, num_ppl, locations, filtered_objs)
+        else:
+            raise ValueError(f'Invalid caption mode: {args.caption_mode}. Must be one of: baseline, improved')
         if args.verbose:
             print(f'prompt: {prompt}\n')
         
@@ -103,7 +105,7 @@ def main(args):
         
         # store best caption & score
         results.append({
-            'image_name': img_file,
+            'image_name': img_fname,
             'best_caption': best_caption,
             'cos_sim': best_score,
         })
@@ -113,13 +115,14 @@ def main(args):
     print('done')
     res_dir = f'{args.output_dir}/{args.lm_version}/'
     os.makedirs(res_dir, exist_ok=True)
-    res_path = f'{res_dir}/improved_captions{args.output_file_suffix}.csv'
-    # file_name_extension = get_file_name_extension(
-    #     args.temperature, args.sim_threshold, args.num_objects, args.num_places, args.caption_strategy
-    # )
-    # file_path = f'../data/outputs/captions/improved_caption{file_name_extension}.csv'
+    if args.output_file_suffix is None:
+        file_name_extension = get_file_name_extension(args.temperature, args.sim_threshold, args.obj_topk, args.places_topk, args.caption_mode)
+        res_path = f'{res_dir}/improved_captions{file_name_extension}.csv'
+        args_path = f'{res_dir}/improved_params{file_name_extension}.json'
+    else:
+        res_path = f'{res_dir}/improved_captions{args.output_file_suffix}.csv'
+        args_path = f'{res_dir}/improved_params{args.output_file_suffix}.json'
     pd.DataFrame(results).to_csv(res_path, index=False)
-    args_path = f'{res_dir}/improved_params{args.output_file_suffix}.json'
     with open(args_path, 'w') as f:
         json.dump(vars(args), f)
 
@@ -128,14 +131,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Image Captioning')
     # add args
     parser.add_argument('--output-dir', type=str, default='../outputs/captions', help='path to output directory')
-    parser.add_argument('--output-file-suffix',  type=str, default='', help='suffix for output file')
+    parser.add_argument('--output-file-suffix',  type=str, default=None, help='suffix for output file')
     parser.add_argument('--num-imgs', type=int, default=50, help='# imgs to sample randomly from MS-COCO')
     parser.add_argument('--num-captions', type=int, default=10, help='# captions to generate per img')
     parser.add_argument('--rand-seed', type=int, default=42, help='random seed for sampling & inference')
     parser.add_argument('--obj-topk', type=int, default=10, help='# top objects detected to keep per img (CLIP)')
     parser.add_argument('--places-topk', type=int, default=3, help='# top places detected to keep per img (CLIP)')
     parser.add_argument('--sim-threshold', type=float, default=0.7, help='cosine similarity threshold for filtering objects')
-    parser.add_argument('--caption-strategy', type=str, default='baseline', help='caption strategy to use')
+    parser.add_argument('--caption-mode', type=str, default='default', help='caption strategy to use')
+    parser.add_argument('--filter-mode', type=str, default='baseline', help='method to use for filtering objects')
     parser.add_argument('--param-search', type=bool, default=False, help='whether to run parameter search')
     parser.add_argument('--verbose', type=bool, default=False, help='whether to print intermediate results')
 

@@ -52,13 +52,11 @@ def main(args):
 
     # compute place & object features
     place_emb = cache_manager.get_place_emb(clip_manager, vocab_manager)
-    object_emb = cache_manager.get_object_emb(clip_manager, vocab_manager)
+    obj_emb = cache_manager.get_object_emb(clip_manager, vocab_manager)
 
     # randomly select images from the COCO dataset
-    img_files = coco_manager.get_random_image_paths(num_images=args.num_imgs)
+    img_fnames = coco_manager.get_random_image_paths(num_images=args.num_imgs)
 
-    # dict to store image info
-    img_dict = dict.fromkeys(['name', 'img', 'feats', 'img_type', 'num_ppl', 'location', 'objs'])
     # list of dicts to store results
     results = []    
     
@@ -67,22 +65,15 @@ def main(args):
     
     '''2. Generate captions for each image'''
     
-    for img_idx, img_file in enumerate(img_files):
-        print(f'generating captions for img {img_idx + 1}/{len(img_files)}...')
+    for img_idx, img_fname in enumerate(img_fnames):
+        print(f'generating captions for img {img_idx + 1}/{len(img_fnames)}...')
         # load  image
-        img_dict['name'] = img_file
-        img = image_manager.load_image(coco_manager.image_dir + img_file)
-        img_dict['img'] = img
+        img = image_manager.load_image(coco_manager.image_dir + img_fname)
         # generate the CLIP image embedding
-        img_feats = clip_manager.get_img_emb(img_dict['img']).flatten()
-        img_dict['feats'] = img_feats
-        
+        img_feats = clip_manager.get_img_emb(img).flatten()
+
         # get image info (type, # ppl, location, objects) using CLIP w/ zero-shot classification
-        img_type, num_ppl, locations, sorted_objs, topk_objs, _ = clip_manager.get_img_info(img, place_emb, object_emb, vocab_manager, args.obj_topk)
-        img_dict['img_type'] = img_type
-        img_dict['num_ppl'] = num_ppl
-        img_dict['locations'] = locations
-        img_dict['objs'] = topk_objs
+        img_type, num_ppl, locations, sorted_objs, topk_objs, obj_scores = clip_manager.get_img_info(img, place_emb, obj_emb, vocab_manager, args.obj_topk)
         if args.verbose:
             print(f'img type: {img_type} | # ppl: {num_ppl} | locations: {locations}\n | objs: {topk_objs}\n')
         # generate prompt
@@ -100,7 +91,7 @@ def main(args):
         
         # store best caption & score
         results.append({
-            'image_name': img_file,
+            'image_name': img_fname,
             'best_caption': best_caption,
             'cos_sim': best_score,
         })
@@ -147,5 +138,5 @@ if __name__ == '__main__':
 
     # call main with args
     args = parser.parse_args()
-    print(f'args: {args}')
+    print(args)
     main(args)
