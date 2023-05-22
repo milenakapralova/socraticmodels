@@ -9,9 +9,12 @@ import numpy as np
 import itertools
 from bert_score import score
 import os
+import sys
 import json
 import pickle
 import pandas as pd
+import argparse
+sys.path.append('..')
 try:
     os.chdir('scripts')
 except FileNotFoundError:
@@ -34,9 +37,9 @@ class SocraticEvalCap:
         self.eval = {}
         self.gts_sims = {}
         self.res_sims = {}
-        self.imgToEval = {}
+        self.img_to_eval = {}
         self.res_cossim = res_raw
-        self.res_cossim_map = dict(zip(res_raw['image_id'], res_raw['cosine_similarity']))
+        self.res_cossim_map = dict(zip(res_raw['image_id'], res_raw['cos_sim']))
 
         #Make res a suitable format for the rule-based evaluation
         res = {}
@@ -44,7 +47,7 @@ class SocraticEvalCap:
             res[row.image_id] = [{
                 'image_id': row.image_id,
                 'id': row.image_id,
-                'caption': row.generated_caption
+                'caption': row.best_caption
             }]
 
         self.intersect_keys = set(gts.keys()) & set(res.keys())
@@ -83,27 +86,27 @@ class SocraticEvalCap:
             score, scores = scorer.compute_score(gts_tok, res_tok)
             if type(method) == list:
                 for sc, scs, m in zip(score, scores, method):
-                    self.setEval(sc, m)
-                    self.setImgToEvalImgs(scs, gts_tok.keys(), m)
+                    self.set_eval(sc, m)
+                    self.set_imgs_to_eval(scs, gts_tok.keys(), m)
                     print("%s: %0.3f"%(m, sc))
             else:
-                self.setEval(score, method)
-                self.setImgToEvalImgs(scores, gts_tok.keys(), method)
+                self.set_eval(score, method)
+                self.set_imgs_to_eval(scores, gts_tok.keys(), method)
                 print("%s: %0.3f"%(method, score))
-        self.setEvalImgs()
+        self.set_eval_imgs()
 
-    def setEval(self, score, method):
+    def set_eval(self, score, method):
         self.eval[method] = score
 
-    def setImgToEvalImgs(self, scores, imgIds, method):
+    def set_imgs_to_eval(self, scores, imgIds, method):
         for imgId, score in zip(imgIds, scores):
-            if not imgId in self.imgToEval:
-                self.imgToEval[imgId] = {}
-                self.imgToEval[imgId]["image_id"] = imgId
-            self.imgToEval[imgId][method] = score
+            if not imgId in self.img_to_eval:
+                self.img_to_eval[imgId] = {}
+                self.img_to_eval[imgId]["image_id"] = imgId
+            self.img_to_eval[imgId][method] = score
 
-    def setEvalImgs(self):
-        self.evalImgs = [eval for imgId, eval in self.imgToEval.items()]
+    def set_eval_imgs(self):
+        self.evalImgs = [eval for imgId, eval in self.img_to_eval.items()]
 
     def evaluate_cossim(self, gt_caption_emb, image_emb):
 
@@ -117,7 +120,7 @@ class SocraticEvalCap:
         # Calculate aggregates
         self.sims = {
             'gts': [np.mean(gts_list), np.std(gts_list)],
-            'res': [self.res_cossim['cosine_similarity'].mean(), self.res_cossim['cosine_similarity'].std()]
+            'res': [self.res_cossim['cos_sim'].mean(), self.res_cossim['cos_sim'].std()]
         }
 
     def evaluate_bert(self):
@@ -142,39 +145,32 @@ class SocraticEvalCap:
         }
 
 
-def load_caption_baseline():
+def load_caption_baseline(captions_path):
     """
     Load the captions
     """
     try:
-        res_baseline = pd.read_csv(f'../data/outputs/captions/baseline_caption.csv')
+        res_baseline = pd.read_csv(captions_path)
     except FileNotFoundError:
-        raise FileNotFoundError(
-            "baseline_caption.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved.py "
-            "to obtain the generated captions before proceeding with the evaluation."
-        )
+            "Baseline captions csv not found! Make sure you pass the correct path as an arg. Please run coco_captioning_baseline.py to obtain the generated captions before proceeding with the evaluation."
     return res_baseline
 
 
-def load_caption_improved():
+def load_caption_improved(captions_path):
     """
     Load the captions
     """
     try:
-        res_improved = pd.read_csv(f'../data/outputs/captions/improved_caption.csv')
+        res_improved = pd.read_csv(captions_path)
     except FileNotFoundError:
-        raise FileNotFoundError(
-            "improved_caption.csv not found! Please run the coco_captioning_baseline.py or coco_captioning_improved.py "
-            "to obtain the generated captions before proceeding with the evaluation."
-        )
+            "Improved captions csv not found! Make sure you pass the correct path as an arg. Please run coco_captioning_improved.py to obtain the generated captions before proceeding with the evaluation."
     return res_improved
 
 
-def load_gts_captions():
+def load_gts_captions(annot_path):
     # Load the ground truth annotations
-    annotation_file = '../data/coco/annotations/captions_val2017.json'
 
-    with open(annotation_file, 'r') as f:
+    with open(annot_path, 'r') as f:
         lines = json.load(f)['annotations']
 
     gts = {}
@@ -225,15 +221,12 @@ def load_image_emb(clip_manager, img_list):
         # Ensure the directory exists
         prepare_dir(emb_pickle_path)
 
-        # Set the image folder path
-        img_folder = '../data/coco/val2017/'
-
         # Instantiate the image manager
         image_manager = ImageManager()
 
         image_emb = {}
         for img_name in img_list:
-            img = image_manager.load_image(img_folder + img_name)
+            img = image_manager.load_image(f'{args.img_dir}/{img_name}')
             img_emb = clip_manager.get_img_emb(img)
             image_emb[int(img_name.split('.')[0])] = img_emb.flatten()
 
@@ -242,7 +235,7 @@ def load_image_emb(clip_manager, img_list):
     return image_emb
 
 
-def evaluate_captions(data_to_analyse, gt_caption_emb, image_emb):
+def evaluate_captions(data_to_analyse, gts, gt_caption_emb, image_emb):
     # Create a data list to store the outputs
     data_list = []
 
@@ -282,41 +275,56 @@ def summarise_analysis(analysis_df):
     numerical_cols = [c for c in analysis_df.columns if c not in ('approach', 'caption')]
     return analysis_df.groupby('approach')[numerical_cols].mean().reset_index()
 
-# Load the generated captions
-caption_baseline = load_caption_baseline()
-caption_improved = load_caption_improved()
+def main(args):
+    print('computing metrics for baseline & improved captions...')
+    # Load the generated captions
+    caption_baseline = load_caption_baseline(args.baseline_captions_path)
+    caption_improved = load_caption_improved(args.improved_captions_path)
 
-# Load the ground truth captions
-gts = load_gts_captions()
+    # Load the ground truth captions
+    gts = load_gts_captions(args.annot_path)
 
-# Extract the list of images
-img_list = caption_baseline['image_name'].tolist()
+    # Extract the list of images
+    img_list = caption_baseline['image_name'].tolist()
 
-# Set the device to use
-device = get_device()
+    # Set the device to use
+    device = get_device()
 
-# Instantiate the clip manager
-clip_manager = ClipManager(device)
+    # Instantiate the clip manager
+    clip_manager = ClipManager(device)
 
-# Retrieve the embeddings of the ground truth captions
-gt_caption_emb = load_caption_emb(clip_manager, gts, img_list)
+    # Retrieve the embeddings of the ground truth captions
+    gt_caption_emb = load_caption_emb(clip_manager, gts, img_list)
 
-# Retrieve the embeddings of the images
-image_emb = load_image_emb(clip_manager, img_list)
+    # Retrieve the embeddings of the images
+    image_emb = load_image_emb(clip_manager, img_list)
 
-# Perform analysis
-data_to_analyse = {
-    'baseline': caption_baseline,
-    'improved': caption_improved
-}
-analysis_df = evaluate_captions(data_to_analyse, gt_caption_emb, image_emb)
-analysis_df_gr = summarise_analysis(analysis_df)
+    # Perform analysis
+    data_to_analyse = {
+        'baseline': caption_baseline,
+        'improved': caption_improved
+    }
+    analysis_df = evaluate_captions(data_to_analyse, gts,  gt_caption_emb, image_emb)
+    analysis_df_gr = summarise_analysis(analysis_df)
 
-# Prepare output folder
-out_folder = '../data/outputs/analysis/'
-prepare_dir(out_folder)
+    # Output analysis
+    os.makedirs(args.output_dir, exist_ok=True)
+    analysis_df.to_csv(f'{args.output_dir}/captions_eval.csv', index=False)
+    analysis_df_gr.to_csv(f'{args.output_dir}/captions_eval_summary.csv', index=False)
+    
+    print('done')
 
-# Output analysis
-analysis_df.to_csv(out_folder + 'caption_eval3.csv', index=False)
-analysis_df_gr.to_csv(out_folder + 'caption_eval_summary.csv', index=False)
+if __name__ == '__main__':
+    # parse args
+    parser = argparse.ArgumentParser(description='args for eval of baseline & improved captioning on COCO')
+    parser.add_argument('--img-dir', type=str, default='../data/coco/val2017', help='path to image directory')
+    parser.add_argument('--annot-path', type=str, default='../data/coco/annotations/captions_val2017.json', help='path to annotations file')
+    parser.add_argument('--baseline-captions-path', type=str, default='../outputs/captions/google/flan-t5-xl/baseline_captions.csv', help='path to baseline captions file')
+    parser.add_argument('--improved-captions-path', type=str, default='../outputs/captions/google/flan-t5-xl/improved_captions.csv', help='path to improved captions file')
+    parser.add_argument('--output-dir', type=str, default='../outputs/captions/google/flan-t5-xl', help='path to output directory')
 
+    args = parser.parse_args()
+    print(args)
+    
+    main(args)
+    

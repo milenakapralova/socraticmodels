@@ -2,7 +2,7 @@
 SocraticFlanT5 - Caption Generation (baseline) | DL2 Project, May 2023
 This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
 and the corresponding ground-truth captions and generates captions based on the baseline Socratic model pipeline:
-a Socratic model based on the work by Zeng et al. (2022) where GPT-3 is replaced by FLAN-T5-xl.
+a Socratic model based on the work by Zeng et al. (2022) where GPT-3 is replaced by an open-source LM.
 
 Set-up
 If you haven't done so already, please activate the corresponding environment by running in the terminal:
@@ -18,174 +18,125 @@ try:
     os.chdir('scripts')
 except:
     pass
+import argparse
+import json
 
 # Local imports
-from scripts.image_captioning import ClipManager, ImageManager, VocabManager, LmManager, CocoManager
-from scripts.image_captioning import LmPromptGenerator as pg
-from scripts.image_captioning import CacheManager as cm
-from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec
+import scripts.image_captioning as ic
+from scripts.utils import get_device, set_all_seeds, print_time_dec
 
 
 @print_time_dec
-def main(num_images=50, num_captions=30, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, random_seed=42):
+def main(args):
 
-    """
-    1. Set up
-    """
+    '''1. Set up'''
 
-    # Set the seeds
-    set_all_seeds(random_seed)
+    # seed random seeds for reproducibility
+    set_all_seeds(args.rand_seed)
 
-    # Step 1: Downloading the MS COCO images and annotations
-    coco_manager = CocoManager()
+    # download the MS COCO images and annotations
+    coco_manager = ic.CocoManager()
 
-    # Step 2: Generating the captions via the Socratic pipeline
-
-    # Set the device to use
+    # set device
     device = get_device()
 
-    # Instantiate the clip manager
-    clip_manager = ClipManager(device)
+    # instantiate managers
+    clip_manager = ic.ClipManager(device)
+    image_manager = ic.ImageManager()
+    vocab_manager = ic.VocabManager()
+    lm_manager = ic.LmManager(version=args.lm_version, use_api=args.use_api, device=device)
+    cache_manager = ic.CacheManager()
+    
+    # instantiate prompt generator
+    prompt_generator = ic.LmPromptGenerator()
 
-    # Instantiate the image manager
-    image_manager = ImageManager()
+    # compute place & object features
+    place_emb = cache_manager.get_place_emb(clip_manager, vocab_manager)
+    obj_emb = cache_manager.get_object_emb(clip_manager, vocab_manager)
 
-    # Instantiate the vocab manager
-    vocab_manager = VocabManager()
+    # randomly select images from the COCO dataset
+    img_fnames = coco_manager.get_random_image_paths(num_images=args.num_imgs)
 
-    # Instantiate the Flan T5 manager
-    flan_manager = LmManager(device=device)
+    # list of dicts to store results
+    results = []    
+    
+    # set LM params
+    lm_params = {"min_new_tokens": args.min_new_tokens, "max_new_tokens": args.max_new_tokens, "length_penalty": args.length_penalty, "num_beams": args.num_beams, "no_repeat_ngram_size": args.no_repeat_ngram_size, "temperature": args.temperature,  "early_stopping": args.early_stopping, "do_sample": args.do_sample, "num_return_sequences": args.num_return_sequences}
+    
+    '''2. Generate captions for each image'''
+    
+    for img_idx, img_fname in enumerate(img_fnames):
+        print(f'generating captions for img {img_idx + 1}/{len(img_fnames)}...')
+        # load  image
+        img = image_manager.load_image(coco_manager.image_dir + img_fname)
+        # generate the CLIP image embedding
+        img_feats = clip_manager.get_img_emb(img).flatten()
 
-    """
-    2. Text embeddings
-    """
-
-    # Calculate the place features
-    place_emb = cm.get_place_emb(clip_manager, vocab_manager)
-
-    # Calculate the object features
-    object_emb = cm.get_object_emb(clip_manager, vocab_manager)
-
-
-    """
-    3. Load images and compute image embedding
-    """
-
-    # Randomly select images from the COCO dataset
-    img_files = coco_manager.get_random_image_paths(num_images=num_images)
-
-    # Create dictionaries to store the images features
-    img_dic = {}
-    img_feat_dic = {}
-
-    for img_file in img_files:
-        # Load the image
-        img_dic[img_file] = image_manager.load_image(coco_manager.image_dir + img_file)
-        # Generate the CLIP image embedding
-        img_feat_dic[img_file] = clip_manager.get_img_emb(img_dic[img_file]).flatten()
-
-    """
-    4. Zero-shot VLM (CLIP): We zero-shot prompt CLIP to produce various inferences of an image, such as image type or 
-    the number of people in the image.
-    """
-
-    # Classify image type
-    img_types = ['photo', 'cartoon', 'sketch', 'painting']
-    img_types_emb = clip_manager.get_text_emb([f'This is a {t}.' for t in img_types])
-
-    # Create a dictionary to store the image types
-    img_type_dic = {}
-    for img_name, img_feat in img_feat_dic.items():
-        sorted_img_types, img_type_scores = clip_manager.get_nn_text(img_types, img_types_emb, img_feat)
-        img_type_dic[img_name] = sorted_img_types[0]
-
-    # Classify number of people
-    ppl_texts_bool = ['no people', 'people']
-    ppl_emb_bool = clip_manager.get_text_emb([f'There are {p} in this photo.' for p in ppl_texts_bool])
-    ppl_texts_mult = ['is one person', 'are two people', 'are three people', 'are several people', 'are many people']
-    ppl_emb_mult = clip_manager.get_text_emb([f'There {p} in this photo.' for p in ppl_texts_mult])
-
-    # Create a dictionary to store the number of people
-    num_people_dic = {}
-
-    for img_name, img_feat in img_feat_dic.items():
-        sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts_bool, ppl_emb_bool, img_feat)
-        ppl_result = sorted_ppl_texts[0]
-        if ppl_result == 'people':
-            sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts_mult, ppl_emb_mult, img_feat)
-            ppl_result = sorted_ppl_texts[0]
-        else:
-            ppl_result = f'are {ppl_result}'
-
-        num_people_dic[img_name] = ppl_result
-
-    # Classify image place
-
-    # Create a dictionary to store the location
-    location_dic = {}
-    for img_name, img_feat in img_feat_dic.items():
-        sorted_places, places_scores = clip_manager.get_nn_text(vocab_manager.place_list, place_emb, img_feat)
-        location_dic[img_name] = sorted_places[0]
-
-    # Classify image objects
-    obj_topk = 10
-
-    # Create a dictionary to store the similarity of each object with the images
-    obj_list_dic = {}
-    for img_name, img_feat in img_feat_dic.items():
-        sorted_obj_texts, obj_scores = clip_manager.get_nn_text(vocab_manager.object_list, object_emb, img_feat)
-        object_list = ''
-        for i in range(obj_topk):
-            object_list += f'{sorted_obj_texts[i]}, '
-        object_list = object_list[:-2]
-        obj_list_dic[img_name] = object_list
-
-    """
-    5. Zero-shot LM (Flan-T5): We zero-shot prompt Flan-T5 to produce captions and use CLIP to rank the captions
-    generated
-    """
-
-    # Set LM params
-    model_params = {'temperature': lm_temperature, 'max_length': lm_max_length, 'do_sample': lm_do_sample}
-
-    # Create dictionaries to store the outputs
-    prompt_dic = {}
-    sorted_caption_map = {}
-    caption_score_map = {}
-
-    for img_name in img_dic:
-        # Create the prompt for the language model
-        prompt_dic[img_name] = pg.create_baseline_lm_prompt(
-            img_type_dic[img_name], num_people_dic[img_name], location_dic[img_name], obj_list_dic[img_name]
-        )
-
-        # Generate the caption using the language model
-        caption_texts = flan_manager.generate_response(num_captions * [prompt_dic[img_name]], model_params)
-
-        # Zero-shot VLM: rank captions.
-        caption_emb = clip_manager.get_text_emb(caption_texts)
-        sorted_captions, caption_scores = clip_manager.get_nn_text(caption_texts, caption_emb, img_feat_dic[img_name])
-        sorted_caption_map[img_name] = sorted_captions
-        caption_score_map[img_name] = dict(zip(sorted_captions, caption_scores))
-
-    """
-    6. Outputs.
-    """
-
-    # Store the captions
-    data_list = []
-    for img_name in img_dic:
-        generated_caption = sorted_caption_map[img_name][0]
-        data_list.append({
-            'image_name': img_name,
-            'generated_caption': generated_caption,
-            'cosine_similarity': caption_score_map[img_name][generated_caption]
+        # get image info (type, # ppl, location, objects) using CLIP w/ zero-shot classification
+        img_type, num_ppl, locations, sorted_objs, topk_objs, obj_scores = clip_manager.get_img_info(img, place_emb, obj_emb, vocab_manager, args.obj_topk)
+        if args.verbose:
+            print(f'img type: {img_type} | # ppl: {num_ppl} | locations: {locations}\n | objs: {topk_objs}\n')
+        # generate prompt
+        prompt = prompt_generator.create_baseline_lm_prompt(img_type, num_ppl, locations, topk_objs)
+        if args.verbose:
+            print(f'prompt: {prompt}\n')
+        # generate captions by propmting LM (zero-shot)
+        caption_texts = lm_manager.generate_response(args.num_captions * [prompt], lm_params)
+        
+        # rank captions by CLIP
+        sorted_captions = clip_manager.rank_gen_outputs(img_feats, caption_texts)
+        best_caption, best_score = next(iter(sorted_captions.items()))
+        if args.verbose:
+            print(f'best caption: {best_caption} | score: {best_score}\n')
+        
+        # store best caption & score
+        results.append({
+            'image_name': img_fname,
+            'best_caption': best_caption,
+            'cos_sim': best_score,
         })
-
-    file_path = f'../data/outputs/captions/baseline_caption.csv'
-    prepare_dir(file_path)
-    pd.DataFrame(data_list).to_csv(file_path, index=False)
+        
+        print('=' * 50)
+       
+    print('done')
+    # save results & params
+    res_dir = f'{args.output_dir}/{args.lm_version}/'
+    os.makedirs(res_dir, exist_ok=True)
+    res_path = f'{res_dir}/baseline_captions{args.output_file_suffix}.csv'
+    pd.DataFrame(results).to_csv(res_path, index=False)
+    args_path = f'{res_dir}/baseline_params{args.output_file_suffix}.json'
+    with open(args_path, 'w') as f:
+        json.dump(vars(args), f)
 
 
 if __name__ == '__main__':
-    main()
+    # init argparser
+    parser = argparse.ArgumentParser(description='Image Captioning')
+    # add args
+    parser.add_argument('--output-dir', type=str, default='../outputs/captions', help='path to output directory')
+    parser.add_argument('--output-file-suffix',  type=str, default='', help='suffix for output file')
+    parser.add_argument('--num-imgs', type=int, default=50, help='# imgs to sample randomly from MS-COCO')
+    parser.add_argument('--num-captions', type=int, default=10, help='# captions to generate per img')
+    parser.add_argument('--rand-seed', type=int, default=42, help='random seed for sampling & inference')
+    parser.add_argument('--obj-topk', type=int, default=10, help='# top objects detected to keep per img (CLIP)')
+    parser.add_argument('--verbose', type=bool, default=False, help='whether to print intermediate results')
+
+    # LM params
+    parser.add_argument('--lm-version', type=str, default='google/flan-t5-xl', help='name of the LM model to use on HuggingFace')
+    parser.add_argument('--use-api', type=bool, default=False, help='whether to use the HuggingFace API for inference')
+    parser.add_argument('--temperature', type=float, default=0.9, help='temperature param for inference')
+    parser.add_argument('--max-length', type=int, default=None, help='max length (tokens) of generated caption')
+    parser.add_argument('--min-length', type=int, default=None, help='minimum length (tokens) of generated caption')
+    parser.add_argument('--max-new-tokens', type=int, default=20, help='max amount of new tokens to be generated, not including input tokens')
+    parser.add_argument('--min-new-tokens', type=int, default=None, help='minimum amount of new tokens to be generated, not including input tokens')
+    parser.add_argument('--num-beams', type=int, default=8, help='# beams for beam search')
+    parser.add_argument('--do-sample', type=bool, default=True, help='whether to use sampling during generation')
+    parser.add_argument('--num-return-sequences', type=int, default=1, help='# of sequences to generate')
+    parser.add_argument('--early-stopping', type=bool, default=True, help='whether to enable early stopping')
+    parser.add_argument('--no-repeat-ngram-size', type=int, default=3, help='size of n-grams to avoid repeating')
+    parser.add_argument('--length-penalty', type=float, default=2.0, help='length penalty applied during generation')
+
+    # call main with args
+    args = parser.parse_args()
+    print(args)
+    main(args)

@@ -5,17 +5,19 @@ from typing import List, Union
 import numpy as np
 import pandas as pd
 import requests
+import json
 import clip
 import cv2
 import zipfile
 from PIL import Image
 from dotenv import load_dotenv
-from profanity_filter import ProfanityFilter
+# from profanity_filter import ProfanityFilter
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration
 sys.path.append('..')
 from scripts.utils import print_time_dec, prepare_dir
 
+#TODO: uncomment pf sections in final version
 
 class CocoManager:
     def __init__(self):
@@ -146,7 +148,7 @@ class VocabManager:
         with open(file_path, "wb") as f:
             f.write(response.content)
 
-    @print_time_dec
+    # @print_time_dec
     def load_places(self) -> List[str]:
         """
         Load the places.
@@ -182,7 +184,7 @@ class VocabManager:
         place_texts.sort()
         return place_texts
 
-    @print_time_dec
+    # @print_time_dec
     def load_objects(self, remove_profanity: bool = False) -> List[str]:
         """
         Load the objects.
@@ -200,22 +202,22 @@ class VocabManager:
             with open(file_path) as fid:
                 object_categories = fid.readlines()
             object_texts = []
-            pf = ProfanityFilter()
+            # pf = ProfanityFilter()
             for object_text in object_categories[1:]:
                 object_text = object_text.strip()
                 object_text = object_text.split('\t')[3]
-                if remove_profanity:
-                    safe_list = ''
-                    for variant in object_text.split(','):
-                        text = variant.strip()
-                        if pf.is_clean(text):
-                            safe_list += f'{text}, '
+                # if remove_profanity:
+                #     safe_list = ''
+                #     for variant in object_text.split(','):
+                #         text = variant.strip()
+                #         if pf.is_clean(text):
+                #             safe_list += f'{text}, '
 
-                    safe_list = safe_list[:-2]
-                    if len(safe_list) > 0:
-                        object_texts.append(safe_list)
-                else:
-                    object_texts.append(object_text)
+                #     safe_list = safe_list[:-2]
+                #     if len(safe_list) > 0:
+                #         object_texts.append(safe_list)
+                # else:
+                object_texts.append(object_text)
             # Cache the file for the next run
             with open(cache_path, 'w') as f:
                 for obj in object_texts:
@@ -301,7 +303,7 @@ class ClipManager:
         img_types_feats = self.get_text_emb([f'This is a {t}.' for t in img_types])
         sorted_img_types, img_type_scores = self.get_nn_text(img_types, img_types_feats, img_feats)
         img_type = sorted_img_types[0]
-        print(f'This is a {img_type}.')
+        # print(f'This is a {img_type}.')
 
         # classify number of people
         ppl_texts = [
@@ -310,30 +312,31 @@ class ClipManager:
         ppl_feats = self.get_text_emb([f'There {p} in this photo.' for p in ppl_texts])
         sorted_ppl_texts, ppl_scores = self.get_nn_text(ppl_texts, ppl_feats, img_feats)
         num_people = sorted_ppl_texts[0]
-        print(f'There {num_people} in this photo.')
+        # print(f'There {num_people} in this photo.')
 
         # classify places
         sorted_places, places_scores = self.get_nn_text(vocab_manager.place_list, place_feats, img_feats)
         location = sorted_places[0]
-        print(f'It was taken in {location}.')
+        # print(f'It was taken in {location}.')
 
         # classify objects
         sorted_obj_texts, obj_scores = self.get_nn_text(vocab_manager.object_list, obj_feats, img_feats)
-        object_list = ''
+        topk_objs = ''
         for i in range(obj_topk):
-            object_list += f'{sorted_obj_texts[i]}, '
-        object_list = object_list[:-2]
-        print(f'Top 10 objects in the image: \n{sorted_obj_texts[:10]}')
+            topk_objs += f'{sorted_obj_texts[i]}, '
+        topk_objs = topk_objs[:-2]
+        # print(f'Top 10 objects in the image: \n{sorted_obj_texts[:10]}')
         
-        return img_type, num_people, location, sorted_obj_texts, object_list, obj_scores
+        return img_type, num_people, sorted_places, sorted_obj_texts, topk_objs, obj_scores
     
-    def rank_gen_outputs(self, img, output_texts, k=5):
-        img_feats = self.get_img_emb(img)
+    def rank_gen_outputs(self, img_feats, output_texts, k=5):
+        # img_feats = self.get_img_emb(img)
         output_feats = self.get_text_emb(output_texts)
         sorted_outputs, output_scores = self.get_nn_text(output_texts, output_feats, img_feats)
         output_score_map = dict(zip(sorted_outputs, output_scores))
-        for i, output in enumerate(sorted_outputs[:k]):
-            print(f'{i + 1}. {output} ({output_score_map[output]:.2f})')
+        # for i, output in enumerate(sorted_outputs[:k]):
+        #     print(f'{i + 1}. {output} ({output_score_map[output]:.2f})')
+        return output_score_map
 
 class CacheManager:
     @staticmethod
@@ -464,7 +467,12 @@ class LmManager:
 
     def query(self, payload):
         response = requests.post(self.api_url, headers=self.headers, json=payload)
-        return response.json()
+        # check response status code
+        if response.status_code == 200:
+            return response.json()
+        else :
+            raise ValueError(f'API request failed with code {response.status_code}, {response.json()["error"]}')
+        # return json.loads(response.content.decode("utf-8"))
 
 
 class Blip2Manager:
