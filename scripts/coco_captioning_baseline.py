@@ -44,7 +44,7 @@ def main(args):
     clip_manager = ic.ClipManager(device)
     image_manager = ic.ImageManager()
     vocab_manager = ic.VocabManager()
-    lm_manager = ic.LmManager(version=args.lm_model, use_api=args.use_api, device=device)
+    lm_manager = ic.LmManager(version=args.lm_version, use_api=args.use_api, device=device)
     cache_manager = ic.CacheManager()
     
     # instantiate prompt generator
@@ -67,7 +67,8 @@ def main(args):
     
     '''2. Generate captions for each image'''
     
-    for img_file in img_files:
+    for img_idx, img_file in enumerate(img_files):
+        print(f'generating captions for img {img_idx + 1}/{len(img_files)}...')
         # load  image
         img_dict['name'] = img_file
         img = image_manager.load_image(coco_manager.image_dir + img_file)
@@ -82,30 +83,37 @@ def main(args):
         img_dict['num_ppl'] = num_ppl
         img_dict['locations'] = locations
         img_dict['objs'] = topk_objs
-        
+        if args.verbose:
+            print(f'img type: {img_type} | # ppl: {num_ppl} | locations: {locations}\n | objs: {topk_objs}\n')
         # generate prompt
         prompt = prompt_generator.create_baseline_lm_prompt(img_type, num_ppl, locations, topk_objs)
-        
+        if args.verbose:
+            print(f'prompt: {prompt}\n')
         # generate captions by propmting LM (zero-shot)
         caption_texts = lm_manager.generate_response(args.num_captions * [prompt], lm_params)
         
         # rank captions by CLIP
         sorted_captions = clip_manager.rank_gen_outputs(img_feats, caption_texts)
         best_caption, best_score = next(iter(sorted_captions.items()))
+        if args.verbose:
+            print(f'best caption: {best_caption} | score: {best_score}\n')
         
         # store best caption & score
         results.append({
-            'img_name': img_file,
+            'image_name': img_file,
             'best_caption': best_caption,
             'cos_sim': best_score,
         })
-    
+        
+        print('=' * 50)
+       
+    print('done')
     # save results & params
-    res_dir = f'{args.output_dir}/{args.lm_model}/'
+    res_dir = f'{args.output_dir}/{args.lm_version}/'
     os.makedirs(res_dir, exist_ok=True)
-    res_path = f'{res_dir}/res_baseline_{args.output_file_suffix}.csv'
+    res_path = f'{res_dir}/baseline_captions{args.output_file_suffix}.csv'
     pd.DataFrame(results).to_csv(res_path, index=False)
-    args_path = f'{res_dir}/params_baseline_{args.output_file_suffix}.json'
+    args_path = f'{res_dir}/baseline_params{args.output_file_suffix}.json'
     with open(args_path, 'w') as f:
         json.dump(vars(args), f)
 
@@ -115,14 +123,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Image Captioning')
     # add args
     parser.add_argument('--output-dir', type=str, default='../outputs/captions', help='path to output directory')
-    parser.add_argument('--output-file-suffix',  type=str, default='1', help='suffix for output file')
+    parser.add_argument('--output-file-suffix',  type=str, default='', help='suffix for output file')
     parser.add_argument('--num-imgs', type=int, default=50, help='# imgs to sample randomly from MS-COCO')
     parser.add_argument('--num-captions', type=int, default=10, help='# captions to generate per img')
     parser.add_argument('--rand-seed', type=int, default=42, help='random seed for sampling & inference')
     parser.add_argument('--obj-topk', type=int, default=10, help='# top objects detected to keep per img (CLIP)')
+    parser.add_argument('--verbose', type=bool, default=False, help='whether to print intermediate results')
 
     # LM params
-    parser.add_argument('--lm-model', type=str, default='google/flan-t5-xl', help='name of the LM model to use on HuggingFace')
+    parser.add_argument('--lm-version', type=str, default='google/flan-t5-xl', help='name of the LM model to use on HuggingFace')
     parser.add_argument('--use-api', type=bool, default=False, help='whether to use the HuggingFace API for inference')
     parser.add_argument('--temperature', type=float, default=0.9, help='temperature param for inference')
     parser.add_argument('--max-length', type=int, default=None, help='max length (tokens) of generated caption')

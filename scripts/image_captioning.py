@@ -303,7 +303,7 @@ class ClipManager:
         img_types_feats = self.get_text_emb([f'This is a {t}.' for t in img_types])
         sorted_img_types, img_type_scores = self.get_nn_text(img_types, img_types_feats, img_feats)
         img_type = sorted_img_types[0]
-        print(f'This is a {img_type}.')
+        # print(f'This is a {img_type}.')
 
         # classify number of people
         ppl_texts = [
@@ -312,12 +312,12 @@ class ClipManager:
         ppl_feats = self.get_text_emb([f'There {p} in this photo.' for p in ppl_texts])
         sorted_ppl_texts, ppl_scores = self.get_nn_text(ppl_texts, ppl_feats, img_feats)
         num_people = sorted_ppl_texts[0]
-        print(f'There {num_people} in this photo.')
+        # print(f'There {num_people} in this photo.')
 
         # classify places
         sorted_places, places_scores = self.get_nn_text(vocab_manager.place_list, place_feats, img_feats)
         location = sorted_places[0]
-        print(f'It was taken in {location}.')
+        # print(f'It was taken in {location}.')
 
         # classify objects
         sorted_obj_texts, obj_scores = self.get_nn_text(vocab_manager.object_list, obj_feats, img_feats)
@@ -325,7 +325,7 @@ class ClipManager:
         for i in range(obj_topk):
             topk_objs += f'{sorted_obj_texts[i]}, '
         topk_objs = topk_objs[:-2]
-        print(f'Top 10 objects in the image: \n{sorted_obj_texts[:10]}')
+        # print(f'Top 10 objects in the image: \n{sorted_obj_texts[:10]}')
         
         return img_type, num_people, sorted_places, sorted_obj_texts, topk_objs, obj_scores
     
@@ -334,8 +334,8 @@ class ClipManager:
         output_feats = self.get_text_emb(output_texts)
         sorted_outputs, output_scores = self.get_nn_text(output_texts, output_feats, img_feats)
         output_score_map = dict(zip(sorted_outputs, output_scores))
-        for i, output in enumerate(sorted_outputs[:k]):
-            print(f'{i + 1}. {output} ({output_score_map[output]:.2f})')
+        # for i, output in enumerate(sorted_outputs[:k]):
+        #     print(f'{i + 1}. {output} ({output_score_map[output]:.2f})')
         return output_score_map
 
 class CacheManager:
@@ -467,8 +467,12 @@ class LmManager:
 
     def query(self, payload):
         response = requests.post(self.api_url, headers=self.headers, json=payload)
-        # return response.json()
-        return json.loads(response.content.decode("utf-8"))
+        # check response status code
+        if response.status_code == 200:
+            return response.json()
+        else :
+            raise ValueError(f'API request failed with code {response.status_code}, {response.json()["error"]}')
+        # return json.loads(response.content.decode("utf-8"))
 
 
 class Blip2Manager:
