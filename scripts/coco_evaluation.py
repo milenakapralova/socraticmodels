@@ -151,8 +151,8 @@ def load_caption_baseline(captions_path):
     """
     try:
         res_baseline = pd.read_csv(captions_path)
-    except FileNotFoundError:
-            "Baseline captions csv not found! Make sure you pass the correct path as an arg. Please run coco_captioning_baseline.py to obtain the generated captions before proceeding with the evaluation."
+    except:
+        raise FileNotFoundError("Baseline captions csv not found! Make sure you pass the correct path as an arg. Please run coco_captioning_baseline.py to obtain the generated captions before proceeding with the evaluation.")
     return res_baseline
 
 
@@ -162,8 +162,8 @@ def load_caption_improved(captions_path):
     """
     try:
         res_improved = pd.read_csv(captions_path)
-    except FileNotFoundError:
-            "Improved captions csv not found! Make sure you pass the correct path as an arg. Please run coco_captioning_improved.py to obtain the generated captions before proceeding with the evaluation."
+    except:
+        raise FileNotFoundError("Improved captions csv not found! Make sure you pass the correct path as an arg. Please run coco_captioning_improved.py to obtain the generated captions before proceeding with the evaluation.")
     return res_improved
 
 
@@ -309,8 +309,8 @@ def main(args):
 
     # Output analysis
     os.makedirs(args.output_dir, exist_ok=True)
-    analysis_df.to_csv(f'{args.output_dir}/captions_eval.csv', index=False)
-    analysis_df_gr.to_csv(f'{args.output_dir}/captions_eval_summary.csv', index=False)
+    analysis_df.to_csv(f'{args.output_dir}/captions_eval{args.output_file_suffix}.csv', index=False)
+    analysis_df_gr.to_csv(f'{args.output_dir}/captions_eval_summary{args.output_file_suffix}.csv', index=False)
     
     print('done')
 
@@ -322,6 +322,7 @@ if __name__ == '__main__':
     parser.add_argument('--baseline-captions-path', type=str, default='../outputs/captions/google/flan-t5-xl/baseline_captions.csv', help='path to baseline captions file')
     parser.add_argument('--improved-captions-path', type=str, default='../outputs/captions/google/flan-t5-xl/improved_captions.csv', help='path to improved captions file')
     parser.add_argument('--output-dir', type=str, default='../outputs/captions/google/flan-t5-xl', help='path to output directory')
+    parser.add_argument('--output-file-suffix',  type=str, default='', help='suffix for output file')
 
     args = parser.parse_args()
     print(args)
