@@ -24,12 +24,12 @@ from scripts.image_captioning import (
     ClipManager, ImageManager, VocabManager, LmManager, CocoManager, LmPromptGenerator
 )
 from scripts.image_captioning import CacheManager as cm
-from scripts.utils import get_device, prepare_dir, set_all_seeds, get_file_name_extension, print_time_dec
+from scripts.utils import get_device, prepare_dir, set_all_seeds, get_file_name_extension_improved, print_time_dec
 
 
 @print_time_dec
 def main(
-        num_images=50, num_captions=30, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
+        num_images=50, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
         num_objects=5, num_places=2, caption_strategy='baseline', random_seed=42
 ):
     """
@@ -206,7 +206,7 @@ def main(
             'generated_caption': generated_caption,
             'cosine_similarity': caption_score_map[img_name][generated_caption]
         })
-    file_name_extension = get_file_name_extension(
+    file_name_extension = get_file_name_extension_improved(
         lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy
     )
     file_path = f'../data/outputs/captions/improved_caption{file_name_extension}.csv'
@@ -217,15 +217,15 @@ def main(
 if __name__ == '__main__':
 
     template_params = dict(
-        num_images=50, num_captions=30, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
-        num_objects=5, num_places=2, caption_strategy='creative', random_seed=42
+        num_images=50, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
+        num_objects=5, num_places=2, caption_strategy='baseline', random_seed=42
     )
 
     # Run with the base parameters
     main(**template_params)
 
     # Temperature search
-    for t in (0.85, 0.95):
+    for t in (0.8, 1):
         temp_params = template_params.copy()
         temp_params['lm_temperature'] = t
         main(**temp_params)

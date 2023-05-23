@@ -58,7 +58,9 @@ class CocoManager:
             self.download_unzip_delete(folder, url)
 
     def get_random_image_paths(self, num_images):
-        return np.random.choice(os.listdir(self.image_dir), size=num_images).tolist()
+        img_list = os.listdir(self.image_dir)
+        img_list.sort()
+        return np.random.choice(img_list, size=num_images).tolist()
 
 
 class ImageManager:

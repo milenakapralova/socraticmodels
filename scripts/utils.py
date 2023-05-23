@@ -59,7 +59,18 @@ def get_uuid_for_imgs(img_list):
     return str(uuid.uuid3(uuid.NAMESPACE_DNS, ''.join(img_list)))
 
 
-def get_file_name_extension(lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy):
+def get_file_name_extension_baseline(lm_temperature, num_objects, num_places):
+    extension = ''
+    if lm_temperature != 0.9:
+        extension += f'_temp_{lm_temperature}'.replace('.', '')
+    if num_objects != 10:
+        extension += f'_nobj_{num_objects}'
+    if num_places != 3:
+        extension += f'_npl_{num_places}'
+    return extension
+
+
+def get_file_name_extension_improved(lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy):
     extension = ''
     if lm_temperature != 0.9:
         extension += f'_temp_{lm_temperature}'.replace('.', '')

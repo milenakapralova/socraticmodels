@@ -23,11 +23,12 @@ except:
 from scripts.image_captioning import ClipManager, ImageManager, VocabManager, LmManager, CocoManager
 from scripts.image_captioning import LmPromptGenerator as pg
 from scripts.image_captioning import CacheManager as cm
-from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec
+from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec, get_file_name_extension_baseline
 
 
 @print_time_dec
-def main(num_images=100, num_captions=50, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, random_seed=42):
+def main(num_images=50, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, random_seed=42,
+         num_objects=10, num_places=3):
 
     """
     1. Set up
@@ -134,11 +135,12 @@ def main(num_images=100, num_captions=50, lm_temperature=0.9, lm_max_length=40, 
     obj_list_dic = {}
     for img_name, img_feat in img_feat_dic.items():
         sorted_obj_texts, obj_scores = clip_manager.get_nn_text(vocab_manager.object_list, object_emb, img_feat)
-        object_list = ''
-        for i in range(obj_topk):
-            object_list += f'{sorted_obj_texts[i]}, '
-        object_list = object_list[:-2]
-        obj_list_dic[img_name] = object_list
+        # object_list = ''
+        # for i in range(obj_topk):
+        #     object_list += f'{sorted_obj_texts[i]}, '
+        # object_list = object_list[:-2]
+        # obj_list_dic[img_name] = object_list
+        obj_list_dic[img_name] = sorted_obj_texts
 
     """
     5. Zero-shot LM (Flan-T5): We zero-shot prompt Flan-T5 to produce captions and use CLIP to rank the captions
@@ -155,8 +157,13 @@ def main(num_images=100, num_captions=50, lm_temperature=0.9, lm_max_length=40, 
 
     for img_name in img_dic:
         # Create the prompt for the language model
-        prompt_dic[img_name] = pg.create_baseline_lm_prompt(
-            img_type_dic[img_name], num_people_dic[img_name], location_dic[img_name], obj_list_dic[img_name]
+        # prompt_dic[img_name] = pg.create_baseline_lm_prompt(
+        #     img_type_dic[img_name], num_people_dic[img_name], location_dic[img_name], obj_list_dic[img_name]
+        # )
+
+        prompt_dic[img_name] = pg.create_baseline_lm_prompt2(
+            img_type_dic[img_name], num_people_dic[img_name], location_dic[img_name][:num_places],
+            obj_list_dic[img_name][:num_objects]
         )
 
         # Generate the caption using the language model
@@ -182,10 +189,37 @@ def main(num_images=100, num_captions=50, lm_temperature=0.9, lm_max_length=40, 
             'cosine_similarity': caption_score_map[img_name][generated_caption]
         })
 
-    file_path = f'../data/outputs/captions/baseline_caption.csv'
+    file_name_extension = get_file_name_extension_baseline(
+        lm_temperature, num_objects, num_places
+    )
+    file_path = f'../data/outputs/captions/baseline_caption{file_name_extension}.csv'
     prepare_dir(file_path)
     pd.DataFrame(data_list).to_csv(file_path, index=False)
 
 
 if __name__ == '__main__':
-    main()
+    template_params = dict(
+        num_images=50, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, random_seed=42,
+        num_objects=10, num_places=3
+    )
+    main(**template_params)
+
+    # Temperature search
+    for t in (0.8, 1):
+        temp_params = template_params.copy()
+        temp_params['lm_temperature'] = t
+        main(**temp_params)
+
+    # Number of generated objects search
+    for n in (8, 9, 11):
+        temp_params = template_params.copy()
+        temp_params['num_objects'] = n
+        main(**temp_params)
+
+    # Number of places search
+    for n in (1, 2):
+        temp_params = template_params.copy()
+        temp_params['num_places'] = n
+        main(**temp_params)
+
+
