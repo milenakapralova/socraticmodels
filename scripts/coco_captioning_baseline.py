@@ -98,7 +98,10 @@ def main(args):
         
         print('=' * 50)
        
+    avg_cos_sim = sum([res['cos_sim'] for res in results]) / args.num_imgs
+    print(f'avg. cos sim over {args.num_imgs} imgs: {avg_cos_sim:.4f}')
     print('done')
+    
     # save results & params
     res_dir = f'{args.output_dir}/{args.lm_version}/'
     os.makedirs(res_dir, exist_ok=True)
@@ -124,12 +127,12 @@ if __name__ == '__main__':
     # LM params
     parser.add_argument('--lm-version', type=str, default='google/flan-t5-xl', help='name of the LM model to use on HuggingFace')
     parser.add_argument('--use-api', type=bool, default=False, help='whether to use the HuggingFace API for inference')
-    parser.add_argument('--temperature', type=float, default=0.9, help='temperature param for inference')
+    parser.add_argument('--temperature', type=float, default=1., help='temperature param for inference')
     parser.add_argument('--max-length', type=int, default=None, help='max length (tokens) of generated caption')
     parser.add_argument('--min-length', type=int, default=None, help='minimum length (tokens) of generated caption')
-    parser.add_argument('--max-new-tokens', type=int, default=20, help='max amount of new tokens to be generated, not including input tokens')
+    parser.add_argument('--max-new-tokens', type=int, default=30, help='max amount of new tokens to be generated, not including input tokens')
     parser.add_argument('--min-new-tokens', type=int, default=None, help='minimum amount of new tokens to be generated, not including input tokens')
-    parser.add_argument('--num-beams', type=int, default=8, help='# beams for beam search')
+    parser.add_argument('--num-beams', type=int, default=16, help='# beams for beam search')
     parser.add_argument('--do-sample', type=bool, default=True, help='whether to use sampling during generation')
     parser.add_argument('--num-return-sequences', type=int, default=1, help='# of sequences to generate')
     parser.add_argument('--early-stopping', type=bool, default=True, help='whether to enable early stopping')
