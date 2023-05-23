@@ -20,8 +20,7 @@ except:
     pass
 
 # Local imports
-from scripts.image_captioning import ClipManager, ImageManager, VocabManager, LmManager, CocoManager
-from scripts.image_captioning import LmPromptGenerator
+from scripts.image_captioning import ClipManager, ImageManager, VocabManager, LmManager, CocoManager, LmPromptGenerator
 from scripts.image_captioning import CacheManager as cm
 from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec, get_file_name_extension_baseline
 
