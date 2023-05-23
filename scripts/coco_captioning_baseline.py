@@ -21,7 +21,7 @@ except:
 
 # Local imports
 from scripts.image_captioning import ClipManager, ImageManager, VocabManager, LmManager, CocoManager
-from scripts.image_captioning import LmPromptGenerator as pg
+from scripts.image_captioning import LmPromptGenerator
 from scripts.image_captioning import CacheManager as cm
 from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec, get_file_name_extension_baseline
 
@@ -56,6 +56,9 @@ def main(num_images=50, num_captions=10, lm_temperature=0.9, lm_max_length=40, l
 
     # Instantiate the Flan T5 manager
     flan_manager = LmManager()
+
+    # Instantiate the prompt generator
+    pg = LmPromptGenerator()
 
     """
     2. Text embeddings
