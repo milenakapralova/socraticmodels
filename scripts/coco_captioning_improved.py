@@ -125,41 +125,57 @@ def main(args):
     with open(args_path, 'w') as f:
         json.dump(vars(args), f)
 
+
+class FakeArgs:
+    def __init__(self):
+        arg_dic = dict(
+            output_dir='../outputs/captions', output_file_suffix=None, num_imgs=50, num_captions=10, rand_seed=42,
+            obj_topk=10, places_topk=3, sim_threshold=0.7, caption_mode='default', filter_mode='baseline',
+            param_search=False, verbose=False, lm_version='google/flan-t5-xl', use_api=False,
+            temperature=1.0, max_length=None, min_length=None, max_new_tokens=30,
+            min_new_tokens=None, num_beams=16, do_sample=True, num_return_sequences=1,
+            early_stopping=True, no_repeat_ngram_size=3, length_penalty=2.0
+        )
+        for k, v in arg_dic.items():
+            setattr(self, k, v)
+
 if __name__ == '__main__':
-    # init argparser
-    parser = argparse.ArgumentParser(description='Image Captioning')
-    # add args
-    parser.add_argument('--output-dir', type=str, default='../outputs/captions', help='path to output directory')
-    parser.add_argument('--output-file-suffix',  type=str, default=None, help='suffix for output file')
-    parser.add_argument('--num-imgs', type=int, default=50, help='# imgs to sample randomly from MS-COCO')
-    parser.add_argument('--num-captions', type=int, default=10, help='# captions to generate per img')
-    parser.add_argument('--rand-seed', type=int, default=42, help='random seed for sampling & inference')
-    parser.add_argument('--obj-topk', type=int, default=10, help='# top objects detected to keep per img (CLIP)')
-    parser.add_argument('--places-topk', type=int, default=3, help='# top places detected to keep per img (CLIP)')
-    parser.add_argument('--sim-threshold', type=float, default=0.7, help='cosine similarity threshold for filtering objects')
-    parser.add_argument('--caption-mode', type=str, default='default', help='caption strategy to use')
-    parser.add_argument('--filter-mode', type=str, default='baseline', help='method to use for filtering objects')
-    parser.add_argument('--param-search', type=bool, default=False, help='whether to run parameter search')
-    parser.add_argument('--verbose', type=bool, default=False, help='whether to print intermediate results')
+    # # init argparser
+    # parser = argparse.ArgumentParser(description='Image Captioning')
+    # # add args
+    # parser.add_argument('--output-dir', type=str, default='../outputs/captions', help='path to output directory')
+    # parser.add_argument('--output-file-suffix',  type=str, default=None, help='suffix for output file')
+    # parser.add_argument('--num-imgs', type=int, default=50, help='# imgs to sample randomly from MS-COCO')
+    # parser.add_argument('--num-captions', type=int, default=10, help='# captions to generate per img')
+    # parser.add_argument('--rand-seed', type=int, default=42, help='random seed for sampling & inference')
+    # parser.add_argument('--obj-topk', type=int, default=10, help='# top objects detected to keep per img (CLIP)')
+    # parser.add_argument('--places-topk', type=int, default=3, help='# top places detected to keep per img (CLIP)')
+    # parser.add_argument('--sim-threshold', type=float, default=0.7, help='cosine similarity threshold for filtering objects')
+    # parser.add_argument('--caption-mode', type=str, default='default', help='caption strategy to use')
+    # parser.add_argument('--filter-mode', type=str, default='baseline', help='method to use for filtering objects')
+    # parser.add_argument('--param-search', type=bool, default=False, help='whether to run parameter search')
+    # parser.add_argument('--verbose', type=bool, default=False, help='whether to print intermediate results')
+    #
+    # # LM params
+    # parser.add_argument('--lm-version', type=str, default='google/flan-t5-xl', help='name of the LM model to use on HuggingFace')
+    # parser.add_argument('--use-api', type=bool, default=False, help='whether to use the HuggingFace API for inference')
+    # parser.add_argument('--temperature', type=float, default=1., help='temperature param for inference')
+    # parser.add_argument('--max-length', type=int, default=None, help='max length (tokens) of generated caption')
+    # parser.add_argument('--min-length', type=int, default=None, help='minimum length (tokens) of generated caption')
+    # parser.add_argument('--max-new-tokens', type=int, default=30, help='max amount of new tokens to be generated, not including input tokens')
+    # parser.add_argument('--min-new-tokens', type=int, default=None, help='minimum amount of new tokens to be generated, not including input tokens')
+    # parser.add_argument('--num-beams', type=int, default=16, help='# beams for beam search')
+    # parser.add_argument('--do-sample', type=bool, default=True, help='whether to use sampling during generation')
+    # parser.add_argument('--num-return-sequences', type=int, default=1, help='# of sequences to generate')
+    # parser.add_argument('--early-stopping', type=bool, default=True, help='whether to enable early stopping')
+    # parser.add_argument('--no-repeat-ngram-size', type=int, default=3, help='size of n-grams to avoid repeating')
+    # parser.add_argument('--length-penalty', type=float, default=2.0, help='length penalty applied during generation')
+    #
+    # # call main with args
+    # args = parser.parse_args()
+    # print(f'args: {args}')
 
-    # LM params
-    parser.add_argument('--lm-version', type=str, default='google/flan-t5-xl', help='name of the LM model to use on HuggingFace')
-    parser.add_argument('--use-api', type=bool, default=False, help='whether to use the HuggingFace API for inference')
-    parser.add_argument('--temperature', type=float, default=1., help='temperature param for inference')
-    parser.add_argument('--max-length', type=int, default=None, help='max length (tokens) of generated caption')
-    parser.add_argument('--min-length', type=int, default=None, help='minimum length (tokens) of generated caption')
-    parser.add_argument('--max-new-tokens', type=int, default=30, help='max amount of new tokens to be generated, not including input tokens')
-    parser.add_argument('--min-new-tokens', type=int, default=None, help='minimum amount of new tokens to be generated, not including input tokens')
-    parser.add_argument('--num-beams', type=int, default=16, help='# beams for beam search')
-    parser.add_argument('--do-sample', type=bool, default=True, help='whether to use sampling during generation')
-    parser.add_argument('--num-return-sequences', type=int, default=1, help='# of sequences to generate')
-    parser.add_argument('--early-stopping', type=bool, default=True, help='whether to enable early stopping')
-    parser.add_argument('--no-repeat-ngram-size', type=int, default=3, help='size of n-grams to avoid repeating')
-    parser.add_argument('--length-penalty', type=float, default=2.0, help='length penalty applied during generation')
-
-    # call main with args
-    args = parser.parse_args()
-    print(f'args: {args}')
+    args = FakeArgs()
 
     # Run with the base parameters
     main(args)
@@ -167,7 +183,7 @@ if __name__ == '__main__':
     # parameter search
     if args.param_search:
         # temperature
-        for t in (0.85, 0.95):
+        for t in (0.8, 0.9):
             temp_args = args
             temp_args.temperature = t
             if args.output_file_suffix is not None:
