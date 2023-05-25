@@ -30,7 +30,7 @@ from scripts.utils import get_device, prepare_dir, set_all_seeds, get_file_name_
 @print_time_dec
 def main(
         num_images=50, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
-        num_objects=5, num_places=2, caption_strategy='baseline', random_seed=42
+        num_objects=5, num_places=2, caption_strategy='baseline', random_seed=42, set_type='train'
 ):
     """
     1. Set up
@@ -78,7 +78,7 @@ def main(
     """
 
     # Randomly select images from the COCO dataset
-    img_files = coco_manager.get_random_image_paths(num_images=num_images)
+    img_files = coco_manager.get_random_image_paths(num_images=num_images, set_type=set_type)
 
     # Create dictionaries to store the images features
     img_dic = {}
@@ -204,47 +204,57 @@ def main(
         data_list.append({
             'image_name': img_name,
             'generated_caption': generated_caption,
-            'cosine_similarity': caption_score_map[img_name][generated_caption]
+            'cosine_similarity': caption_score_map[img_name][generated_caption],
+            'set_type': set_type
         })
     file_name_extension = get_file_name_extension_improved(
-        lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy
+        lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy, set_type
     )
     file_path = f'../data/outputs/captions/improved_caption{file_name_extension}.csv'
     prepare_dir(file_path)
     pd.DataFrame(data_list).to_csv(file_path, index=False)
 
+def random_parameter_search(n_rounds, template_params):
+    for _ in range(n_rounds):
+        template_params_copy = template_params.copy()
+        template_params_copy['lm_temperature'] = np.round(np.random.uniform(0.5, 1), 3)
+        template_params_copy['cos_sim_thres'] = np.round(np.random.uniform(0.5, 1), 3)
+        template_params_copy['num_objects'] = np.random.choice(range(5, 20))
+        template_params_copy['num_places'] = np.random.choice(range(1, 6))
+        main(**template_params)
 
 if __name__ == '__main__':
 
     template_params = dict(
-        num_images=50, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
+        num_images=2, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
         num_objects=5, num_places=2, caption_strategy='baseline', random_seed=42
     )
+    random_parameter_search(n_rounds=50, template_params=template_params)
 
-    # Run with the base parameters
-    main(**template_params)
-
-    # Temperature search
-    for t in (0.8, 1):
-        temp_params = template_params.copy()
-        temp_params['lm_temperature'] = t
-        main(**temp_params)
-
-    # Cosine similarity threshold search
-    for c in (0.6, 0.8):
-        temp_params = template_params.copy()
-        temp_params['cos_sim_thres'] = c
-        main(**temp_params)
-
-    # Number of generated objects search
-    for n in (4, 6, 7):
-        temp_params = template_params.copy()
-        temp_params['num_objects'] = n
-        main(**temp_params)
-
-    # Number of places search
-    for n in (1, 3):
-        temp_params = template_params.copy()
-        temp_params['num_places'] = n
-        main(**temp_params)
+    # # Run with the base parameters
+    # main(**template_params)
+    #
+    # # Temperature search
+    # for t in (0.8, 1):
+    #     temp_params = template_params.copy()
+    #     temp_params['lm_temperature'] = t
+    #     main(**temp_params)
+    #
+    # # Cosine similarity threshold search
+    # for c in (0.6, 0.8):
+    #     temp_params = template_params.copy()
+    #     temp_params['cos_sim_thres'] = c
+    #     main(**temp_params)
+    #
+    # # Number of generated objects search
+    # for n in (4, 6, 7):
+    #     temp_params = template_params.copy()
+    #     temp_params['num_objects'] = n
+    #     main(**temp_params)
+    #
+    # # Number of places search
+    # for n in (1, 3):
+    #     temp_params = template_params.copy()
+    #     temp_params['num_places'] = n
+    #     main(**temp_params)
 

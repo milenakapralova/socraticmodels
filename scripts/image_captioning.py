@@ -57,11 +57,21 @@ class CocoManager:
         for folder, url in self.dataset_to_download.items():
             self.download_unzip_delete(folder, url)
 
-    def get_random_image_paths(self, num_images):
+    def get_random_image_paths(self, num_images, set_type):
         img_list = os.listdir(self.image_dir)
         img_list.sort()
-        return np.random.choice(img_list, size=num_images).tolist()
-
+        # Data split
+        train_set = np.random.choice(img_list, size=num_images).tolist()
+        test_set = np.random.choice(
+            list(set(img_list) - set(train_set)),
+            size=num_images
+        ).tolist()
+        if set_type == 'train':
+            return train_set
+        elif set_type == 'test':
+            return test_set
+        else:
+            raise ValueError(f'set_type {test_set} not supported.')
 
 class ImageManager:
     def __init__(self):
