@@ -533,6 +533,14 @@ class LmPromptGenerator:
         A creative short caption I can generate to describe this image is:'''
 
     @staticmethod
+    def create_improved_gpt_prompt(img_type, ppl_result, sorted_places, object_list_str):
+        return f'''I am an intelligent image captioning bot.
+        This image is a {img_type}. There {ppl_result}.
+        I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
+        I think there might be a {object_list_str} in this {img_type}.
+        A short, likely caption I can generate to describe this image is:'''
+
+    @staticmethod
     def create_improved_lm_prompt(img_type, ppl_result, terms_to_include):
         return f'''Create a creative beautiful caption from this context:
         "This image is a {img_type}. There {ppl_result}.
