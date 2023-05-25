@@ -52,7 +52,7 @@ def main(num_images=100, num_captions=10, lm_temperature=0.9, lm_max_length=40, 
     # Instantiate the vocab manager
     vocab_manager = VocabManager()
 
-    # Instantiate the Flan T5 manager
+    # Instantiate the GPT manager
     gpt_manager = GPTManager()
 
     # Instantiate the prompt generator
@@ -127,7 +127,7 @@ def main(num_images=100, num_captions=10, lm_temperature=0.9, lm_max_length=40, 
     location_dic = {}
     for img_name, img_feat in img_feat_dic.items():
         sorted_places, places_scores = clip_manager.get_nn_text(vocab_manager.place_list, place_emb, img_feat)
-        location_dic[img_name] = sorted_places[0]
+        location_dic[img_name] = sorted_places
 
     # Classify image objects
     obj_topk = 10
@@ -161,7 +161,7 @@ def main(num_images=100, num_captions=10, lm_temperature=0.9, lm_max_length=40, 
         )
 
         # Generate the caption using the language model
-        caption_texts = [gpt_manager.generate_response(prompt_dic[img_name]) for _ in range(num_captions)]
+        caption_texts = [gpt_manager.generate_response(prompt_dic[img_name], temperature=lm_temperature) for _ in range(num_captions)]
 
         # Zero-shot VLM: rank captions.
         caption_emb = clip_manager.get_text_emb(caption_texts)
