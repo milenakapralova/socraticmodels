@@ -26,7 +26,7 @@ from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec
 
 
 @print_time_dec
-def main(num_images=100, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, random_seed=42):
+def main(num_images=100, num_captions=10, lm_temperature=0.9, random_seed=42):
 
     """
     1. Set up
@@ -161,7 +161,7 @@ def main(num_images=100, num_captions=10, lm_temperature=0.9, lm_max_length=40, 
         )
 
         # Generate the caption using the language model
-        caption_texts = [gpt_manager.generate_response(prompt_dic[img_name]) for _ in range(num_captions)]
+        caption_texts = [gpt_manager.generate_response(prompt_dic[img_name], temperature=lm_temperature) for _ in range(num_captions)]
 
         # Zero-shot VLM: rank captions.
         caption_emb = clip_manager.get_text_emb(caption_texts)
