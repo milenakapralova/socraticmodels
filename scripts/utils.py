@@ -61,26 +61,25 @@ def get_uuid_for_imgs(img_list):
 
 def get_file_name_extension_baseline(lm_temperature, num_objects, num_places):
     extension = ''
-    if lm_temperature != 0.9:
-        extension += f'_temp_{lm_temperature}'.replace('.', '')
-    if num_objects != 10:
-        extension += f'_nobj_{num_objects}'
-    if num_places != 3:
-        extension += f'_npl_{num_places}'
+    extension += f'_temp_{lm_temperature}'.replace('.', '')
+    extension += f'_nobj_{num_objects}'
+    extension += f'_npl_{num_places}'
     return extension
 
 
-def get_file_name_extension_improved(lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy):
+def get_file_name_extension_improved(lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy, set_type):
     extension = ''
-    if lm_temperature != 0.9:
-        extension += f'_temp_{lm_temperature}'.replace('.', '')
-    if cos_sim_thres != 0.7:
-        extension += f'_costhres_{cos_sim_thres}'.replace('.', '')
-    if num_objects != 5:
-        extension += f'_nobj_{num_objects}'
-    if num_places != 2:
-        extension += f'_npl_{num_places}'
-    if caption_strategy != 'baseline':
-        extension += f'_strat_{caption_strategy}'
+    # The language model temperature
+    extension += f'_temp_{lm_temperature}'.replace('.', '')
+    # The cosine thresold.
+    extension += f'_costhres_{cos_sim_thres}'.replace('.', '')
+    # Number of objects
+    extension += f'_nobj_{num_objects}'
+    # Number of places
+    extension += f'_npl_{num_places}'
+    # Caption strategy
+    extension += f'_strat_{caption_strategy}'
+    # Train/test set
+    extension += f'_{set_type}'
     return extension
 
