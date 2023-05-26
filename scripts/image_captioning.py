@@ -528,15 +528,12 @@ class Blip2Manager:
 
 
 class LmPromptGenerator:
-    @staticmethod
-    def create_baseline_lm_prompt(img_type, ppl_result, sorted_places, object_list_str):
-        return f'''I am an intelligent image captioning bot.
-        This image is a {img_type}. There {ppl_result}.
-        I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
-        I think there might be a {object_list_str} in this {img_type}.
-        A creative short caption I can generate to describe this image is:'''
-
     def create_socratic_original_prompt(self, img_type, ppl_result, sorted_places, object_list):
+        '''
+        This creates the prompt from the original paper introducing SM.
+        The only difference is that the sorted places are managed by a method, making
+        it convenient to change the number of places.
+        '''
         places_string = self.get_places_string(sorted_places)
         return f'''I am an intelligent image captioning bot.
         This image is a {img_type}. There {ppl_result}.
@@ -544,7 +541,11 @@ class LmPromptGenerator:
         I think there might be a {', '.join(object_list)} in this {img_type}.
         A creative short caption I can generate to describe this image is:'''
 
-    def create_baseline_lm_prompt2_likely(self, img_type, ppl_result, sorted_places, object_list):
+    def create_socratic_original_prompt_COCO(self, img_type, ppl_result, sorted_places, object_list):
+        '''
+        This creates the prompt from the original paper introducing SM.
+        The authors used this prompt to achieve better captions on the MS COCO dataset.
+        '''
         places_string = self.get_places_string(sorted_places)
         return f'''I am an intelligent image captioning bot.
         This image is a {img_type}. There {ppl_result}.
@@ -553,21 +554,19 @@ class LmPromptGenerator:
         A short, likely caption I can generate to describe this image is:'''
 
     @staticmethod
-    def create_gpt_prompt_likely(img_type, ppl_result, sorted_places, object_list_str):
-        return f'''I am an intelligent image captioning bot.
-        This image is a {img_type}. There {ppl_result}.
-        I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
-        I think there might be a {object_list_str} in this {img_type}.
-        A short, likely caption I can generate to describe this image is:'''
-
-    @staticmethod
-    def create_improved_lm_prompt(img_type, ppl_result, terms_to_include):
+    def create_experimental_beautiful_prompt(img_type, ppl_result, terms_to_include):
+        '''
+        This creates an experimental 'creative beautiful caption' prompt.
+        '''
         return f'''Create a creative beautiful caption from this context:
         "This image is a {img_type}. There {ppl_result}.
         The context is: {', '.join(terms_to_include)}.
         A creative short caption I can generate to describe this image is:'''
 
-    def create_improved_lm_prompt_alt1(self, img_type, ppl_result, sorted_places, object_list):
+    def create_experimental_poetic_prompt(self, img_type, ppl_result, sorted_places, object_list):
+        '''
+        This creates an experimental 'creative poetic caption' prompt.
+        '''
         places_string = self.get_places_string(sorted_places)
         return f'''I am a poetic writer that creates image captions.
         This image is a {img_type}. There {ppl_result}.

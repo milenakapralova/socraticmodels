@@ -159,7 +159,7 @@ def main(
 
     for img_name in img_dic:
         # Create the prompt for the language model
-        prompt_dic[img_name] = pg.create_baseline_lm_prompt(
+        prompt_dic[img_name] = pg.create_socratic_original_prompt(
             img_type_dic[img_name], num_people_dic[img_name], location_dic[img_name], obj_list_dic[img_name]
         )
 

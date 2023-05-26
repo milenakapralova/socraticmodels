@@ -185,7 +185,7 @@ class ImageCaptioner:
         # Set up the prompt generator map
         pg_map = {
             'original': self.prompt_generator.create_socratic_original_prompt,
-            'creative': self.prompt_generator.create_improved_lm_prompt_alt1,
+            'creative': self.prompt_generator.create_experimental_poetic_prompt,
         }
 
         # Set LM params
