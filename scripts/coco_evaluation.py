@@ -163,7 +163,7 @@ def load_all_captions():
     :return: Dictionary mapping caption csv file names to the loaded dataframe.
     """
     caption_dir = '../data/outputs/captions/'
-    return {c.split('.')[0]: load_caption(caption_dir + c) for c in os.listdir(caption_dir)}
+    return {c.split('.')[0]: load_caption(caption_dir + c) for c in os.listdir(caption_dir) if c.endswith('csv')}
 
 
 def load_gts_captions():
@@ -310,6 +310,7 @@ def summarise_analysis(analysis_df):
     mean_df = perform_agg(analysis_df, numerical_cols, agg_type='mean')
     std_df = perform_agg(analysis_df, numerical_cols, agg_type='std')
     return pd.concat([mean_df, std_df], axis=1)
+
 
 # Load the generated captions
 caption_dic = load_all_captions()
