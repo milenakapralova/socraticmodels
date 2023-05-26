@@ -10,7 +10,7 @@ To install the environment, run:
 
 `conda env create -f environment.yml`
 
-`conda activate socrati`
+`conda activate socratic`
 
 `python -m spacy download en`
 
