@@ -20,163 +20,20 @@ try:
     os.chdir('scripts')
 except:
     pass
-from scripts.image_captioning import (
-    ClipManager, ImageManager, VocabManager, LmManager, CocoManager, LmPromptGenerator
-)
-from scripts.image_captioning import CacheManager as cm
-from scripts.utils import get_device, prepare_dir, set_all_seeds, get_file_name_extension_improved, print_time_dec
+from scripts.image_captioning import ImageCaptionerParent
+from scripts.utils import prepare_dir, get_file_name_extension_improved, print_time_dec
 
 
-class ImageCaptioner:
-    def __init__(self, random_seed=42, num_images=50, set_type='train'):
-        """
-        1. Set up
-        """
-        # Store set type
-        self.set_type = set_type
-
-        # Set the seeds
-        set_all_seeds(random_seed)
-
-        # ## Step 1: Downloading the MS COCO images and annotations
-        self.coco_manager = CocoManager()
-
-
-        # ### Set the device, instantiate managers and calculate the variables that are image independent.
-
-        # Set the device to use
-        device = get_device()
-
-        # Instantiate the clip manager
-        self.clip_manager = ClipManager(device)
-
-        # Instantiate the image manager
-        self.image_manager = ImageManager()
-
-        # Instantiate the vocab manager
-        self.vocab_manager = VocabManager()
-
-        # Instantiate the Flan T5 manager
-        self.flan_manager = LmManager()
-
-        # Instantiate the prompt generator
-        self.prompt_generator = LmPromptGenerator()
-
-        """
-        2. Text embeddings
-        """
-
-        # Calculate the place features
-        self.place_emb = cm.get_place_emb(self.clip_manager, self.vocab_manager)
-
-        # Calculate the object features
-        self.object_emb = cm.get_object_emb(self.clip_manager, self.vocab_manager)
-
-        # Calculate the features of the number of people
-        self.ppl_texts = [
-            'are no people', 'is one person', 'are two people', 'are three people', 'are several people',
-            'are many people'
-        ]
-        self.ppl_emb = self.clip_manager.get_text_emb([f'There {p} in this photo.' for p in self.ppl_texts])
-
-        self.img_types = ['photo', 'cartoon', 'sketch', 'painting']
-        self.img_types_emb = self.clip_manager.get_text_emb([f'This is a {t}.' for t in self.img_types])
-
-        # Create a dictionary that maps the objects to the cosine sim.
-        self.object_embeddings = dict(zip(self.vocab_manager.object_list, self.object_emb))
-
-        """
-        3. Load images and compute image embedding
-        """
-
-        # Randomly select images from the COCO dataset
-        img_files = self.coco_manager.get_random_image_paths(num_images=num_images, set_type=set_type)
-
-        # Create dictionaries to store the images features
-        self.img_dic = {}
-        self.img_feat_dic = {}
-
-        for img_file in img_files:
-            # Load the image
-            self.img_dic[img_file] = self.image_manager.load_image(self.coco_manager.image_dir + img_file)
-            # Generate the CLIP image embedding
-            self.img_feat_dic[img_file] = self.clip_manager.get_img_emb(self.img_dic[img_file]).flatten()
-
-        """
-        4. Zero-shot VLM (CLIP): We zero-shot prompt CLIP to produce various inferences of an image, such as image type or 
-        the number of people in the image.
-        """
-
-        # Classify image type
-        # Create a dictionary to store the image types
-        self.img_type_dic = {}
-        for img_name, img_feat in self.img_feat_dic.items():
-            sorted_img_types, img_type_scores = self.clip_manager.get_nn_text(
-                self.img_types, self.img_types_emb, img_feat
-            )
-            self.img_type_dic[img_name] = sorted_img_types[0]
-
-        # Classify number of people
-        # Create a dictionary to store the number of people
-        self.num_people_dic = {}
-        for img_name, img_feat in self.img_feat_dic.items():
-            sorted_ppl_texts, ppl_scores = self.clip_manager.get_nn_text(self.ppl_texts, self.ppl_emb, img_feat)
-            self.num_people_dic[img_name] = sorted_ppl_texts[0]
-
-        # Classify image place
-
-        # Create a dictionary to store the location
-        self.location_dic = {}
-        for img_name, img_feat in self.img_feat_dic.items():
-            sorted_places, places_scores = self.clip_manager.get_nn_text(
-                self.vocab_manager.place_list, self.place_emb, img_feat
-            )
-            self.location_dic[img_name] = sorted_places
-
-        # Classify image object
-
-        # Create a dictionary to store the similarity of each object with the images
-        self.object_score_map = {}
-        self.sorted_obj_dic = {}
-        for img_name, img_feat in self.img_feat_dic.items():
-            sorted_obj_texts, obj_scores = self.clip_manager.get_nn_text(
-                self.vocab_manager.object_list, self.object_emb, img_feat
-            )
-            self.object_score_map[img_name] = dict(zip(sorted_obj_texts, obj_scores))
-            self.sorted_obj_dic[img_name] = sorted_obj_texts
-
-
+class ImageCaptionerImproved(ImageCaptionerParent):
     @print_time_dec
     def main(
             self, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True,
             cos_sim_thres=0.5, num_objects=5, num_places=2, caption_strategy='baseline'
     ):
-
         """
         5. Finding both relevant and different objects using cosine similarity
         """
-        # Create a dictionary to store the best object matches
-        best_matches = {}
-
-        for img_name, sorted_obj_texts in self.sorted_obj_dic.items():
-
-            # Create a list that contains the objects ordered by cosine sim.
-            embeddings_sorted = [self.object_embeddings[w] for w in sorted_obj_texts]
-
-            # Create a list to store the best matches
-            best_matches[img_name] = [sorted_obj_texts[0]]
-
-            # Create an array to store the embeddings of the best matches
-            unique_embeddings = embeddings_sorted[0].reshape(-1, 1)
-
-            # Loop through the 100 best objects by cosine similarity
-            for i in range(1, 100):
-                # Obtain the maximum cosine similarity when comparing object i to the embeddings of the current best matches
-                max_cos_sim = (unique_embeddings.T @ embeddings_sorted[i]).max()
-                # If object i is different enough to the current best matches, add it to the best matches
-                if max_cos_sim < cos_sim_thres:
-                    unique_embeddings = np.concatenate([unique_embeddings, embeddings_sorted[i].reshape(-1, 1)], 1)
-                    best_matches[img_name].append(sorted_obj_texts[i])
+        best_matches = self.find_best_object_matches(cos_sim_thres)
 
         """
         6. Zero-shot LM (Flan-T5): We zero-shot prompt Flan-T5 to produce captions and use CLIP to rank the captions
@@ -229,7 +86,59 @@ class ImageCaptioner:
         prepare_dir(file_path)
         pd.DataFrame(data_list).to_csv(file_path, index=False)
 
+    def find_best_object_matches(self, cos_sim_thres):
+        """
+        This method is integral to the ImageCaptionerImproved. It filters the objects to only returned
+        terms that do not have too high of cosine similarity with each other. It is controled by the cos_sim_thres
+        parameter.
+
+        :param cos_sim_thres:
+        :return:
+        """
+        # Create a dictionary to store the best object matches
+        best_matches = {}
+
+        for img_name, sorted_obj_texts in self.sorted_obj_dic.items():
+
+            # Create a list that contains the objects ordered by cosine sim.
+            embeddings_sorted = [self.object_embeddings[w] for w in sorted_obj_texts]
+
+            # Create a list to store the best matches
+            best_matches[img_name] = [sorted_obj_texts[0]]
+
+            # Create an array to store the embeddings of the best matches
+            unique_embeddings = embeddings_sorted[0].reshape(-1, 1)
+
+            # Loop through the 100 best objects by cosine similarity
+            for i in range(1, 100):
+                # Obtain the maximum cosine similarity when comparing object i to the embeddings of the current best matches
+                max_cos_sim = (unique_embeddings.T @ embeddings_sorted[i]).max()
+                # If object i is different enough to the current best matches, add it to the best matches
+                if max_cos_sim < cos_sim_thres:
+                    unique_embeddings = np.concatenate([unique_embeddings, embeddings_sorted[i].reshape(-1, 1)], 1)
+                    best_matches[img_name].append(sorted_obj_texts[i])
+        return best_matches
+
+    def get_nb_of_people_emb(self):
+        """
+        Determines the number of people in the image.
+
+        :return:
+        """
+        self.ppl_texts = [
+            'are no people', 'is one person', 'are two people', 'are three people', 'are several people',
+            'are many people'
+        ]
+        self.ppl_emb = self.clip_manager.get_text_emb([f'There {p} in this photo.' for p in self.ppl_texts])
+
     def random_parameter_search(self, n_rounds, template_params):
+        """
+        Runs a random parameter search.
+
+        :param n_rounds:
+        :param template_params:
+        :return:
+        """
         for _ in range(n_rounds):
             template_params_copy = template_params.copy()
             template_params_copy['lm_temperature'] = np.round(np.random.uniform(0.5, 1), 3)
@@ -239,9 +148,20 @@ class ImageCaptioner:
             template_params_copy['caption_strategy'] = np.random.choice(['original', 'creative'])
             self.main(**template_params_copy)
 
+    def determine_nb_of_people(self):
+        """
+        Determines the number of people in the image.
+
+        :return:
+        """
+        self.num_people_dic = {}
+        for img_name, img_feat in self.img_feat_dic.items():
+            sorted_ppl_texts, ppl_scores = self.clip_manager.get_nn_text(self.ppl_texts, self.ppl_emb, img_feat)
+            self.num_people_dic[img_name] = sorted_ppl_texts[0]
+
 if __name__ == '__main__':
 
-    image_captioner = ImageCaptioner(num_images=50, set_type='train')
+    image_captioner = ImageCaptionerImproved(num_images=50, set_type='train')
     template_params = dict(
         num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
         num_objects=5, num_places=2, caption_strategy='baseline'

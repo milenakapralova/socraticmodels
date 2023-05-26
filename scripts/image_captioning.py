@@ -14,11 +14,147 @@ from profanity_filter import ProfanityFilter
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration
 sys.path.append('..')
-from scripts.utils import print_time_dec, prepare_dir
+
+from scripts.utils import print_time_dec, prepare_dir, set_all_seeds, get_device
 import zipfile
 import numpy as np
 import openai
 
+
+class ImageCaptionerParent:
+    def __init__(self, random_seed=42, num_images=50, set_type='train'):
+        """
+        1. Set up
+        """
+        # Store set type
+        self.set_type = set_type
+
+        # Set the seeds
+        set_all_seeds(random_seed)
+
+        # ## Step 1: Downloading the MS COCO images and annotations
+        self.coco_manager = CocoManager()
+
+        # ### Set the device, instantiate managers and calculate the variables that are image independent.
+
+        # Set the device to use
+        device = get_device()
+
+        # Instantiate the clip manager
+        self.clip_manager = ClipManager(device)
+
+        # Instantiate the image manager
+        self.image_manager = ImageManager()
+
+        # Instantiate the vocab manager
+        self.vocab_manager = VocabManager()
+
+        # Instantiate the Flan T5 manager
+        self.flan_manager = LmManager()
+
+        # Instantiate the prompt generator
+        self.prompt_generator = LmPromptGenerator()
+
+        """
+        2. Text embeddings
+        """
+
+        # Calculate the place features
+        self.place_emb = CacheManager.get_place_emb(self.clip_manager, self.vocab_manager)
+
+        # Calculate the object features
+        self.object_emb = CacheManager.get_object_emb(self.clip_manager, self.vocab_manager)
+
+        # Calculate the features of the number of people
+        self.ppl_texts = None
+        self.ppl_emb = None
+        self.ppl_texts_bool = None
+        self.ppl_emb_bool = None
+        self.ppl_texts_mult = None
+        self.ppl_emb_mult = None
+        self.get_nb_of_people_emb()
+
+        # Calculate the features for the image types
+        self.img_types = ['photo', 'cartoon', 'sketch', 'painting']
+        self.img_types_emb = self.clip_manager.get_text_emb([f'This is a {t}.' for t in self.img_types])
+
+        # Create a dictionary that maps the objects to the cosine sim.
+        self.object_embeddings = dict(zip(self.vocab_manager.object_list, self.object_emb))
+
+        """
+        3. Load images and compute image embedding
+        """
+
+        # Randomly select images from the COCO dataset
+        img_files = self.coco_manager.get_random_image_paths(num_images=num_images, set_type=set_type)
+
+        # Create dictionaries to store the images features
+        self.img_dic = {}
+        self.img_feat_dic = {}
+
+        for img_file in img_files:
+            # Load the image
+            self.img_dic[img_file] = self.image_manager.load_image(self.coco_manager.image_dir + img_file)
+            # Generate the CLIP image embedding
+            self.img_feat_dic[img_file] = self.clip_manager.get_img_emb(self.img_dic[img_file]).flatten()
+
+        """
+        4. Zero-shot VLM (CLIP): We zero-shot prompt CLIP to produce various inferences of an image, such as image type or 
+        the number of people in the image.
+        """
+
+        # Classify image type
+        # Create a dictionary to store the image types
+        self.img_type_dic = {}
+        for img_name, img_feat in self.img_feat_dic.items():
+            sorted_img_types, img_type_scores = self.clip_manager.get_nn_text(
+                self.img_types, self.img_types_emb, img_feat
+            )
+            self.img_type_dic[img_name] = sorted_img_types[0]
+
+        # Classify number of people
+        self.num_people_dic = None
+        self.determine_nb_of_people()
+
+        # Classify image place
+        # Create a dictionary to store the location
+        self.location_dic = {}
+        for img_name, img_feat in self.img_feat_dic.items():
+            sorted_places, places_scores = self.clip_manager.get_nn_text(
+                self.vocab_manager.place_list, self.place_emb, img_feat
+            )
+            self.location_dic[img_name] = sorted_places
+
+        # Classify image object
+        # Create a dictionary to store the similarity of each object with the images
+        self.object_score_map = {}
+        self.sorted_obj_dic = {}
+        for img_name, img_feat in self.img_feat_dic.items():
+            sorted_obj_texts, obj_scores = self.clip_manager.get_nn_text(
+                self.vocab_manager.object_list, self.object_emb, img_feat
+            )
+            self.object_score_map[img_name] = dict(zip(sorted_obj_texts, obj_scores))
+            self.sorted_obj_dic[img_name] = sorted_obj_texts
+
+    def get_nb_of_people_emb(self):
+        """
+        Gets the embeddings for the number of people.
+
+        Method to be overriden in the child class.
+
+        :return:
+        """
+        pass
+
+    def determine_nb_of_people(self):
+        """
+        Determines the number of people in the image.
+
+        Method to be overriden in the child class.
+
+        :return:
+        """
+        pass
 
 class CocoManager:
     def __init__(self):
