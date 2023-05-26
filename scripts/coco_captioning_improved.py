@@ -149,7 +149,7 @@ class ImageCaptioner:
     @print_time_dec
     def main(
             self, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True,
-            cos_sim_thres=0.7, num_objects=5, num_places=2, caption_strategy='baseline'
+            cos_sim_thres=0.5, num_objects=5, num_places=2, caption_strategy='baseline'
     ):
 
         """
@@ -233,8 +233,8 @@ class ImageCaptioner:
         for _ in range(n_rounds):
             template_params_copy = template_params.copy()
             template_params_copy['lm_temperature'] = np.round(np.random.uniform(0.5, 1), 3)
-            template_params_copy['cos_sim_thres'] = np.round(np.random.uniform(0.5, 1), 3)
-            template_params_copy['num_objects'] = np.random.choice(range(5, 20))
+            template_params_copy['cos_sim_thres'] = np.round(np.random.uniform(0.6, 1), 3)
+            template_params_copy['num_objects'] = np.random.choice(range(5, 15))
             template_params_copy['num_places'] = np.random.choice(range(1, 6))
             template_params_copy['caption_strategy'] = np.random.choice(['original', 'creative'])
             self.main(**template_params_copy)

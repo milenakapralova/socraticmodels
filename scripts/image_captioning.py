@@ -62,8 +62,10 @@ class CocoManager:
         img_list.sort()
         # Data split
         train_set = np.random.choice(img_list, size=num_images).tolist()
+        remaining_images = list(set(img_list) - set(train_set))
+        remaining_images.sort()
         test_set = np.random.choice(
-            list(set(img_list) - set(train_set)),
+            remaining_images,
             size=num_images
         ).tolist()
         if set_type == 'train':
