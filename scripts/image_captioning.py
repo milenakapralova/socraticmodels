@@ -533,7 +533,22 @@ class LmPromptGenerator:
         This photo may have been taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
         There might be a {', '.join(object_list)} in this {img_type}.
         A creative short caption I can generate to describe this image is:'''
+    
+    # def create_cot_prompt(sample, sorted_places, object_list):
+    def create_cot_prompt(self, sample, clip_manager, vocab_manager, place_feats, obj_feats):
+        _, _, sorted_places, sorted_obj_texts, obj_list, obj_scores = clip_manager.get_img_info(sample['image'], place_feats, obj_feats, vocab_manager)
+        filtered_objs = filter_objs(sorted_obj_texts, obj_scores, clip_manager, obj_topk=10, sim_threshold=0.7)
+        prompt = f'''This image was taken in a {sorted_places[0]}. It contains a {', '.join(filtered_objs)}.\nQuestion: {sample['question']}\nChoices: {sample['choices']}\nAnswer: Let's think step by step...'''
+        return prompt
 
+    def create_vqa_prompt(self, sample, clip_manager, vocab_manager, place_feats, obj_feats):
+        _, _, sorted_places, sorted_obj_texts, obj_list, obj_scores = clip_manager.get_img_info(sample['image'], place_feats, obj_feats, vocab_manager)
+        filtered_objs = filter_objs(sorted_obj_texts, obj_scores, clip_manager, obj_topk=10, sim_threshold=0.7)
+        prompt = f'''This image was taken in a {sorted_places[0]}. It contains a {', '.join(filtered_objs)}. Using this information, answer the following question: {sample['question']}
+        Choices: {sample['choices']}
+        Answer: '''
+        return prompt
+        
     @staticmethod
     def get_places_string(place_list):
         if len(place_list) == 1:
