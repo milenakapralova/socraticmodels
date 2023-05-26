@@ -127,9 +127,9 @@ class VocabManager:
         self.cache_folder = '../data/cache/'
         self.files_to_download = {
             'categories_places365.txt': "https://raw.githubusercontent.com/zhoubolei/places_devkit/master/categories_pl"
-            "aces365.txt",
+                                        "aces365.txt",
             'dictionary_and_semantic_hierarchy.txt': "https://raw.githubusercontent.com/Tencent/tencent-ml-images/maste"
-            "r/data/dictionary_and_semantic_hierarchy.txt"
+                                                     "r/data/dictionary_and_semantic_hierarchy.txt"
         }
         self.download_data()
         self.place_list = self.load_places()
@@ -534,7 +534,7 @@ class LmPromptGenerator:
         I think there might be a {object_list_str} in this {img_type}.
         A creative short caption I can generate to describe this image is:'''
 
-    def create_baseline_lm_prompt2(self, img_type, ppl_result, sorted_places, object_list):
+    def create_socratic_original_prompt(self, img_type, ppl_result, sorted_places, object_list):
         places_string = self.get_places_string(sorted_places)
         return f'''I am an intelligent image captioning bot.
         This image is a {img_type}. There {ppl_result}.
