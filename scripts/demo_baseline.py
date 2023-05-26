@@ -76,7 +76,7 @@ for i in range(obj_topk):
 object_list = object_list[:-2]
 
 # Zero-shot LM: generate captions.
-num_captions = 10
+n_captions = 10
 prompt = f'''I am an intelligent image captioning bot.
 This image is a {img_type}. There {ppl_result}.
 I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
@@ -85,7 +85,7 @@ A creative short caption I can generate to describe this image is:'''
 
 # Generate multiple captions
 model_params = {'temperature': 0.9, 'max_length': 40, 'do_sample': True}
-caption_texts = flan_manager.generate_response(num_captions * [prompt], model_params)
+caption_texts = flan_manager.generate_response(n_captions * [prompt], model_params)
 
 # Zero-shot VLM: rank captions.
 caption_emb = clip_manager.get_text_emb(caption_texts)

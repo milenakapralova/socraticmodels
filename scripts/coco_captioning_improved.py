@@ -27,8 +27,8 @@ from scripts.utils import prepare_dir, get_file_name_extension_improved, print_t
 class ImageCaptionerImproved(ImageCaptionerParent):
     @print_time_dec
     def main(
-            self, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True,
-            cos_sim_thres=0.5, num_objects=5, num_places=2, caption_strategy='baseline'
+            self, n_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True,
+            cos_sim_thres=0.5, n_objects=5, n_places=2, caption_strategy='baseline'
     ):
         """
         5. Finding both relevant and different objects using cosine similarity
@@ -55,12 +55,12 @@ class ImageCaptionerImproved(ImageCaptionerParent):
 
         for img_name in self.img_dic:
             prompt_dic[img_name] = pg_map[caption_strategy](
-                self.img_type_dic[img_name], self.num_people_dic[img_name], self.location_dic[img_name][:num_places],
-                object_list=best_matches[img_name][:num_objects]
+                self.img_type_dic[img_name], self.n_people_dic[img_name], self.location_dic[img_name][:n_places],
+                object_list=best_matches[img_name][:n_objects]
             )
 
             # Generate the caption using the language model
-            caption_texts = self.flan_manager.generate_response(num_captions * [prompt_dic[img_name]], model_params)
+            caption_texts = self.flan_manager.generate_response(n_captions * [prompt_dic[img_name]], model_params)
 
             # Zero-shot VLM: rank captions.
             caption_emb = self.clip_manager.get_text_emb(caption_texts)
@@ -80,7 +80,7 @@ class ImageCaptionerImproved(ImageCaptionerParent):
                 'set_type': self.set_type
             })
         file_name_extension = get_file_name_extension_improved(
-            lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy, self.set_type
+            lm_temperature, cos_sim_thres, n_objects, n_places, caption_strategy, self.set_type
         )
         file_path = f'../data/outputs/captions/improved_caption{file_name_extension}.csv'
         prepare_dir(file_path)
@@ -131,22 +131,27 @@ class ImageCaptionerImproved(ImageCaptionerParent):
         ]
         self.ppl_emb = self.clip_manager.get_text_emb([f'There {p} in this photo.' for p in self.ppl_texts])
 
-    def random_parameter_search(self, n_rounds, template_params):
+    def random_parameter_search(self, n_iterations, n_captions, lm_max_length=40, lm_do_sample=True):
         """
         Runs a random parameter search.
 
-        :param n_rounds:
+        :param n_iterations:
         :param template_params:
         :return:
         """
-        for _ in range(n_rounds):
-            template_params_copy = template_params.copy()
-            template_params_copy['lm_temperature'] = np.round(np.random.uniform(0.5, 1), 3)
-            template_params_copy['cos_sim_thres'] = np.round(np.random.uniform(0.6, 1), 3)
-            template_params_copy['num_objects'] = np.random.choice(range(5, 15))
-            template_params_copy['num_places'] = np.random.choice(range(1, 6))
-            template_params_copy['caption_strategy'] = np.random.choice(['original', 'creative'])
-            self.main(**template_params_copy)
+        for _ in range(n_iterations):
+            template_params = {
+                'n_captions': n_captions,
+                'lm_temperature': np.round(np.random.uniform(0.5, 1), 3),
+                'lm_max_length': lm_max_length,
+                'lm_do_sample': lm_do_sample,
+                'cos_sim_thres': np.round(np.random.uniform(0.6, 1), 3),
+                'n_objects': np.random.choice(range(5, 15)),
+                'n_places': np.random.choice(range(1, 6)),
+                'caption_strategy': np.random.choice(['original', 'creative'])
+            }
+            self.main(**template_params)
+
 
     def determine_nb_of_people(self):
         """
@@ -154,17 +159,11 @@ class ImageCaptionerImproved(ImageCaptionerParent):
 
         :return:
         """
-        self.num_people_dic = {}
+        self.n_people_dic = {}
         for img_name, img_feat in self.img_feat_dic.items():
             sorted_ppl_texts, ppl_scores = self.clip_manager.get_nn_text(self.ppl_texts, self.ppl_emb, img_feat)
-            self.num_people_dic[img_name] = sorted_ppl_texts[0]
+            self.n_people_dic[img_name] = sorted_ppl_texts[0]
 
 if __name__ == '__main__':
-
-    image_captioner = ImageCaptionerImproved(num_images=50, set_type='train')
-    template_params = dict(
-        num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, cos_sim_thres=0.7,
-        num_objects=5, num_places=2, caption_strategy='baseline'
-    )
-    image_captioner.random_parameter_search(n_rounds=200, template_params=template_params)
-
+    image_captioner = ImageCaptionerImproved(n_images=50, set_type='train')
+    image_captioner.random_parameter_search(n_iterations=200, n_captions=10)

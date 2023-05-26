@@ -30,8 +30,8 @@ from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec
 class ImageCaptionerBaseline(ImageCaptionerParent):
     @print_time_dec
     def main(
-            self, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True,
-            num_objects=10, num_places=3
+            self, n_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True,
+            n_objects=10, n_places=3
     ):
 
         # Set LM params
@@ -45,12 +45,12 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
         for img_name in self.img_dic:
 
             prompt_dic[img_name] = self.prompt_generator.create_socratic_original_prompt(
-                self.img_type_dic[img_name], self.num_people_dic[img_name], self.location_dic[img_name][:num_places],
-                self.sorted_obj_dic[img_name][:num_objects]
+                self.img_type_dic[img_name], self.n_people_dic[img_name], self.location_dic[img_name][:n_places],
+                self.sorted_obj_dic[img_name][:n_objects]
             )
 
             # Generate the caption using the language model
-            caption_texts = self.flan_manager.generate_response(num_captions * [prompt_dic[img_name]], model_params)
+            caption_texts = self.flan_manager.generate_response(n_captions * [prompt_dic[img_name]], model_params)
 
             # Zero-shot VLM: rank captions.
             caption_emb = self.clip_manager.get_text_emb(caption_texts)
@@ -75,7 +75,7 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
             })
 
         file_name_extension = get_file_name_extension_baseline(
-            lm_temperature, num_objects, num_places
+            lm_temperature, n_objects, n_places
         )
         file_path = f'../data/outputs/captions/baseline_caption{file_name_extension}.csv'
         prepare_dir(file_path)
@@ -97,7 +97,7 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
         :return:
         """
         # Create a dictionary to store the number of people
-        self.num_people_dic = {}
+        self.n_people_dic = {}
         for img_name, img_feat in self.img_feat_dic.items():
             sorted_ppl_texts, ppl_scores = self.clip_manager.get_nn_text(
                 self.ppl_texts_bool, self.ppl_emb_bool, img_feat
@@ -111,28 +111,29 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
             else:
                 ppl_result = f'are {ppl_result}'
 
-            self.num_people_dic[img_name] = ppl_result
+            self.n_people_dic[img_name] = ppl_result
 
-    def random_parameter_search(self, n_rounds, template_params):
+    def random_parameter_search(self, n_iterations, n_captions, lm_max_length=40, lm_do_sample=True):
         """
         Runs a random parameter search.
 
-        :param n_rounds:
+        :param n_iterations:
         :param template_params:
         :return:
         """
-        for _ in range(n_rounds):
-            template_params_copy = template_params.copy()
-            template_params_copy['lm_temperature'] = np.round(np.random.uniform(0.5, 1), 3)
-            template_params_copy['num_objects'] = np.random.choice(range(5, 15))
-            template_params_copy['num_places'] = np.random.choice(range(1, 6))
-            self.main(**template_params_copy)
+        for _ in range(n_iterations):
+            template_params = {
+                'n_captions': n_captions,
+                'lm_temperature': np.round(np.random.uniform(0.5, 1), 3),
+                'lm_max_length': lm_max_length,
+                'lm_do_sample': lm_do_sample,
+                'n_objects': np.random.choice(range(5, 15)),
+                'n_places': np.random.choice(range(1, 6))
+            }
+            self.main(**template_params)
 
 
 
 if __name__ == '__main__':
-    image_captioner = ImageCaptionerBaseline(num_images=50, set_type='train')
-    template_params = dict(
-        num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, num_objects=10, num_places=3
-    )
-    image_captioner.random_parameter_search(n_rounds=200, template_params=template_params)
+    image_captioner = ImageCaptionerBaseline(n_images=50, set_type='train')
+    image_captioner.random_parameter_search(n_iterations=200, n_captions=10)

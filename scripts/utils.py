@@ -59,24 +59,24 @@ def get_uuid_for_imgs(img_list):
     return str(uuid.uuid3(uuid.NAMESPACE_DNS, ''.join(img_list)))
 
 
-def get_file_name_extension_baseline(lm_temperature, num_objects, num_places):
+def get_file_name_extension_baseline(lm_temperature, n_objects, n_places):
     extension = ''
     extension += f'_temp_{lm_temperature}'.replace('.', '')
-    extension += f'_nobj_{num_objects}'
-    extension += f'_npl_{num_places}'
+    extension += f'_nobj_{n_objects}'
+    extension += f'_npl_{n_places}'
     return extension
 
 
-def get_file_name_extension_improved(lm_temperature, cos_sim_thres, num_objects, num_places, caption_strategy, set_type):
+def get_file_name_extension_improved(lm_temperature, cos_sim_thres, n_objects, n_places, caption_strategy, set_type):
     extension = ''
     # The language model temperature
     extension += f'_temp_{lm_temperature}'.replace('.', '')
     # The cosine thresold.
     extension += f'_costhres_{cos_sim_thres}'.replace('.', '')
     # Number of objects
-    extension += f'_nobj_{num_objects}'
+    extension += f'_nobj_{n_objects}'
     # Number of places
-    extension += f'_npl_{num_places}'
+    extension += f'_npl_{n_places}'
     # Caption strategy
     extension += f'_strat_{caption_strategy}'
     # Train/test set

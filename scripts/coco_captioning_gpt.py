@@ -27,7 +27,7 @@ from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec
 
 @print_time_dec
 def main(
-        num_images=100, num_captions=10, lm_temperature=0.9, random_seed=42,
+        n_images=100, n_captions=10, lm_temperature=0.9, random_seed=42,
         set_type='train'
 ):
 
@@ -77,7 +77,7 @@ def main(
     """
 
     # Randomly select images from the COCO dataset
-    img_files = coco_manager.get_random_image_paths(num_images=num_images, set_type=set_type)
+    img_files = coco_manager.get_random_image_paths(n_images=n_images, set_type=set_type)
 
     # Create dictionaries to store the images features
     img_dic = {}
@@ -111,7 +111,7 @@ def main(
     ppl_emb_mult = clip_manager.get_text_emb([f'There {p} in this photo.' for p in ppl_texts_mult])
 
     # Create a dictionary to store the number of people
-    num_people_dic = {}
+    n_people_dic = {}
 
     for img_name, img_feat in img_feat_dic.items():
         sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts_bool, ppl_emb_bool, img_feat)
@@ -122,7 +122,7 @@ def main(
         else:
             ppl_result = f'are {ppl_result}'
 
-        num_people_dic[img_name] = ppl_result
+        n_people_dic[img_name] = ppl_result
 
     # Classify image place
 
@@ -160,11 +160,11 @@ def main(
     for img_name in img_dic:
         # Create the prompt for the language model
         prompt_dic[img_name] = pg.create_baseline_lm_prompt(
-            img_type_dic[img_name], num_people_dic[img_name], location_dic[img_name], obj_list_dic[img_name]
+            img_type_dic[img_name], n_people_dic[img_name], location_dic[img_name], obj_list_dic[img_name]
         )
 
         # Generate the caption using the language model
-        caption_texts = [gpt_manager.generate_response(prompt_dic[img_name], temperature=lm_temperature) for _ in range(num_captions)]
+        caption_texts = [gpt_manager.generate_response(prompt_dic[img_name], temperature=lm_temperature) for _ in range(n_captions)]
 
         # Zero-shot VLM: rank captions.
         caption_emb = clip_manager.get_text_emb(caption_texts)

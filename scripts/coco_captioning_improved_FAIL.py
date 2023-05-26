@@ -70,7 +70,7 @@ object_emb = cm.get_object_emb(clip_manager, vocab_manager)
 
 # Randomly select images from the COCO dataset
 N = 5
-img_files = coco_manager.get_random_image_paths(num_images=5)
+img_files = coco_manager.get_random_image_paths(n_images=5)
 
 # Create dictionaries to store the images features
 img_dic = {}
@@ -104,10 +104,10 @@ ppl_texts = [
 ppl_emb = clip_manager.get_text_emb([f'There {p} in this photo.' for p in ppl_texts])
 
 # Create a dictionary to store the number of people
-num_people_dic = {}
+n_people_dic = {}
 for img_name, img_feat in img_feat_dic.items():
     sorted_ppl_texts, ppl_scores = clip_manager.get_nn_text(ppl_texts, ppl_emb, img_feat)
-    num_people_dic[img_name] = sorted_ppl_texts[0]
+    n_people_dic[img_name] = sorted_ppl_texts[0]
 
 
 # Classify image place
@@ -206,7 +206,7 @@ for img_name, sorted_obj_texts in sorted_obj_dic.items():
 
 
 # Generate captions
-num_captions = 50
+n_captions = 50
 
 # Set LM params
 model_params = {'temperature': 0.9, 'max_length': 40, 'do_sample': True}
@@ -219,11 +219,11 @@ caption_score_map = {}
 for img_name in img_dic:
     # Create the prompt for the language model
     prompt_dic[img_name] = pg.create_improved_lm_prompt(
-        img_type_dic[img_name], num_people_dic[img_name], terms_to_include[img_name]
+        img_type_dic[img_name], n_people_dic[img_name], terms_to_include[img_name]
     )
 
     # Generate the caption using the language model
-    caption_texts = flan_manager.generate_response(num_captions * [prompt_dic[img_name]], model_params)
+    caption_texts = flan_manager.generate_response(n_captions * [prompt_dic[img_name]], model_params)
 
     # Zero-shot VLM: rank captions.
     caption_emb = clip_manager.get_text_emb(caption_texts)

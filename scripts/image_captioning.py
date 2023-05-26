@@ -22,7 +22,7 @@ import openai
 
 
 class ImageCaptionerParent:
-    def __init__(self, random_seed=42, num_images=50, set_type='train'):
+    def __init__(self, random_seed=42, n_images=50, set_type='train'):
         """
         1. Set up
         """
@@ -86,7 +86,7 @@ class ImageCaptionerParent:
         """
 
         # Randomly select images from the COCO dataset
-        img_files = self.coco_manager.get_random_image_paths(num_images=num_images, set_type=set_type)
+        img_files = self.coco_manager.get_random_image_paths(n_images=n_images, set_type=set_type)
 
         # Create dictionaries to store the images features
         self.img_dic = {}
@@ -113,7 +113,7 @@ class ImageCaptionerParent:
             self.img_type_dic[img_name] = sorted_img_types[0]
 
         # Classify number of people
-        self.num_people_dic = None
+        self.n_people_dic = None
         self.determine_nb_of_people()
 
         # Classify image place
@@ -193,16 +193,16 @@ class CocoManager:
         for folder, url in self.dataset_to_download.items():
             self.download_unzip_delete(folder, url)
 
-    def get_random_image_paths(self, num_images, set_type):
+    def get_random_image_paths(self, n_images, set_type):
         img_list = os.listdir(self.image_dir)
         img_list.sort()
         # Data split
-        train_set = np.random.choice(img_list, size=num_images).tolist()
+        train_set = np.random.choice(img_list, size=n_images).tolist()
         remaining_images = list(set(img_list) - set(train_set))
         remaining_images.sort()
         test_set = np.random.choice(
             remaining_images,
-            size=num_images
+            size=n_images
         ).tolist()
         if set_type == 'train':
             return train_set
@@ -462,8 +462,8 @@ class ClipManager:
         ]
         ppl_feats = self.get_text_emb([f'There {p} in this photo.' for p in ppl_texts])
         sorted_ppl_texts, ppl_scores = self.get_nn_text(ppl_texts, ppl_feats, img_feats)
-        num_people = sorted_ppl_texts[0]
-        print(f'There {num_people} in this photo.')
+        n_people = sorted_ppl_texts[0]
+        print(f'There {n_people} in this photo.')
 
         # classify places
         sorted_places, places_scores = self.get_nn_text(vocab_manager.place_list, place_feats, img_feats)
@@ -478,7 +478,7 @@ class ClipManager:
         object_list = object_list[:-2]
         print(f'Top 10 objects in the image: \n{sorted_obj_texts[:10]}')
 
-        return img_type, num_people, location, sorted_obj_texts, object_list, obj_scores
+        return img_type, n_people, location, sorted_obj_texts, object_list, obj_scores
 
     def rank_gen_outputs(self, img, output_texts, k=5):
         img_feats = self.get_img_emb(img)

@@ -155,7 +155,7 @@ for i in range(1, 100):
 #         break
 
 # Generate 100 captions, order them and print out the best.
-num_captions = 50
+n_captions = 50
 # prompt = f'''Create a creative beautiful caption from this context:
 #     "This image is a {img_type}. There {ppl_result}.
 #     The context is: {', '.join(terms_to_include)}.
@@ -167,7 +167,7 @@ prompt = f'''I am an intelligent image captioning bot.
     I think there might be a {', '.join(best_matches[:5])} in this {img_type}.
     A creative short caption I can generate to describe this image is:'''
 model_params = {'temperature': 0.9, 'max_length': 40, 'do_sample': True}
-caption_texts = flan_manager.generate_response([prompt] * num_captions, model_params)
+caption_texts = flan_manager.generate_response([prompt] * n_captions, model_params)
 
 # Zero-shot VLM: rank captions.
 caption_emb = clip_manager.get_text_emb(caption_texts)
