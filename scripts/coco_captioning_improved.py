@@ -30,32 +30,10 @@ class ImageCaptionerImproved(ImageCaptionerParent):
             self, num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True,
             cos_sim_thres=0.5, num_objects=5, num_places=2, caption_strategy='baseline'
     ):
-
         """
         5. Finding both relevant and different objects using cosine similarity
         """
-        # Create a dictionary to store the best object matches
-        best_matches = {}
-
-        for img_name, sorted_obj_texts in self.sorted_obj_dic.items():
-
-            # Create a list that contains the objects ordered by cosine sim.
-            embeddings_sorted = [self.object_embeddings[w] for w in sorted_obj_texts]
-
-            # Create a list to store the best matches
-            best_matches[img_name] = [sorted_obj_texts[0]]
-
-            # Create an array to store the embeddings of the best matches
-            unique_embeddings = embeddings_sorted[0].reshape(-1, 1)
-
-            # Loop through the 100 best objects by cosine similarity
-            for i in range(1, 100):
-                # Obtain the maximum cosine similarity when comparing object i to the embeddings of the current best matches
-                max_cos_sim = (unique_embeddings.T @ embeddings_sorted[i]).max()
-                # If object i is different enough to the current best matches, add it to the best matches
-                if max_cos_sim < cos_sim_thres:
-                    unique_embeddings = np.concatenate([unique_embeddings, embeddings_sorted[i].reshape(-1, 1)], 1)
-                    best_matches[img_name].append(sorted_obj_texts[i])
+        best_matches = self.find_best_object_matches(cos_sim_thres)
 
         """
         6. Zero-shot LM (Flan-T5): We zero-shot prompt Flan-T5 to produce captions and use CLIP to rank the captions
@@ -107,6 +85,39 @@ class ImageCaptionerImproved(ImageCaptionerParent):
         file_path = f'../data/outputs/captions/improved_caption{file_name_extension}.csv'
         prepare_dir(file_path)
         pd.DataFrame(data_list).to_csv(file_path, index=False)
+
+    def find_best_object_matches(self, cos_sim_thres):
+        """
+        This method is integral to the ImageCaptionerImproved. It filters the objects to only returned
+        terms that do not have too high of cosine similarity with each other. It is controled by the cos_sim_thres
+        parameter.
+
+        :param cos_sim_thres:
+        :return:
+        """
+        # Create a dictionary to store the best object matches
+        best_matches = {}
+
+        for img_name, sorted_obj_texts in self.sorted_obj_dic.items():
+
+            # Create a list that contains the objects ordered by cosine sim.
+            embeddings_sorted = [self.object_embeddings[w] for w in sorted_obj_texts]
+
+            # Create a list to store the best matches
+            best_matches[img_name] = [sorted_obj_texts[0]]
+
+            # Create an array to store the embeddings of the best matches
+            unique_embeddings = embeddings_sorted[0].reshape(-1, 1)
+
+            # Loop through the 100 best objects by cosine similarity
+            for i in range(1, 100):
+                # Obtain the maximum cosine similarity when comparing object i to the embeddings of the current best matches
+                max_cos_sim = (unique_embeddings.T @ embeddings_sorted[i]).max()
+                # If object i is different enough to the current best matches, add it to the best matches
+                if max_cos_sim < cos_sim_thres:
+                    unique_embeddings = np.concatenate([unique_embeddings, embeddings_sorted[i].reshape(-1, 1)], 1)
+                    best_matches[img_name].append(sorted_obj_texts[i])
+        return best_matches
 
     def get_nb_of_people_emb(self):
         """
