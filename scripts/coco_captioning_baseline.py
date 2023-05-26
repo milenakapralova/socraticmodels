@@ -133,7 +133,6 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
 if __name__ == '__main__':
     image_captioner = ImageCaptionerBaseline(num_images=50, set_type='train')
     template_params = dict(
-        num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, random_seed=42, num_objects=10,
-        num_places=3
+        num_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True, num_objects=10, num_places=3
     )
     image_captioner.random_parameter_search(n_rounds=200, template_params=template_params)
