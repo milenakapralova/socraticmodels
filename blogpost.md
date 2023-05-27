@@ -73,7 +73,6 @@ description are added and all other not-so-relevant terms are filtered out. Fina
 
 ![A picture of the CLIP embedding space of texts an images](pca.png)
 
-...
 
 
 The other of our contributions was in extending the evaluation pipeline to include also more semantically informed caption evaluations metrics. Specifically, the authors of the original paper [1] use only rule-based metrics such as BLUE-4, METEOR, CIDEr, SPICE and ROUGE-L to evaluate the quality of generated captions, and those metrics often do not correlate with human judgements, and they also have blind spots to syntactically pathological caption constructions [17], taking into account only information such as n-gram matching, word order, TF-IDF weights, and overlapping sequences of words. To remedy these issues, we iplemented two additional evaluation metrics that better correlate with human judgement [18]: an unscaled CLIP-S score [19] and the BERT score [20].
