@@ -302,14 +302,15 @@ def perform_agg(analysis_df, numerical_cols, agg_type):
     # Set the ground truth value
     agg_df[f'gts_sims_{agg_type}'] = agg_df['approach'].map(gts_sims_map)
     # Return the dataframe
-    return agg_df.reset_index()
+    return agg_df
 
 
 def summarise_analysis(analysis_df):
     numerical_cols = [c for c in analysis_df.columns if c not in ('approach', 'caption', 'image_id', 'gts_sims')]
     mean_df = perform_agg(analysis_df, numerical_cols, agg_type='mean')
     std_df = perform_agg(analysis_df, numerical_cols, agg_type='std')
-    return pd.concat([mean_df, std_df], axis=1)
+    cols_to_keep = [c for c in std_df.columns if c not in set(mean_df.columns)]
+    return pd.concat([mean_df, std_df[cols_to_keep]], axis=1)
 
 
 # Load the generated captions

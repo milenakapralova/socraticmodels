@@ -34,7 +34,7 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
         # Set up the prompt generator map
         pg_map = {
             'original': self.prompt_generator.create_socratic_original_prompt,
-            'creative': self.prompt_generator.create_improved_lm_prompt_alt1,
+            'creative': self.prompt_generator.create_improved_lm_creative,
         }
 
         # Set LM params
@@ -78,11 +78,12 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
             })
 
         file_name_extension = get_file_name_extension_baseline(
-            lm_temperature, n_objects, n_places, self.set_type
+            lm_temperature, n_objects, n_places, caption_strategy, self.set_type
         )
         file_path = f'../data/outputs/captions/baseline_caption{file_name_extension}.csv'
         prepare_dir(file_path)
-        pd.DataFrame(data_list).to_csv(file_path, index=False)
+        self.generated_caption_df = pd.DataFrame(data_list)
+        self.generated_caption_df.to_csv(file_path, index=False)
 
     def get_nb_of_people_emb(self):
         # Classify number of people

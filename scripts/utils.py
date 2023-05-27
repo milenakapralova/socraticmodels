@@ -59,11 +59,17 @@ def get_uuid_for_imgs(img_list):
     return str(uuid.uuid3(uuid.NAMESPACE_DNS, ''.join(img_list)))
 
 
-def get_file_name_extension_baseline(lm_temperature, n_objects, n_places, set_type):
+def get_file_name_extension_baseline(lm_temperature, n_objects, n_places, caption_strategy, set_type):
     extension = ''
+    # The language model temperature
     extension += f'_temp_{lm_temperature}'.replace('.', '')
+    # Number of objects
     extension += f'_nobj_{n_objects}'
+    # Number of places
     extension += f'_npl_{n_places}'
+    # Caption strategy
+    extension += f'_strat_{caption_strategy}'
+    # Train/test set
     extension += f'_{set_type}'
     return extension
 

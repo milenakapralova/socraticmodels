@@ -1,4 +1,10 @@
-
+import os
+import sys
+sys.path.append('..')
+try:
+    os.chdir('scripts')
+except:
+    pass
 from image_captioning import ImageManager, Blip2Manager
 from utils import get_device
 
@@ -22,7 +28,6 @@ model_params = {
     'max_length': 40,
     'no_repeat_ngram_size': 2,
     'repetition_penalty': 1.5,
-    # 'do_sample': True
 }
 
 # Example 1: Caption without a prompt
