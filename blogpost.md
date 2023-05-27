@@ -47,6 +47,34 @@ and is therefore assumed to be the most relevant. The subsequent terms are then 
 Empirically, we found that the optimal number of terms to include in the prompt varies from image to image, as some images contain a small number of relevant objects while others have more objects that should be considered. To handle this aspect, our method has a clever way of determining the number of candidate terms that should be included in the prompt. Specifically, we combine the term that has the highest cosine similarity with each of the previously determined candidate terms. We then calculate the cosine similarity between these combinations and the image and verify whether at least one of the combinations managed to achieve a higher cosine similarity compared to the original top term (at least 1% higher). This ensures that only relevant terms that contribute to the image
 description are added and all other not-so-relevant terms are filtered out. Finally, we also tested different prompt structures and combinations in order to find a prompt that was best suited for the FLAN-T5 model. More details should be expected in the final version.
 
+
+## Image Object Selection Algorithm
+
+1. **Procedure** `select_objects`:
+   - **Input**: `images` (list of images)
+   - **Output**: `objects` (list of selected objects)
+
+2. **Initialize** an empty list `objects` to store selected objects.
+
+3. **For each** `image` **in** `images`:
+     - **Get** the 100 most similar object categories to `image` based on cosine similarity.
+     - **Order** the 100 most similar object categories by cosine similarity.
+     - **Set** `selected_object` as the object category with the highest cosine similarity.
+     - **Add** `selected_object` **to** `objects`.
+
+4. **For each** `object` **in** `objects`:
+     - **For each** `next_object` **in** the ordered list of object categories after `object`:
+         - **Calculate** the cosine similarity between `next_object` and all the previously selected objects in `objects`.
+         - **If none** of the calculated cosine similarities is higher than the pre-specified threshold:
+             - **Include** `next_object` in `objects`.
+
+5. **Return** `objects` as the final list of selected objects.
+
+
+![A picture of the CLIP embedding space of texts an images](pca.png)
+
+
+
 The other of our contributions was in extending the evaluation pipeline to include also more semantically informed caption evaluations metrics. Specifically, the authors of the original paper [1] use only rule-based metrics such as BLUE-4, METEOR, CIDEr, SPICE and ROUGE-L to evaluate the quality of generated captions, and those metrics often do not correlate with human judgements, and they also have blind spots to syntactically pathological caption constructions [17], taking into account only information such as n-gram matching, word order, TF-IDF weights, and overlapping sequences of words. To remedy these issues, we iplemented two additional evaluation metrics that better correlate with human judgement [18]: an unscaled CLIP-S score [19] and the BERT score [20].
 
 CLIP-S is an embedding-based approach (based on CLIP embeddings), and are supposed to capture the semantic overlap between the candidate caption and an image, regardless of some groung truth. To comppute this score, we calculated the cosine similarities between each image embedding and embeddings of the ground truth captions and then we calculate the cosine similarities between each image embedding and embeddings of the captions generated with FLAN-T5. Then we computed the means and standard deviations of these cosine similarities, comparing the baseline and improved model based on the gap between ground truth and reference caption-related cosine similarities.
@@ -55,9 +83,50 @@ The BERT score is learning based method to evaluate image captions, exploiting t
 the tokens in the reference and candidate sentences via cosine similarity [21]. To this end, we calculated precision, recall and the F1 score for the baseline and improved model.
 
 
-## Results 
+## Results
 
-[to be added soon]
+<div style="display: flex; flex-direction: row;">
+    <div style="flex: 50%; text-align: center;">
+        <figure>
+            <img src="blogspot_images/demo_img.png" alt="Image 1">
+            <figcaption><strong>Original Socratic (ChatGPT)</strong>: "This photo captures the elegance of a well-designed dining room with a beautiful view."
+            <br><strong>Baseline (Flan-T5)</strong>: "The interior of a home with large windows and wooden shutters and chairs under a stairway."
+            <br><strong>Improved (Flan-T5)</strong>: "The interior of a home with large windows and wooden floors"</figcaption>
+        </figure>
+    </div>
+    <div style="flex: 50%; text-align: center;">
+        <figure>
+            <img src="blogspot_images/astronaut_with_beer.jpg" alt="Image 2">
+            <figcaption><strong>Original Socratic (ChatGPT)</strong>: "A photo of an astronaut enjoying a beer while waiting for a meeting."
+            <br><strong>Baseline (Flan-T5)</strong>: "man resting in spacesuit"
+            <br><strong>Improved (Flan-T5)</strong>: "astronaut relaxes with beer"</figcaption>
+        </figure>
+    </div>
+</div>
+
+
+<div style="display: flex; flex-direction: row;">
+    <div style="flex: 50%; text-align: center;">
+        <figure>
+            <img src="blogspot_images/monkey_with_gun.jpg" alt="Image 1">
+            <figcaption><strong>Original Socratic (ChatGPT)</strong>: "This photo chimpanzee was taken at a veterinarians office."
+            <br><strong>Baseline (Flan-T5)</strong>: "There is a chimpanzee in this photo"
+            <br><strong>Improved (Flan-T5)</strong>: "The chimpanzee wants to shoot at the person." </figcaption>
+        </figure>
+    </div>
+    <div style="flex: 50%; text-align: center;">
+        <figure>
+            <img src="blogspot_images/fruit_bowl.jpg" alt="Image 2">
+            <figcaption><strong>Original Socratic (ChatGPT)</strong>: "A close-up of a dish rack, with various plates and bowls stacked neatly inside."
+            <br><strong>Baseline (Flan-T5)</strong>: "A dish-rack has dishes in it."
+            <br><strong>Improved (Flan-T5)</strong>: "A basket of fruit in a stand."</figcaption>
+        </figure>
+    </div>
+</div>
+
+
+
+
 
 We present both quantitative and qualitative reults. Qualitative results show the vast improvement of the model compared to baseline (Figure 1), and the quantitative results confirm this observation (Table 1).
 

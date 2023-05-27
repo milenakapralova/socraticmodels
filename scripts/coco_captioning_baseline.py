@@ -2,7 +2,7 @@
 SocraticFlanT5 - Caption Generation (baseline) | DL2 Project, May 2023
 This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
 and the corresponding ground-truth captions and generates captions based on the baseline Socratic model pipeline:
-a Socratic model based on the work by Zeng et al. (2022) where GPT-3 is replaced by an open-source LM.
+a Socratic model based on the work by Zeng et al. (2022) where GPT-3 is replaced by FLAN-T5-xl.
 
 Set-up
 If you haven't done so already, please activate the corresponding environment by running in the terminal:
@@ -11,135 +11,135 @@ If you haven't done so already, please activate the corresponding environment by
 
 # Package loading
 import pandas as pd
+import numpy as np
+import os
 import sys
 sys.path.append('..')
-import os
 try:
     os.chdir('scripts')
 except:
     pass
-import argparse
-import json
 
 # Local imports
-import scripts.image_captioning as ic
-from scripts.utils import get_device, set_all_seeds, print_time_dec
+from scripts.image_captioning import ImageCaptionerParent
+from scripts.utils import prepare_dir, print_time_dec, get_file_name_extension_baseline
 
 
-@print_time_dec
-def main(args):
+class ImageCaptionerBaseline(ImageCaptionerParent):
+    @print_time_dec
+    def main(
+            self, n_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True,
+            n_objects=10, n_places=3, caption_strategy='original'
+    ):
+        # Set up the prompt generator map
+        pg_map = {
+            'original': self.prompt_generator.create_socratic_original_prompt,
+            'creative': self.prompt_generator.create_improved_lm_creative,
+        }
 
-    '''1. Set up'''
+        # Set LM params
+        model_params = {'temperature': lm_temperature, 'max_length': lm_max_length, 'do_sample': lm_do_sample}
 
-    # seed random seeds for reproducibility
-    set_all_seeds(args.rand_seed)
+        # Create dictionaries to store the outputs
+        prompt_dic = {}
+        sorted_caption_map = {}
+        caption_score_map = {}
 
-    # download the MS COCO images and annotations
-    coco_manager = ic.CocoManager()
+        for img_name in self.img_dic:
 
-    # set device
-    device = get_device()
+            prompt_dic[img_name] = pg_map[caption_strategy](
+                self.img_type_dic[img_name], self.n_people_dic[img_name], self.location_dic[img_name][:n_places],
+                self.sorted_obj_dic[img_name][:n_objects]
+            )
 
-    # instantiate managers
-    clip_manager = ic.ClipManager(device)
-    image_manager = ic.ImageManager()
-    vocab_manager = ic.VocabManager()
-    lm_manager = ic.LmManager(version=args.lm_version, use_api=args.use_api, device=device)
-    cache_manager = ic.CacheManager()
-    
-    # instantiate prompt generator
-    prompt_generator = ic.LmPromptGenerator()
+            # Generate the caption using the language model
+            caption_texts = self.flan_manager.generate_response(n_captions * [prompt_dic[img_name]], model_params)
 
-    # compute place & object features
-    place_emb = cache_manager.get_place_emb(clip_manager, vocab_manager)
-    obj_emb = cache_manager.get_object_emb(clip_manager, vocab_manager)
+            # Zero-shot VLM: rank captions.
+            caption_emb = self.clip_manager.get_text_emb(caption_texts)
+            sorted_captions, caption_scores = self.clip_manager.get_nn_text(
+                caption_texts, caption_emb, self.img_feat_dic[img_name]
+            )
+            sorted_caption_map[img_name] = sorted_captions
+            caption_score_map[img_name] = dict(zip(sorted_captions, caption_scores))
 
-    # randomly select images from the COCO dataset
-    img_fnames = coco_manager.get_random_image_paths(num_images=args.num_imgs)
+        """
+        6. Outputs.
+        """
 
-    # list of dicts to store results
-    results = []    
-    
-    # set LM params
-    lm_params = {"min_new_tokens": args.min_new_tokens, "max_new_tokens": args.max_new_tokens, "length_penalty": args.length_penalty, "num_beams": args.num_beams, "no_repeat_ngram_size": args.no_repeat_ngram_size, "temperature": args.temperature,  "early_stopping": args.early_stopping, "do_sample": args.do_sample, "num_return_sequences": args.num_return_sequences}
-    
-    '''2. Generate captions for each image'''
-    
-    for img_idx, img_fname in enumerate(img_fnames):
-        print(f'generating captions for img {img_idx + 1}/{len(img_fnames)}...')
-        # load  image
-        img = image_manager.load_image(coco_manager.image_dir + img_fname)
-        # generate the CLIP image embedding
-        img_feats = clip_manager.get_img_emb(img).flatten()
+        # Store the captions
+        data_list = []
+        for img_name in self.img_dic:
+            generated_caption = sorted_caption_map[img_name][0]
+            data_list.append({
+                'image_name': img_name,
+                'generated_caption': generated_caption,
+                'cosine_similarity': caption_score_map[img_name][generated_caption]
+            })
 
-        # get image info (type, # ppl, location, objects) using CLIP w/ zero-shot classification
-        img_type, num_ppl, locations, sorted_objs, topk_objs, obj_scores = clip_manager.get_img_info(img, place_emb, obj_emb, vocab_manager, args.obj_topk)
-        if args.verbose:
-            print(f'img type: {img_type} | # ppl: {num_ppl} | locations: {locations}\n | objs: {topk_objs}\n')
-        # generate prompt
-        prompt = prompt_generator.create_baseline_lm_prompt(img_type, num_ppl, locations, topk_objs)
-        if args.verbose:
-            print(f'prompt: {prompt}\n')
-        # generate captions by propmting LM (zero-shot)
-        caption_texts = lm_manager.generate_response(args.num_captions * [prompt], lm_params)
-        
-        # rank captions by CLIP
-        sorted_captions = clip_manager.rank_gen_outputs(img_feats, caption_texts)
-        best_caption, best_score = next(iter(sorted_captions.items()))
-        if args.verbose:
-            print(f'best caption: {best_caption} | score: {best_score}\n')
-        
-        # store best caption & score
-        results.append({
-            'image_name': img_fname,
-            'best_caption': best_caption,
-            'cos_sim': best_score,
-        })
-        
-        print('=' * 50)
-       
-    avg_cos_sim = sum([res['cos_sim'] for res in results]) / args.num_imgs
-    print(f'avg. cos sim over {args.num_imgs} imgs: {avg_cos_sim:.4f}')
-    print('done')
-    
-    # save results & params
-    res_dir = f'{args.output_dir}/{args.lm_version}/'
-    os.makedirs(res_dir, exist_ok=True)
-    res_path = f'{res_dir}/baseline_captions{args.output_file_suffix}.csv'
-    pd.DataFrame(results).to_csv(res_path, index=False)
-    args_path = f'{res_dir}/baseline_params{args.output_file_suffix}.json'
-    with open(args_path, 'w') as f:
-        json.dump(vars(args), f)
+        file_name_extension = get_file_name_extension_baseline(
+            lm_temperature, n_objects, n_places, caption_strategy, self.set_type
+        )
+        file_path = f'../data/outputs/captions/baseline_caption{file_name_extension}.csv'
+        prepare_dir(file_path)
+        self.generated_caption_df = pd.DataFrame(data_list)
+        self.generated_caption_df.to_csv(file_path, index=False)
+
+    def get_nb_of_people_emb(self):
+        # Classify number of people
+        self.ppl_texts_bool = ['no people', 'people']
+        self.ppl_emb_bool = self.clip_manager.get_text_emb([
+            f'There are {p} in this photo.' for p in self.ppl_texts_bool
+        ])
+        self.ppl_texts_mult = ['is one person', 'are two people', 'are three people', 'are several people', 'are many people']
+        self.ppl_emb_mult = self.clip_manager.get_text_emb([f'There {p} in this photo.' for p in self.ppl_texts_mult])
+
+    def determine_nb_of_people(self):
+        """
+        Determines the number of people in the image.
+
+        :return:
+        """
+        # Create a dictionary to store the number of people
+        self.n_people_dic = {}
+        for img_name, img_feat in self.img_feat_dic.items():
+            sorted_ppl_texts, ppl_scores = self.clip_manager.get_nn_text(
+                self.ppl_texts_bool, self.ppl_emb_bool, img_feat
+            )
+            ppl_result = sorted_ppl_texts[0]
+            if ppl_result == 'people':
+                sorted_ppl_texts, ppl_scores = self.clip_manager.get_nn_text(
+                    self.ppl_texts_mult, self.ppl_emb_mult, img_feat
+                )
+                ppl_result = sorted_ppl_texts[0]
+            else:
+                ppl_result = f'are {ppl_result}'
+
+            self.n_people_dic[img_name] = ppl_result
+
+    def random_parameter_search(self, n_iterations, n_captions, lm_max_length=40, lm_do_sample=True):
+        """
+        Runs a random parameter search.
+
+        :param n_iterations:
+        :param template_params:
+        :return:
+        """
+        for _ in range(n_iterations):
+            template_params = {
+                'n_captions': n_captions,
+                'lm_temperature': np.round(np.random.uniform(0.5, 1), 3),
+                'lm_max_length': lm_max_length,
+                'lm_do_sample': lm_do_sample,
+                'n_objects': np.random.choice(range(5, 15)),
+                'n_places': np.random.choice(range(1, 6)),
+                'caption_strategy': np.random.choice(['original', 'creative'])
+            }
+            self.main(**template_params)
+
+
 
 
 if __name__ == '__main__':
-    # init argparser
-    parser = argparse.ArgumentParser(description='Image Captioning')
-    # add args
-    parser.add_argument('--output-dir', type=str, default='../outputs/captions', help='path to output directory')
-    parser.add_argument('--output-file-suffix',  type=str, default='', help='suffix for output file')
-    parser.add_argument('--num-imgs', type=int, default=50, help='# imgs to sample randomly from MS-COCO')
-    parser.add_argument('--num-captions', type=int, default=10, help='# captions to generate per img')
-    parser.add_argument('--rand-seed', type=int, default=42, help='random seed for sampling & inference')
-    parser.add_argument('--obj-topk', type=int, default=10, help='# top objects detected to keep per img (CLIP)')
-    parser.add_argument('--verbose', type=bool, default=False, help='whether to print intermediate results')
-
-    # LM params
-    parser.add_argument('--lm-version', type=str, default='google/flan-t5-xl', help='name of the LM model to use on HuggingFace')
-    parser.add_argument('--use-api', type=bool, default=False, help='whether to use the HuggingFace API for inference')
-    parser.add_argument('--temperature', type=float, default=1., help='temperature param for inference')
-    parser.add_argument('--max-length', type=int, default=None, help='max length (tokens) of generated caption')
-    parser.add_argument('--min-length', type=int, default=None, help='minimum length (tokens) of generated caption')
-    parser.add_argument('--max-new-tokens', type=int, default=30, help='max amount of new tokens to be generated, not including input tokens')
-    parser.add_argument('--min-new-tokens', type=int, default=None, help='minimum amount of new tokens to be generated, not including input tokens')
-    parser.add_argument('--num-beams', type=int, default=16, help='# beams for beam search')
-    parser.add_argument('--do-sample', type=bool, default=True, help='whether to use sampling during generation')
-    parser.add_argument('--num-return-sequences', type=int, default=1, help='# of sequences to generate')
-    parser.add_argument('--early-stopping', type=bool, default=True, help='whether to enable early stopping')
-    parser.add_argument('--no-repeat-ngram-size', type=int, default=3, help='size of n-grams to avoid repeating')
-    parser.add_argument('--length-penalty', type=float, default=2.0, help='length penalty applied during generation')
-
-    # call main with args
-    args = parser.parse_args()
-    print(args)
-    main(args)
+    image_captioner = ImageCaptionerBaseline(n_images=50, set_type='train')
+    image_captioner.random_parameter_search(n_iterations=200, n_captions=10)

@@ -5,6 +5,12 @@ import torch
 from image_captioning import ClipManager, ImageManager, VocabManager, LmManager, print_clip_info
 from utils import get_device
 
+
+image_folder = '../data/coco/val2017/'
+img_file = '000000244750.jpg'
+img_path = image_folder + img_file
+verbose = True
+
 #
 # def main(img_path='demo_img.png', verbose=True):
 # Set the device to use
@@ -20,7 +26,7 @@ image_manager = ImageManager()
 vocab_manager = VocabManager()
 
 # Instantiate the Flan T5 manager
-flan_manager = LmManager(device=device)
+flan_manager = LmManager()
 
 # Print out clip model info
 print_clip_info(clip_manager.model)
@@ -32,6 +38,7 @@ place_emb = clip_manager.get_text_emb([f'Photo of a {p}.' for p in vocab_manager
 object_emb = clip_manager.get_text_emb([f'Photo of a {o}.' for o in vocab_manager.object_list])
 
 # Load image.
+
 img = image_manager.load_image(img_path)
 img_emb = clip_manager.get_img_emb(img)
 plt.imshow(img)
@@ -69,7 +76,7 @@ for i in range(obj_topk):
 object_list = object_list[:-2]
 
 # Zero-shot LM: generate captions.
-num_captions = 10
+n_captions = 10
 prompt = f'''I am an intelligent image captioning bot.
 This image is a {img_type}. There {ppl_result}.
 I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
@@ -78,7 +85,7 @@ A creative short caption I can generate to describe this image is:'''
 
 # Generate multiple captions
 model_params = {'temperature': 0.9, 'max_length': 40, 'do_sample': True}
-caption_texts = flan_manager.generate_response(num_captions * [prompt], model_params)
+caption_texts = flan_manager.generate_response(n_captions * [prompt], model_params)
 
 # Zero-shot VLM: rank captions.
 caption_emb = clip_manager.get_text_emb(caption_texts)
