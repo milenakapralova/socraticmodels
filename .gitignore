@@ -54,3 +54,7 @@ requirements.txt
 env.yml
 /lisa/
 /notebooks/.ipynb_checkpoints/
+/lisa_0/
+/lisa_1/
+/lisa_2/
+/lisa_3/
