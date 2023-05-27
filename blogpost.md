@@ -71,6 +71,7 @@ description are added and all other not-so-relevant terms are filtered out. Fina
 5. **Return** `objects` as the final list of selected objects.
 
 
+![A picture of the CLIP embedding space of texts an images](pca.png)
 
 
 
