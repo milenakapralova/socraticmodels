@@ -12,27 +12,30 @@ If you haven't done so already, please activate the corresponding environment by
 # Package loading
 import pandas as pd
 import numpy as np
+import os
 import sys
 sys.path.append('..')
-import os
 try:
     os.chdir('scripts')
 except:
     pass
 
 # Local imports
-from scripts.image_captioning import ClipManager, ImageManager, VocabManager, LmManager, CocoManager, LmPromptGenerator, \
-    ImageCaptionerParent
-from scripts.image_captioning import CacheManager as cm
-from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec, get_file_name_extension_baseline
+from scripts.image_captioning import ImageCaptionerParent
+from scripts.utils import prepare_dir, print_time_dec, get_file_name_extension_baseline
 
 
 class ImageCaptionerBaseline(ImageCaptionerParent):
     @print_time_dec
     def main(
             self, n_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True,
-            n_objects=10, n_places=3
+            n_objects=10, n_places=3, caption_strategy='original'
     ):
+        # Set up the prompt generator map
+        pg_map = {
+            'original': self.prompt_generator.create_socratic_original_prompt,
+            'creative': self.prompt_generator.create_improved_lm_prompt_alt1,
+        }
 
         # Set LM params
         model_params = {'temperature': lm_temperature, 'max_length': lm_max_length, 'do_sample': lm_do_sample}
@@ -44,7 +47,7 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
 
         for img_name in self.img_dic:
 
-            prompt_dic[img_name] = self.prompt_generator.create_socratic_original_prompt(
+            prompt_dic[img_name] = pg_map[caption_strategy](
                 self.img_type_dic[img_name], self.n_people_dic[img_name], self.location_dic[img_name][:n_places],
                 self.sorted_obj_dic[img_name][:n_objects]
             )
@@ -75,7 +78,7 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
             })
 
         file_name_extension = get_file_name_extension_baseline(
-            lm_temperature, n_objects, n_places
+            lm_temperature, n_objects, n_places, self.set_type
         )
         file_path = f'../data/outputs/captions/baseline_caption{file_name_extension}.csv'
         prepare_dir(file_path)
@@ -128,9 +131,11 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
                 'lm_max_length': lm_max_length,
                 'lm_do_sample': lm_do_sample,
                 'n_objects': np.random.choice(range(5, 15)),
-                'n_places': np.random.choice(range(1, 6))
+                'n_places': np.random.choice(range(1, 6)),
+                'caption_strategy': np.random.choice(['original', 'creative'])
             }
             self.main(**template_params)
+
 
 
 
