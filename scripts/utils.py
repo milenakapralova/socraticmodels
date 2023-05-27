@@ -59,11 +59,12 @@ def get_uuid_for_imgs(img_list):
     return str(uuid.uuid3(uuid.NAMESPACE_DNS, ''.join(img_list)))
 
 
-def get_file_name_extension_baseline(lm_temperature, n_objects, n_places):
+def get_file_name_extension_baseline(lm_temperature, n_objects, n_places, set_type):
     extension = ''
     extension += f'_temp_{lm_temperature}'.replace('.', '')
     extension += f'_nobj_{n_objects}'
     extension += f'_npl_{n_places}'
+    extension += f'_{set_type}'
     return extension
 
 

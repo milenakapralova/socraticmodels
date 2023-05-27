@@ -319,7 +319,10 @@ caption_dic = load_all_captions()
 gts = load_gts_captions()
 
 # Extract the list of images
-img_list = list(caption_dic.values())[0]['image_name'].tolist()
+all_images = []
+for df in caption_dic.values():
+    all_images += df['image_name'].tolist()
+img_list = list(set(all_images))
 
 # Set the device to use
 device = get_device()
