@@ -7,7 +7,6 @@ an improved baseline model where the template prompt filled by CLIP is processed
 '''
 
 # Package loading
-from transformers import set_seed
 import os
 import numpy as np
 import pandas as pd
@@ -28,7 +27,7 @@ class ImageCaptionerImproved(ImageCaptionerParent):
     @print_time_dec
     def main(
             self, n_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True,
-            cos_sim_thres=0.5, n_objects=5, n_places=2, caption_strategy='original'
+            cos_sim_thres=0.7, n_objects=5, n_places=2, caption_strategy='original'
     ):
         """
         5. Finding both relevant and different objects using cosine similarity
@@ -42,7 +41,7 @@ class ImageCaptionerImproved(ImageCaptionerParent):
         # Set up the prompt generator map
         pg_map = {
             'original': self.prompt_generator.create_socratic_original_prompt,
-            'creative': self.prompt_generator.create_improved_lm_prompt_alt1,
+            'creative': self.prompt_generator.create_improved_lm_creative,
         }
 
         # Set LM params
@@ -165,6 +164,91 @@ class ImageCaptionerImproved(ImageCaptionerParent):
         for img_name, img_feat in self.img_feat_dic.items():
             sorted_ppl_texts, ppl_scores = self.clip_manager.get_nn_text(self.ppl_texts, self.ppl_emb, img_feat)
             self.n_people_dic[img_name] = sorted_ppl_texts[0]
+
+
+class ImageCaptionerImprovedExtended(ImageCaptionerImproved):
+    """
+    This class extends ImageCaptionerImproved. It simply has a more extensive find_best_object_matches method.
+    """
+    def find_best_object_matches(self, cos_sim_thres):
+        """
+        This method is integral to the ImageCaptionerImproved. It filters the objects to only returned
+        terms that do not have too high of cosine similarity with each other. It is controled by the cos_sim_thres
+        parameter.
+
+        :param cos_sim_thres:
+        :return:
+        """
+        # Create a dictionary to store the best object matches
+        best_matches = {}
+        terms_to_include = {}
+
+        for img_name, sorted_obj_texts in self.sorted_obj_dic.items():
+
+            # Create a list that contains the objects ordered by cosine sim.
+            embeddings_sorted = [self.object_embeddings[w] for w in sorted_obj_texts]
+
+            # Create a list to store the best matches
+            best_matches[img_name] = [sorted_obj_texts[0]]
+
+            # Create an array to store the embeddings of the best matches
+            unique_embeddings = embeddings_sorted[0].reshape(-1, 1)
+
+            # Loop through the 100 best objects by cosine similarity
+            for i in range(1, 100):
+                # Obtain the maximum cosine similarity when comparing object i to the embeddings of the current best matches
+                max_cos_sim = (unique_embeddings.T @ embeddings_sorted[i]).max()
+                # If object i is different enough to the current best matches, add it to the best matches
+                if max_cos_sim < cos_sim_thres:
+                    unique_embeddings = np.concatenate([unique_embeddings, embeddings_sorted[i].reshape(-1, 1)], 1)
+                    best_matches[img_name].append(sorted_obj_texts[i])
+
+            # Looping through the best matches, consider each terms separately by splitting the commas and spaces.
+            data_list = []
+            for terms in best_matches[img_name]:
+                for term_split in terms.split(', '):
+                    score = self.clip_manager.get_image_caption_score(term_split, self.img_feat_dic[img_name])
+                    data_list.append({
+                        'term': term_split, 'score': score, 'context': terms
+                    })
+                    term_split_split = term_split.split(' ')
+                    if len(term_split_split) > 1:
+                        for term_split2 in term_split_split:
+                            score = self.clip_manager.get_image_caption_score(term_split2, self.img_feat_dic[img_name])
+                            data_list.append({
+                                'term': term_split2, 'score': score, 'context': terms
+                            })
+
+            # Create a dataframe with the terms and scores and only keep the top term per context.
+            term_df = pd.DataFrame(data_list).sort_values('score', ascending=False).drop_duplicates('context').reset_index(drop=True)
+
+            # Prepare loop to find if additional terms can improve cosine similarity
+            best_terms_sorted = term_df['term'].tolist()
+            best_term = best_terms_sorted[0]
+            terms_to_check = list(set(best_terms_sorted[1:]))
+            best_cos_sim = term_df['score'].iloc[0]
+            terms_to_include[img_name] = [best_term]
+
+            # Perform a loop to find if additional terms can improve the cosine similarity
+            n_iteration = 5
+            for iteration in range(n_iteration):
+                data_list = []
+                for term_to_test in terms_to_check:
+                    new_term = f"{best_term} {term_to_test}"
+                    score = self.clip_manager.get_image_caption_score(new_term, self.img_feat_dic[img_name])
+                    data_list.append({
+                        'term': new_term, 'candidate': term_to_test, 'score': score
+                    })
+                combined_df = pd.DataFrame(data_list).sort_values('score', ascending=False)
+                if combined_df['score'].iloc[0] > best_cos_sim:
+                    best_cos_sim = combined_df['score'].iloc[0]
+                    terms_to_include[img_name].append(combined_df['candidate'].iloc[0])
+                    terms_to_check = combined_df['candidate'].tolist()[1:]
+                    best_term += f" {combined_df['candidate'].iloc[0]}"
+                else:
+                    break
+
+        return terms_to_include
 
 if __name__ == '__main__':
     image_captioner = ImageCaptionerImproved(n_images=50, set_type='train')

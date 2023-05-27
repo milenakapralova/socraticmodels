@@ -59,6 +59,26 @@ the tokens in the reference and candidate sentences via cosine similarity [21]. 
 
 [to be added soon]
 
+
+<div style="display: flex; flex-direction: row;">
+    <div style="flex: 50%; text-align: center;">
+        <figure>
+            <img src="blogspot_images/monkey_with_gun.jpg" alt="Image 1">
+            <figcaption>Socratic models: <br> Ours: </figcaption>
+        </figure>
+    </div>
+    <div style="flex: 50%; text-align: center;">
+        <figure>
+            <img src="blogspot_images/astronaut_with_beer.jpg" alt="Image 2">
+            <figcaption>Caption for Image 2</figcaption>
+        </figure>
+    </div>
+</div>
+
+
+
+
+
 We present both quantitative and qualitative reults. Qualitative results show the vast improvement of the model compared to baseline (Figure 1), and the quantitative results confirm this observation (Table 1).
 
 [Figure 1: Demo | Pictue of the astronaut with beer and the generated captions scored as most likely.]
