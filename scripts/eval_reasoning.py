@@ -34,11 +34,6 @@ def main(args):
     gts = data['gt'].tolist()
     gens = data['gen'].tolist()
     
-    # for i, (gt, gen) in enumerate(zip(gts, gens)):
-    #     print(f'gt: {gt}\n\n gen: {gen}')
-    #     if i == 2:
-    #         break
-    
     # calculate metrics for each sample
     if args.task == 'cot_zs' or args.task == 'cot_fs':
         metrics = ['bleu', 'rouge', 'meteor', 'bertscore', 'bleurt']
@@ -51,7 +46,7 @@ def main(args):
     # save results
     df_samples = pd.DataFrame(sample_results)
     results = df_samples.describe().loc[['mean', 'std']].transpose()
-    results_path = f'{args.data_dir}/res_{args.task}{args.file_suffix}.csv'
+    results_path = f'{args.data_dir}/{args.lm_model}/res_{args.task}{args.file_suffix}.csv'
     results.to_csv(results_path, index=True)
     print('done.')
     print(f'results saved to {results_path}')
@@ -59,12 +54,10 @@ def main(args):
 if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(description='Evaluate generated responses.')
-    # parser.add_argument('--responses-path', type=str, default=None, help='path to the input file containing the generated responses.')
     parser.add_argument('--data-dir', type=str, default='outputs/reasoning', help='Path to the input dir containing the generated responses.')
-    # parser.add_argument('--output-dir', type=str, default='../outputs/reasoning/', help='Path to the output dir for results')
     parser.add_argument('--file-suffix',  type=str, default='', help='suffix for output file')
     parser.add_argument('--task', type=str, default='cot_zs', help='task to run')
-    
+    parser.add_argument('--lm-model', type=str, default=None, help='language model to use')
     args = parser.parse_args()
     print(args)
     main(args)

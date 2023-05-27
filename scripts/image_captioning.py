@@ -15,7 +15,12 @@ import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration
 import openai
 from dotenv import load_dotenv
-from utils import print_time_dec, prepare_dir
+sys.path.append('..')
+try:
+    os.chdir('scripts')
+except:
+    pass
+from scripts.utils import print_time_dec, prepare_dir
 
 # init openai
 load_dotenv()
