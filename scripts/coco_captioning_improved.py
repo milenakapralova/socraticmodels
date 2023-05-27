@@ -28,7 +28,7 @@ class ImageCaptionerImproved(ImageCaptionerParent):
     @print_time_dec
     def main(
             self, n_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True,
-            cos_sim_thres=0.5, n_objects=5, n_places=2, caption_strategy='baseline'
+            cos_sim_thres=0.5, n_objects=5, n_places=2, caption_strategy='original'
     ):
         """
         5. Finding both relevant and different objects using cosine similarity
@@ -84,7 +84,9 @@ class ImageCaptionerImproved(ImageCaptionerParent):
         )
         file_path = f'../data/outputs/captions/improved_caption{file_name_extension}.csv'
         prepare_dir(file_path)
-        pd.DataFrame(data_list).to_csv(file_path, index=False)
+        self.generated_caption_df = pd.DataFrame(data_list)
+        if self.set_type != 'demo':
+            self.generated_caption_df.to_csv(file_path, index=False)
 
     def find_best_object_matches(self, cos_sim_thres):
         """
