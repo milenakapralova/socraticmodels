@@ -10,12 +10,16 @@ import clip
 import cv2
 import zipfile
 from PIL import Image
-from dotenv import load_dotenv
 # from profanity_filter import ProfanityFilter
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration
-sys.path.append('..')
-from scripts.utils import print_time_dec, prepare_dir
+import openai
+from dotenv import load_dotenv
+from utils import print_time_dec, prepare_dir
+
+# init openai
+load_dotenv()
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 #TODO: uncomment pf sections in final version
 
@@ -538,15 +542,13 @@ class LmPromptGenerator:
     def create_cot_prompt(self, sample, clip_manager, vocab_manager, place_feats, obj_feats):
         _, _, sorted_places, sorted_obj_texts, obj_list, obj_scores = clip_manager.get_img_info(sample['image'], place_feats, obj_feats, vocab_manager)
         filtered_objs = filter_objs(sorted_obj_texts, obj_scores, clip_manager, obj_topk=10, sim_threshold=0.7)
-        prompt = f'''This image was taken in a {sorted_places[0]}. It contains a {', '.join(filtered_objs)}.\nQuestion: {sample['question']}\nChoices: {sample['choices']}\nAnswer: Let's think step by step...'''
+        prompt = f'''This image was taken in a {sorted_places[0]}. It contains a {', '.join(filtered_objs)}.\nQuestion: {sample['question']}\nChoices: {sample['choices']}\nHint: {sample['hint']}\nAnswer: Let's think step by step...'''
         return prompt
 
     def create_vqa_prompt(self, sample, clip_manager, vocab_manager, place_feats, obj_feats):
         _, _, sorted_places, sorted_obj_texts, obj_list, obj_scores = clip_manager.get_img_info(sample['image'], place_feats, obj_feats, vocab_manager)
         filtered_objs = filter_objs(sorted_obj_texts, obj_scores, clip_manager, obj_topk=10, sim_threshold=0.7)
-        prompt = f'''This image was taken in a {sorted_places[0]}. It contains a {', '.join(filtered_objs)}. Using this information, answer the following question: {sample['question']}
-        Choices: {sample['choices']}
-        Answer: '''
+        prompt = f'''This image was taken in a {sorted_places[0]}. It contains a {', '.join(filtered_objs)}. Using this information, answer the following question: {sample['question']}\nChoices: {sample['choices']}\nHint: {sample['hint']}\nAnswer: '''
         return prompt
         
     @staticmethod
@@ -557,6 +559,22 @@ class LmPromptGenerator:
             return f'{place_list[0]} or {place_list[1]}'
         else:
             return f'{", ".join(place_list[:-1])} or {place_list[-1]}'
+        
+def get_response_gpt(prompt, model='gpt-3.5-turbo', temperature=1., max_tokens=100, **kwargs):
+    '''
+    Get response by prompting GPT-3
+    :param prompt: prompt to GPT-3
+    :param model: GPT-3 model
+    :param temperature: temperature for sampling
+    :param max_tokens: maximum number of tokens to generate
+    :param kwargs: additional arguments to pass to OpenAI API
+    :return: generated response from GPT-3
+    '''
+    response = openai.ChatCompletion.create(model=model, temperature=temperature, max_tokens=max_tokens, messages = [
+        {"role": "user", "content": prompt}
+    ], **kwargs)
+    output = response['choices'][0]['message']['content']
+    return output
 
 
 def num_params(model):
