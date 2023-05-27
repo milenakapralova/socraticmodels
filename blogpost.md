@@ -90,7 +90,8 @@ the tokens in the reference and candidate sentences via cosine similarity [21]. 
     <div style="flex: 50%; text-align: center;">
         <figure>
             <img src="blogpost_images/demo_img.png" alt="Image 1" width="400" height="300">
-            <figcaption><strong>Original Socratic (ChatGPT)</strong>: "This photo captures the elegance of a well-designed dining room with a beautiful view."
+            <figcaption>
+            <br><strong>Original Socratic (ChatGPT)</strong>: "This photo captures the elegance of a well-designed dining room with a beautiful view."
             <br><strong>Baseline (Flan-T5)</strong>: "The interior of a home with large windows and wooden shutters and chairs under a stairway."
             <br><strong>Improved (Flan-T5)</strong>: "The interior of a home with large windows and wooden floors"</figcaption>
         </figure>
