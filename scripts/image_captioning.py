@@ -2,41 +2,33 @@
 import sys
 import os
 from typing import List, Union
+import numpy as np
 import pandas as pd
 import requests
 import clip
 import cv2
+import zipfile
 from PIL import Image
 from dotenv import load_dotenv
 from profanity_filter import ProfanityFilter
 import torch
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration
+sys.path.append('..')
+
+from scripts.utils import print_time_dec, prepare_dir, set_all_seeds, get_device
 import zipfile
 import numpy as np
 import openai
 sys.path.append('..')
 
 # Local imports
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration, \
+    AutoProcessor, AutoModelForCausalLM
 from scripts.utils import print_time_dec, prepare_dir, set_all_seeds, get_device
 
 
 class ImageCaptionerParent:
-    """
-    This is the parent class of the ImageCaptionerBaseline and ImageCaptionerImproved classes. It contains the
-    functionality that is common to both child classes: the constructor of the class.
-    """
     def __init__(self, random_seed=42, n_images=50, set_type='train'):
-        """
-        The constructor instantiates all the helper classes needed for the captioning. It sets the random seeds.
-        Loads the vocabulary embeddings (these never change, so they are loaded from a cache). It loads a different set
-        of images depending on the 'set_type' input. The embeddings of the images are derived. The cosine similarities
-        between the text and image embeddings are determined. The remaining of the image captioning process is done
-        by the children image captioning classes.
-
-        :param random_seed:
-        :param n_images:
-        :param set_type:
-        """
         """
         1. Set up
         """
@@ -98,14 +90,9 @@ class ImageCaptionerParent:
         """
         3. Load images and compute image embedding
         """
-        if self.set_type == 'demo':
-            img_files = [
-                self.image_manager.image_folder + d
-                for d in self.image_manager.demo_names
-            ]
-        else:
-            # Randomly select images from the COCO dataset
-            img_files = self.coco_manager.get_random_image_paths(n_images=n_images, set_type=set_type)
+
+        # Randomly select images from the COCO dataset
+        img_files = self.coco_manager.get_random_image_paths(n_images=n_images, set_type=set_type)
 
         # Create dictionaries to store the images features
         self.img_dic = {}
@@ -113,7 +100,7 @@ class ImageCaptionerParent:
 
         for img_file in img_files:
             # Load the image
-            self.img_dic[img_file] = self.image_manager.load_image(img_file)
+            self.img_dic[img_file] = self.image_manager.load_image(self.coco_manager.image_dir + img_file)
             # Generate the CLIP image embedding
             self.img_feat_dic[img_file] = self.clip_manager.get_img_emb(self.img_dic[img_file]).flatten()
 
@@ -213,41 +200,20 @@ class CocoManager:
             self.download_unzip_delete(folder, url)
 
     def get_random_image_paths(self, n_images, set_type):
-        """
-        This method randomly and deterministically determines the images to use for the different set types.
-
-        The process is deterministic because a numpy random seed is set. The images are then randomly selected in
-        sequence. The images are not replaced in the selection process, such that the train, valid and test sets will
-        all have different images.
-
-        :param n_images:
-        :param set_type:
-        :return:
-        """
         img_list = os.listdir(self.image_dir)
         img_list.sort()
-        # Train set
+        # Data split
         train_set = np.random.choice(img_list, size=n_images).tolist()
         remaining_images = list(set(img_list) - set(train_set))
         remaining_images.sort()
-
-        # Valid set
-        valid_set = np.random.choice(remaining_images, size=n_images).tolist()
-        remaining_images = list(set(remaining_images) - set(valid_set))
-        remaining_images.sort()
-
-        # Test set
-        test_set = np.random.choice(remaining_images, size=n_images).tolist()
-
-        # Return the image path list
+        test_set = np.random.choice(
+            remaining_images,
+            size=n_images
+        ).tolist()
         if set_type == 'train':
-            return [f'{self.image_dir}{c}' for c in train_set]
-        elif set_type == 'valid':
-            return [f'{self.image_dir}{c}' for c in valid_set]
+            return train_set
         elif set_type == 'test':
-            return [f'{self.image_dir}{c}' for c in test_set]
-        elif set_type == 'demo':
-            return None
+            return test_set
         else:
             raise ValueError(f'set_type {test_set} not supported.')
 
@@ -264,7 +230,6 @@ class ImageManager:
             'fruit_bowl.jpg': 'https://drive.google.com/uc?export=download&id=1gRYMoTfCwuV4tNy14Qf2Q_hebx05GNd9',
             'cute_bear.jpg': 'https://drive.google.com/uc?export=download&id=1WvgweWH_vSODLv2EOoXqGaHDcUKPDHbh',
         }
-        self.demo_names = list(self.images_to_download)
         self.download_data()
 
     def download_data(self):
@@ -293,7 +258,6 @@ class ImageManager:
     @staticmethod
     def load_image(image_path: str) -> np.ndarray:
         """
-        Loads an image in RGB from an image path.
 
         :param image_path:
         :return:
