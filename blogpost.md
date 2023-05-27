@@ -92,7 +92,7 @@ the tokens in the reference and candidate sentences via cosine similarity [21]. 
             <figcaption>
             <br><strong>Original Socratic (ChatGPT)</strong>: "This photo captures the elegance of a well-designed dining room with a beautiful view."
             <br><strong>Baseline (Flan-T5)</strong>: "The interior of a home with large windows and wooden shutters and chairs under a stairway."
-            <br><strong>Improved (Flan-T5)</strong>: "The interior of a home with large windows and wooden floors"</figcaption>
+            <br><strong>Improved (Flan-T5)</strong>: "The interior of a home with large windows and wooden floors"<br></figcaption>
         </figure>
     </div>
     <div style="flex: 50%; text-align: center;">
@@ -101,7 +101,7 @@ the tokens in the reference and candidate sentences via cosine similarity [21]. 
             <figcaption>
             <br><strong>Original Socratic (ChatGPT)</strong>: "A photo of an astronaut enjoying a beer while waiting for a meeting."
             <br><strong>Baseline (Flan-T5)</strong>: "man resting in spacesuit"
-            <br><strong>Improved (Flan-T5)</strong>: "astronaut relaxes with beer"</figcaption>
+            <br><strong>Improved (Flan-T5)</strong>: "astronaut relaxes with beer"<br></figcaption>
         </figure>
     </div>
 </div>
@@ -114,7 +114,7 @@ the tokens in the reference and candidate sentences via cosine similarity [21]. 
             <figcaption>
             <br><strong>Original Socratic (ChatGPT)</strong>: "This photo chimpanzee was taken at a veterinarians office."
             <br><strong>Baseline (Flan-T5)</strong>: "There is a chimpanzee in this photo"
-            <br><strong>Improved (Flan-T5)</strong>: "The chimpanzee wants to shoot at the person." </figcaption>
+            <br><strong>Improved (Flan-T5)</strong>: "The chimpanzee wants to shoot at the person."<br></figcaption>
         </figure>
     </div>
     <div style="flex: 50%; text-align: center;">
@@ -123,7 +123,7 @@ the tokens in the reference and candidate sentences via cosine similarity [21]. 
             <figcaption>
             <br><strong>Original Socratic (ChatGPT)</strong>: "A close-up of a dish rack, with various plates and bowls stacked neatly inside."
             <br><strong>Baseline (Flan-T5)</strong>: "A dish-rack has dishes in it."
-            <br><strong>Improved (Flan-T5)</strong>: "A basket of fruit in a stand."</figcaption>
+            <br><strong>Improved (Flan-T5)</strong>: "A basket of fruit in a stand."<br></figcaption>
         </figure>
     </div>
 </div>
