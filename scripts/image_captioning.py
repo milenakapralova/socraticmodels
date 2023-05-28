@@ -753,11 +753,11 @@ class LmPromptGenerator:
         I think there might be a {', '.join(object_list)} in this {img_type}.
         A short, likely caption I can generate to describe this image is:'''
 
-    @staticmethod
-    def create_gpt_prompt_likely(img_type, ppl_result, sorted_places, object_list_str):
+    def create_gpt_prompt_likely(self, img_type, ppl_result, sorted_places, object_list_str):
+        places_string = self.get_places_string(sorted_places)
         return f'''I am an intelligent image captioning bot.
         This image is a {img_type}. There {ppl_result}.
-        I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
+        I think this photo was taken at a {places_string}.
         I think there might be a {object_list_str} in this {img_type}.
         A short, likely caption I can generate to describe this image is:'''
 

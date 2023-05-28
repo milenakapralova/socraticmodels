@@ -35,6 +35,7 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
         pg_map = {
             'original': self.prompt_generator.create_socratic_original_prompt,
             'creative': self.prompt_generator.create_improved_lm_creative,
+            'gpt': self.prompt_generator.create_gpt_prompt_likely,
         }
 
         # Set LM params

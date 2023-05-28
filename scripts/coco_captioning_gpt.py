@@ -45,11 +45,13 @@ class ImageCaptionerGTP(ImageCaptionerBaseline):
         extension += f'_{self.set_type}'
         return f'../data/outputs/captions/gpt_caption{extension}.csv'
 
+
 if __name__ == '__main__':
     image_captioner = ImageCaptionerGTP(n_images=50, set_type='test')
     caption_dir = '../data/outputs/captions/'
     run_params = {
         'n_captions': 10,
         'lm_temperature': 0.9,
+        'caption_strategy': 'gpt'
     }
     image_captioner.main(**run_params)
