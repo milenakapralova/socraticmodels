@@ -52,7 +52,7 @@ ways:
    of paraphrasing information in a realistic way. For instance, FLAN-T5 tends to struggle when
    the provided prompt contains a large number of similar terms - e.g. an image portraying a
    monkey would have a prompt containing the words monkey, ape, chimpanzee, primate etc. which
-   are synonyms -. Therefore, we propose a new prompt pre-processing method, called Synonym
+   are synonyms. Therefore, we propose a new prompt pre-processing method, called Synonym
    Exclusion (SE), which is based upon the PCA analysis of CLIP’s embedding space. Additional
    prompt engineering methods were tested but were not included since no performance increase
    was seen. We will refer to the model where SE is employed as the *Improved model*.
@@ -107,7 +107,7 @@ ways:
 The general pipeline for the Socratic image captioning follows the formula: caption = fV LM (fLM (fV LM (image))).
 Specifically:
 1. The VLM (CLIP) is fed an image and is used zero-shot to detect variables of interest: place
-   categories (Places365[19]), object categories (from Tencent ML-Images [20]), image type and
+   categories (Places365 [19]), object categories (from Tencent ML-Images [20]), image type and
    the number of people. The top-k ranked in each category can then be substituted into an LM
    prompt.
 2. Given the VLM-informed language prompt, the LM generates several n candidate captions. For
@@ -127,7 +127,7 @@ For example, when given the wedding image seen above, The VLM prompt contains th
 I think there might be a dress suit, full dress, tailcoat, tail coat, (etc.) in this photo.” and FLAN-T5
 might generate this caption: ”A wedding dress is paired with a tuxedo for an elegant wedding.”
 
-Our method creates prompts that are more suitable for FLAN-T5 by paying closer attention to
+Our method (outlined in the SE Algorithm snippet below) creates prompts that are more suitable for FLAN-T5 by paying closer attention to
 the words that are passed onto the prompt. In this way, the goal would be to not have similar terms
 that might be redundant and thus confuse the model. To this end, we build a list of candidate terms
 that have a high cosine similarity with the image, but a low cosine similarity with the other terms
