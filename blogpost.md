@@ -147,9 +147,9 @@ emphasizing the need for higher thresholds to filter out text-text synonyms.
 
 > ##### The SE Algorithm
 > 1. *Input*:
-    - CLIP embeddings of `images`
-    - CLIP embeddings of `object categories`
-
+>    - CLIP embeddings of `images`
+>    - CLIP embeddings of `object categories`
+>
 >   *Output*:
 >    - `objects` (list of selected objects for all images)
 >
