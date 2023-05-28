@@ -326,7 +326,7 @@ Section 3.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few
 #### 3.2.1 Zero-shot CoT
 <center>
   <img src="blogpost_images/spring.png" alt="Image" style="width:200px;height:300px;">
-  <p> <b> Figure 3: Zero-shot CoT <b> </p>
+  <p> <b> Figure 3: Zero-shot CoT </b> </p>
 </center>
 
 - **Prompt**: This image was taken in a drugstore. It contains a spring, spring scale, coil, volute, sprig, set gun, whipping cream, elastic, spar, whisk.
@@ -340,13 +340,13 @@ Answer: Let's think step by step...
 #### 3.2.2 Few-shot CoT
 <div style="display:flex; justify-content:center; align-items: center; flex-direction: row">
   <div style="flex:;">
-    <figure>
+    <figure style="text-align:center">
       <img src="blogpost_images/spring.png" alt="Image 1" width="300px">
       <p> Example sample </p>
     </figure>
   </div>
   <div style="flex: 0 0 50%;">
-    <figure>
+    <figure style="text-align:center">
       <img src="blogpost_images/lemon.png" alt="Image 2" width=300px">
       <p> Target sample </p>
     </figure>
@@ -402,14 +402,14 @@ Answer:
 <div style="display:flex; justify-content:center; align-items: center; flex-direction: row;">
   <div style="flex: 1;">
     <figure style="text-align:center">
-      <img src="blogpost_images/africa.png" alt="Image 1" style="width:200px;height:200px;">
-      <figcaption>(a) Example sample</figcaption>
+      <img src="blogpost_images/africa.png" alt="Image 1" width="300px">
+      <figcaption> Example sample</figcaption>
     </figure>
   </div>
   <div style="flex: 1;">
     <figure style="text-align:center">
-      <img src="blogpost_images/south_america.png" alt="Image 2" style="width:200px;height:200px;">
-      <figcaption>(b) Target sample</figcaption>
+      <img src="blogpost_images/south_america.png" alt="Image 2" width="300px">
+      <figcaption> Target sample</figcaption>
     </figure>
   </div>
 </div>
