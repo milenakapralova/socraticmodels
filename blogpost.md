@@ -171,7 +171,7 @@ descriptions, out of which we randomly select 50 images to be used during testin
 • The rule-based metrics such as BLEU-4 [22], METEOR [23], CIDEr [24], SPICE [25] and
 ROUGE-L [26].
 
-Cosine similarity is an embedding-based approach that captures the semantic overlap between
+• Cosine similarity is an embedding-based approach that captures the semantic overlap between
 the candidate caption and an image.
 To compute this overlap, we calculated the cosine similarities between the embeddings of each
 image and ground truth caption and then we calculate the cosine similarities between each image
@@ -379,21 +379,21 @@ Milena Kapralova: Model evaluation
 preprint arXiv:2204.00598 (2022).
 [2] Geva, M., Gupta, A. & Berant, J. Injecting Numerical Reasoning Skills into Language Models
 2020. arXiv: 2004.04487 [cs.CL].
-      [3] Wei, J. et al. Chain of thought prompting elicits reasoning in large language models. arXiv
+[3] Wei, J. et al. Chain of thought prompting elicits reasoning in large language models. arXiv
       preprint arXiv:2201.11903 (2022).
-      [4] Lu, P. et al. Learn to Explain: Multimodal Reasoning via Thought Chains for Science Question
+[4] Lu, P. et al. Learn to Explain: Multimodal Reasoning via Thought Chains for Science Question
       Answering in The 36th Conference on Neural Information Processing Systems (NeurIPS) (2022).
-      [5] Kojima, T., Gu, S. S., Reid, M., Matsuo, Y. & Iwasawa, Y. Large language models are zero-shot
+[5] Kojima, T., Gu, S. S., Reid, M., Matsuo, Y. & Iwasawa, Y. Large language models are zero-shot
       reasoners. arXiv preprint arXiv:2205.11916 (2022).
-      [6] Zhang, Z. et al. Multimodal chain-of-thought reasoning in language models. arXiv preprint arXiv:2302.00923
+[6] Zhang, Z. et al. Multimodal chain-of-thought reasoning in language models. arXiv preprint arXiv:2302.00923
       (2023).
-      [7] Radford, A. et al. Learning Transferable Visual Models From Natural Language Supervision 2021.
+[7] Radford, A. et al. Learning Transferable Visual Models From Natural Language Supervision 2021.
       arXiv: 2103.00020 [cs.CV].
-      [8] Brown, T. et al. Language models are few-shot learners. Advances in neural information processing
+[8] Brown, T. et al. Language models are few-shot learners. Advances in neural information processing
       systems 33, 1877–1901 (2020).
-      [9] Tewel, Y., Shalev, Y., Schwartz, I. & Wolf, L. ZeroCap: Zero-Shot Image-to-Text Generation for
+[9] Tewel, Y., Shalev, Y., Schwartz, I. & Wolf, L. ZeroCap: Zero-Shot Image-to-Text Generation for
       Visual-Semantic Arithmetic 2022. arXiv: 2111.14447 [cs.CV].
-      [10] Mokady, R., Hertz, A. & Bermano, A. H. ClipCap: CLIP Prefix for Image Captioning 2021.
+[10] Mokady, R., Hertz, A. & Bermano, A. H. ClipCap: CLIP Prefix for Image Captioning 2021.
       arXiv: 2111.09734 [cs.CV].
       [11] Radford, A. et al. Language models are unsupervised multitask learners. OpenAI blog 1, 9 (2019).
       [12] Fang, H., Xiong, P., Xu, L. & Chen, Y. CLIP2Video: Mastering Video-Text Retrieval via Image
