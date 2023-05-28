@@ -167,7 +167,7 @@ emphasizing the need for higher thresholds to filter out text-text synonyms.
 >    - Get the 100 most similar `object categories` to `image` based on cosine similarity and order them.
 >    - Find the `object` corresponding to the maximum cosine similarity value
 >    - Add `object` to `objects_image`.
->    - For each sebsequent `object` in the rest of the ordered list of object categories:
+>    - For each subsequent `object` in the rest of the ordered list of object categories:
 >        - Calculate the cosine similarity between `object` and all the objects in `objects_image`.
 >        - If none of the calculated cosine similarities is higher than the pre-specified threshold:
 >            - Add `object` to `objects_image`.
@@ -308,7 +308,7 @@ meaningful comparisons.
 #### 3.2.1 Zero-shot CoT
 <div style="text-align:center;">
   <img src="blogpost_images/spring.png" alt="Image" style="width:300px;height:300px;">
-    <figcaption>Figure 2: Zero-shot CoT</figcaption>
+    <figcaption>Figure 3: Zero-shot CoT</figcaption>
 </div>
 
 #### 3.2.2 Few-shot CoT
@@ -327,14 +327,14 @@ meaningful comparisons.
   </div>
 </div>
 <div align="center">
-  Figure 3: Few-shot CoT
+  Figure 4: Few-shot CoT
 </div>
 
 
 #### 3.2.3 Zero-shot VQA
 <div style="text-align:center;">
   <img src="blogpost_images/africa.png" alt="Image" style="width:300px;height:300px;">
-    <figcaption>Figure 4: Zero-shot VQA</figcaption>
+    <figcaption>Figure 5: Zero-shot VQA</figcaption>
 </div>
 
 
