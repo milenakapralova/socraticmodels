@@ -8,7 +8,7 @@ try:
     os.chdir('scripts')
 except:
     pass
-from scripts.image_captioning import Blip2Manager
+from scripts.image_captioning import BlipManager
 from scripts.coco_captioning_baseline import ImageCaptionerBaseline
 
 
@@ -18,7 +18,7 @@ from scripts.utils import get_device
 device = get_device()
 
 # Instantiate the BLIP2 manager
-blip2_manager = Blip2Manager(device)
+blip_manager = BlipManager(device)
 
 # Instantiate the baseline image captioner to easily load the test images and calculate the cosine similarities
 image_captioner = ImageCaptionerBaseline(n_images=50, set_type='test')
@@ -35,7 +35,7 @@ data_list = []
 # Loop through the test images
 for img_path, img in image_captioner.img_dic.items():
     # Generate a caption for the image with BLIP2
-    caption = blip2_manager.generate_response(img, model_params=model_params)
+    caption = blip_manager.generate_response(img, model_params=model_params)
     # Add the data sample
     data_list.append({
         'image_name': img_path.split('/')[-1],
@@ -45,6 +45,6 @@ for img_path, img in image_captioner.img_dic.items():
         )
     })
 # Save the caption dataframe
-file_path = f'../data/outputs/captions/blip2_caption_test.csv'
+file_path = f'../data/outputs/captions/blip_caption_test.csv'
 pd.DataFrame(data_list).to_csv(file_path, index=False)
 

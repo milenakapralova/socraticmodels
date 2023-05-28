@@ -17,7 +17,7 @@ sys.path.append('..')
 
 # Local imports
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration, \
-    AutoProcessor, AutoModelForCausalLM
+    AutoProcessor, AutoModelForCausalLM, BlipProcessor, BlipForConditionalGeneration
 from scripts.utils import print_time_dec, prepare_dir, set_all_seeds, get_device
 
 
@@ -267,6 +267,7 @@ class ImageManager:
             'astronaut_with_beer.jpg': 'https://drive.google.com/uc?export=download&id=1p5RwifMFtl1CLlUXaIR_y60_laDTbNMi',
             'fruit_bowl.jpg': 'https://drive.google.com/uc?export=download&id=1gRYMoTfCwuV4tNy14Qf2Q_hebx05GNd9',
             'cute_bear.jpg': 'https://drive.google.com/uc?export=download&id=1WvgweWH_vSODLv2EOoXqGaHDcUKPDHbh',
+            'wedding_image.jpg': 'https://drive.google.com/uc?export=download&id=1Apn_e2sBXOV-Nx7KSAsEsWLpAJ1kQw1g'
         }
         self.demo_names = list(self.images_to_download)
         self.download_data()
@@ -682,6 +683,32 @@ class GPTManager:
     ):
         response = openai.Completion.create(engine=self.version, prompt=prompt, max_tokens=max_tokens, temperature=temperature, stop=stop)
         return response["choices"][0]["text"].strip()
+
+
+class BlipManager:
+    def __init__(self, device, version="Salesforce/blip-image-captioning-base"):
+        self.processor = BlipProcessor.from_pretrained(version)
+        self.model = BlipForConditionalGeneration.from_pretrained(version, torch_dtype=torch.float16)
+        self.device = device
+
+    def generate_response(self, image, prompt=None, model_params=None):
+        """
+        Generate a response passing an image and an optional prompt.
+
+        :param image: Input image.
+        :param prompt: The prompt to pass to BLIP.
+        :param model_params:
+        :return:
+        """
+        if model_params is None:
+            model_params = {}
+        if prompt is None:
+            inputs = self.processor(image, return_tensors="pt").to(self.device, torch.float16)
+        else:
+            inputs = self.processor(image, prompt, return_tensors="pt").to(self.device, torch.float16)
+        self.model.to(self.device)
+        out = self.model.generate(**inputs, **model_params)
+        return self.processor.decode(out[0], skip_special_tokens=True).strip()
 
 
 class Blip2Manager:

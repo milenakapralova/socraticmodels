@@ -163,7 +163,10 @@ def load_all_captions():
     :return: Dictionary mapping caption csv file names to the loaded dataframe.
     """
     caption_dir = '../data/outputs/captions/'
-    return {c.split('.')[0]: load_caption(caption_dir + c) for c in os.listdir(caption_dir) if c.endswith('csv')}
+    return {
+        c.split('.')[0]: load_caption(caption_dir + c) for c in os.listdir(caption_dir)
+        if c.endswith('csv') and any(('train' in c, 'valid' in c, 'test' in c))
+    }
 
 
 def load_gts_captions():

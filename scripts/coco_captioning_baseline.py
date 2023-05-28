@@ -22,7 +22,7 @@ except:
 
 # Local imports
 from scripts.image_captioning import ImageCaptionerParent
-from scripts.utils import prepare_dir, print_time_dec, get_file_name_extension_baseline
+from scripts.utils import prepare_dir, print_time_dec
 
 
 class ImageCaptionerBaseline(ImageCaptionerParent):
