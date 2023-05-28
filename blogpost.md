@@ -105,7 +105,7 @@ ways:
 ## 2 Method
 ### 2.1 Image captioning
 #### 2.1.1 The Socratic method
-The general pipeline for the Socratic image captioning follows the formula: caption = fV LM (fLM (fV LM (image))).
+The general pipeline for the Socratic image captioning follows the formula: *caption = f<sub>VLM</sub> ( f<sub>LM</sub> ( f<sub>VLM</sub> (image)))*.
 Specifically:
 1. The VLM (CLIP) is fed an image and is used zero-shot to detect variables of interest: place
    categories (Places365 [19]), object categories (from Tencent ML-Images [20]), image type and
