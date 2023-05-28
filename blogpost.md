@@ -214,7 +214,7 @@ sentences via cosine similarity [21]. To this end, we calculated precision, reca
 for the baseline and improved model.
 
 <div style="text-align:center;">
-  <img src="blogpost_images/pca.png" alt="Image" style="width:700px;height:420px;">
+  <img src="blogpost_images/pca.png" alt="Image" style="width:780px;height:420px;">
     <figcaption>Figure 2: Visualisation of CLIP's embedding space</figcaption>
 </div>
 
@@ -306,10 +306,10 @@ meaningful comparisons.
 
 
 #### 3.2.1 Zero-shot CoT
-<div style="text-align:center;">
+<center>
   <img src="blogpost_images/spring.png" alt="Image" style="width:300px;height:300px;">
-    <figcaption>Figure 3: Zero-shot CoT</figcaption>
-</div>
+  <p>Figure 3: Zero-shot CoT</p>
+</center>
 
 #### 3.2.2 Few-shot CoT
 <div style="display:flex; justify-content:center;">
