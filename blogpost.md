@@ -96,10 +96,11 @@ ways:
    files and the generation of the embeddings is quite consuming, we have implemented a caching
    functionality that speeds up the development and testing process.
 
-<div style="text-align:center;">
-  <img src="blogpost_images/wedding.jpg" alt="Image" style="width:400px;height:300px;">
+
+<center>
+  <img src="blogpost_images/wedding.jpg" alt="Image" style="display:block; margin:auto; width:300px;height:300px;">
     <figcaption>Figure 1: Image for which CLIP produces too many synonyms</figcaption>
-</div>
+</center>
 
 ## 2 Method
 ### 2.1 Image captioning
@@ -213,10 +214,11 @@ trained BERT embeddings to represent and match the tokens in the reference and c
 sentences via cosine similarity [21]. To this end, we calculated precision, recall and the F1 score
 for the baseline and improved model.
 
-<div style="text-align:center;">
-  <img src="blogpost_images/pca.png" alt="Image" style="width:700px;height:420px;">
+
+<center>
+  <img src="blogpost_images/pca.png" alt="Image" style="width:780px;height:420px;">
     <figcaption>Figure 2: Visualisation of CLIP's embedding space</figcaption>
-</div>
+</center>
 
 
 ### 2.2 Chain-of-Thought and Visual Question Answering
@@ -326,10 +328,10 @@ Section 3.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few
 <small>
 
 #### 3.2.1 Zero-shot CoT
-<div style="text-align:center;">
-  <img src="blogpost_images/spring.png" alt="Image" width=200px>
-    <figcaption >Figure 2: Zero-shot CoT</figcaption>
-</div>
+<center>
+  <img src="blogpost_images/spring.png" alt="Image" style="width:300px;height:300px;">
+  <p>Figure 3: Zero-shot CoT</p>
+</center>
 
 - **Prompt**: This image was taken in a drugstore. It contains a spring, spring scale, coil, volute, sprig, set gun, whipping cream, elastic, spar, whisk.
 Question: Which property matches this object?
