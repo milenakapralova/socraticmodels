@@ -145,6 +145,28 @@ colors (right). In both cases, we saw that image and text cluster together, even
 scenario. This indicates that texts exhibit greater similarity among themselves than with images,
 emphasizing the need for higher thresholds to filter out text-text synonyms.
 
+> ##### The SE Algorithm
+> 1. *Input*:
+    - CLIP embeddings of `images`
+    - CLIP embeddings of `object categories`
+
+>   *Output*:
+>    - `objects` (list of selected objects for all images)
+>
+> 2. Initialize an empty list `objects`.
+>
+>3. For each `image` in `images`:
+>    - Initialize an empty list `objects_image` to store selected objects for one image.
+>    - Get the 100 most similar `object categories` to `image` based on cosine similarity and order them.
+>    - Find the `object` corresponding to the maximum cosine similarity value
+>    - Add `object` to `objects_image`.
+>    - For each sebsequent `object` in the rest of the ordered list of object categories:
+>        - Calculate the cosine similarity between `object` and all the objects in `objects_image`.
+>        - If none of the calculated cosine similarities is higher than the pre-specified threshold:
+>            - Add `object` to `objects_image`.
+>    - Add `objects_image` to `objects`.
+>
+>4. Return `objects` as the final list of selected objects.
 
 
 #### 1.1.3 Hyperparameter search
@@ -194,7 +216,7 @@ stage, we extract information from the image I by prompting CLIP to ground the i
 text summary CI , which is then fed as an input prompt to the LM (GPT-3), which finally generates
 the output. In the zero-shot CoT tasks, the prompt P consists of the question Q, choices MC, text
 context CT and image context CI . We also append the phrase ”Let’s think step by step...” (SCOT ) to
-the prompt, which has been shown to elicit CoT reasoning[5], and the desired rationale R (reasoning
+the prompt, which has been shown to elicit CoT reasoning [5], and the desired rationale R (reasoning
 steps) and answer A. In the few-shot CoT task, the prompt P is composed by first creating solved
 examples E (question prompt + solution), and then concatenating the prompt for the zero-shot task.
 Example CoT tasks (zero-shot & few-shot) are shown the presented figure. For the zero-shot VQA
