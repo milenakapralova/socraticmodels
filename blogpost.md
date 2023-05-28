@@ -84,55 +84,19 @@ the tokens in the reference and candidate sentences via cosine similarity [21]. 
 
 
 ## Results
+![Qualitative results](blogpost_images/qualitative_results.png)
 
-<div style="display: flex; flex-direction: row;">
-    <div style="flex: 50%; text-align: center;">
-        <figure>
-            <img src="blogpost_images/demo_img.png" alt="Image 1" width="400" height="300">
-            <figcaption>
-            <br><strong>Original Socratic (ChatGPT)</strong>: "This photo captures the elegance of a well-designed dining room with a beautiful view."
-            <br><strong>Baseline (Flan-T5)</strong>: "The interior of a home with large windows and wooden shutters and chairs under a stairway."
-            <br><strong>Improved (Flan-T5)</strong>: "The interior of a home with large windows and wooden floors"<br></figcaption>
-        </figure>
-    </div>
-    <div style="flex: 50%; text-align: center;">
-        <figure>
-            <img src="blogpost_images/astronaut_with_beer.jpg" alt="Image 2"  width="400" height="300">
-            <figcaption>
-            <br><strong>Original Socratic (ChatGPT)</strong>: "A photo of an astronaut enjoying a beer while waiting for a meeting."
-            <br><strong>Baseline (Flan-T5)</strong>: "man resting in spacesuit"
-            <br><strong>Improved (Flan-T5)</strong>: "astronaut relaxes with beer"<br></figcaption>
-        </figure>
-    </div>
-</div>
-
-
-<div style="display: flex; flex-direction: row;">
-    <div style="flex: 50%; text-align: center;">
-        <figure>
-            <img src="blogpost_images/monkey_with_gun.jpg" alt="Image 1" width="400" height="300">
-            <figcaption>
-            <br><strong>Original Socratic (ChatGPT)</strong>: "This photo chimpanzee was taken at a veterinarians office."
-            <br><strong>Baseline (Flan-T5)</strong>: "There is a chimpanzee in this photo"
-            <br><strong>Improved (Flan-T5)</strong>: "The chimpanzee wants to shoot at the person."<br></figcaption>
-        </figure>
-    </div>
-    <div style="flex: 50%; text-align: center;">
-        <figure>
-            <img src="blogpost_images/fruit_bowl.jpg" alt="Image 2" width="400" height="300">
-            <figcaption>
-            <br><strong>Original Socratic (ChatGPT)</strong>: "A close-up of a dish rack, with various plates and bowls stacked neatly inside."
-            <br><strong>Baseline (Flan-T5)</strong>: "A dish-rack has dishes in it."
-            <br><strong>Improved (Flan-T5)</strong>: "A basket of fruit in a stand."<br></figcaption>
-        </figure>
-    </div>
-</div>
+| Approach                           | Bleu 4 ± std | METEOR ± std | ROUGE L ± std | CIDEr ± std | SPICE ± std | BERT p ± std | BERT r ± std | Cosine Sim ± std |
+|------------------------------------|--------------|--------------|---------------|-------------|-------------|--------------|--------------|------------------|
+| GITVision                          | 37.1% ± 32.7% | 31.5% ± 8.8% | 61.0% ± 14.0% | 162.0% ± 81.4% | 24.8% ± 10.7% | 93.4% ± 1.7% | 87.4% ± 1.6% | 25.5% ± 3.8% |
+| BLIP2                              | 23.9% ± 31.4% | 29.6% ± 12.2% | 58.1% ± 15.4% | 142.6% ± 72.2% | 22.1% ± 8.8% | 92.5% ± 1.7% | 86.6% ± 1.5% | 25.1% ± 3.7% |
+| Baseline Socratic with best params | 6.8% ± 17.4% | 16.8% ± 8.4% | 38.5% ± 15.9% | 57.6% ± 57.8% | 11.9% ± 8.9% | 90.7% ± 3.0% | 85.4% ± 1.7% | 25.3% ± 2.9% |
+| Improved Socratic with best params | 2.4% ± 9.9% | 15.1% ± 6.5% | 34.8% ± 14.4% | 49.4% ± 41.7% | 9.7% ± 8.1% | 90.2% ± 2.9% | 84.7% ± 1.7% | 24.6% ± 2.6% |
+| Original Socratic                  | 2.0% ± 9.4% | 15.4% ± 7.4% | 34.4% ± 15.1% | 45.4% ± 50.3% | 9.6% ± 6.6% | 89.8% ± 3.4% | 85.2% ± 1.8% | 25.8% ± 3.2% |
 
 
 
-
-
-We present both quantitative and qualitative reults. Qualitative results show the vast improvement of the model compared to baseline (Figure 1), and the quantitative results confirm this observation (Table 1).
+We present both quantitative and qualitative results. Qualitative results show the vast improvement of the model compared to baseline (Figure 1), and the quantitative results confirm this observation (Table 1).
 
 [Figure 1: Demo | Pictue of the astronaut with beer and the generated captions scored as most likely.]
 
