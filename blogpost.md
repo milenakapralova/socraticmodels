@@ -149,27 +149,72 @@ emphasizing the need for higher thresholds to filter out text-text synonyms.
 
 #### 1.1.3 Hyperparameter search
 
-
-
-
-
+We tuned several hyperparameters, including the temperature of the language model, which controls
+text randomness and diversity. The number of objects and places provided to the model also impacted
+performance. We conducted a random parameter search with 100 iterations on the training set to
+optimize these hyperparameters. The optimal temperature was around 0.55, lower than the default of
+1, aligning with our goal of generating high-quality prompts without excessive creativity. The optimal
+number of objects was 10 for the baseline and 6 for the improved captioner, reflecting the improved
+model’s ability to filter out redundant objects. For places, the optimal values were 5 for the baseline
+and 4 for the improved model. We experimented with different caption formats but could not surpass
+the original Socratic paper’s prompt. Finally, the cosine similarity threshold for the improved method
+was determined as 0.8.
 
 
 #### 1.1.4 Dataset
-
+Images used in this project were extracted from the MS COCO [21], a large-scale dataset often used
+for image captioning tasks. The dataset contains 328000 images that also have natural language
+descriptions, out of which we randomly select 50 images to be used during testing.
 
 
 #### 1.1.5 Evaluation metrics
+• The rule-based metrics such as BLEU-4 [22], METEOR [23], CIDEr [24], SPICE [25] and
+ROUGE-L [26].
+
+Cosine similarity is an embedding-based approach that captures the semantic overlap between
+the candidate caption and an image.
+To compute this overlap, we calculated the cosine similarities between the embeddings of each
+image and ground truth caption and then we calculate the cosine similarities between each image
+embedding and embeddings of the captions generated with FLAN-T5. Then we computed the
+means and standard deviations of these cosine similarities, comparing the baseline and improved
+model based on the gap between ground truth and reference caption-related cosine similarities.
+
+• The BERT score is a learning-based method to evaluate image captions, exploiting the pre-
+trained BERT embeddings to represent and match the tokens in the reference and candidate
+sentences via cosine similarity [21]. To this end, we calculated precision, recall and the F1 score
+for the baseline and improved model.
 
 ### 1.2 Chain-of-Thought and Visual Question Answering
 
 #### 1.2.1 Model
-
+The pipeline for CoT & VQA tasks is illustrated in ??. It partially mimics the captioning pipeline;
+however, we use GPT-3 (version GPT-3.5 turbo, i.e., ChatGPT) as the LM since the reasoning tasks
+are more complex than the captioning task and hence require a more powerful model. In the 1st
+stage, we extract information from the image I by prompting CLIP to ground the image context to a
+text summary CI , which is then fed as an input prompt to the LM (GPT-3), which finally generates
+the output. In the zero-shot CoT tasks, the prompt P consists of the question Q, choices MC, text
+context CT and image context CI . We also append the phrase ”Let’s think step by step...” (SCOT ) to
+the prompt, which has been shown to elicit CoT reasoning[5], and the desired rationale R (reasoning
+steps) and answer A. In the few-shot CoT task, the prompt P is composed by first creating solved
+examples E (question prompt + solution), and then concatenating the prompt for the zero-shot task.
+Example CoT tasks (zero-shot & few-shot) are shown the presented figure. For the zero-shot VQA
+task, the input prompt P is identical to the zero-shot CoT task but the final sentence SCOT is omitted.
+In this way, the desired output is the answer A in the form of a single choice. On the other hand, the
+few-shot VQA task appends a solved example E to the initial prompt.
 
 #### 1.2.2 Dataset
-
+We use the ScienceQA [4] dataset which contains multiple-choice science questions containing text
+and/or images, along with solutions and explanations, designed for reasoning tasks such as CoT &
+VQA. We take the validation split and filter out samples with (i) no images and (ii) images where the
+visual context is unnecessary to answer the question (e.g., ”What is the capital of Texas?”). Finally,
+we draw 50 random samples each for the CoT & VQA tasks. The small size of the test set is motivated
+primarily by the cost of using the proprietary GPT-3 API, but we hope our experiments would still
+reveal some telling trends and insights.
 
 #### 1.2.3 Evaluation
+We evaluated the CoT tasks using the following metrics: BLEU [22], Rouge [26], METEOR [23], and
+Bertscore [27] between the generated responses (rationales) and ground-truth solutions. For the VQA
+tasks, we simply computed the accuracy between generated answers and ground-truths.
 
 ## 2 Results
 
@@ -177,6 +222,18 @@ emphasizing the need for higher thresholds to filter out text-text synonyms.
 
 #### 2.1.1 Qualitative demonstrations
 ![qualitative_results](blogpost_images/qualitative_results.png)
+
+Overall, no image captioning method seems to outperform the rest for all images. Specifically, while
+the original SM outputs an appropriate caption for the top left image, it seems to hallucinate for the
+top right, stating that ”the astronaut is waiting for a meeting”. This hallucination might be caused
+by the limited vocabulary given to the VLM, which does not include the moon as a viable location.
+In this way, the VLM seems to associate the sitting astronaut with the scenario of a ”waiting room”.
+As for the bottom images, the original SM struggles to recognize the pistol and the fruits. However,
+it should be stated that GPT-3 is non-deterministic and might generate more appropriate captions.
+In contrast, the improved model has a higher chance of detecting the relevant objects in the image,
+generating captions that mention both the gun and the fruit, thus outperforming the original model
+for the last two images.
+
 
 #### 2.1.2 Quantitative comparisons
 
@@ -189,9 +246,26 @@ emphasizing the need for higher thresholds to filter out text-text synonyms.
 | Baseline Socratic with best params | 6.8 ± 17.4   | 16.8 ± 8.4   | 38.5 ± 15.9 | 57.6 ± 57.8  | 11.9 ± 8.9  | 90.7 ± 3.0 | 85.4 ± 1.7 | 25.3 ± 2.9 |
 | Improved Socratic with best params | 2.4 ± 9.9    | 15.1 ± 6.5   | 34.8 ± 14.4 | 49.4 ± 41.7  | 9.7 ± 8.1   | 90.2 ± 2.9 | 84.7 ± 1.7 | 24.6 ± 2.6 |
 
+It can be seen from the results table that the non-Socratic models perform significantly better than
+the Socratic methods. This is somewhat expected as some of these models were specifically trained
+for the task of image captioning, whilst the SM were used zero-shot. Surprisingly, our baseline SM
+with the fine-tuned parameters performs better than the original SM, despite having a less effective
+language model. This means that it is possible to obtain similar or even superior results than the
+original SM by carefully prompting the LM. However, the fine-tuned improved SM performed less well
+than the baseline models. This means that the promising results that we obtained in the qualitative
+assessment did not generalize well once we tested it on the MS-Coco dataset with the quantitative
+benchmark.
 
 
 ### 2.2 Chain-of-Thought and Visual Question Answering
+
+Section 2.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few-shot). The results of
+evaluation are summarized in 2. We achieve decent zero-shot performance on the CoT task (BLEU-4=
+9.12, BERT=86.41), and this spikes drastically in the 1-shot setting (BLEU-4=42.03, BERT=90.97).
+In the VQA task, the zero-shot accuracy is already high (66.72%) and jumps to 72.91% in the 1-shot
+case. We refrain from comparing with existing benchmarks as our sample size is too small to make
+meaningful comparisons.
+
 
 #### 2.2.1 Zero-shot CoT
 <div style="text-align:center;">
@@ -220,16 +294,146 @@ emphasizing the need for higher thresholds to filter out text-text synonyms.
 
 ## 3 Discussion
 
-
 #### Image captioning
+The performance of the models on image caption generation was somewhat
+expected, with the best-performing models being those that were directly trained on image-captioning:
+GIT, BLIP and BLIP-2. In the case of all three SMs, the performance was similar and slightly better
+for the FLAN-T5 baseline model, although the large uncertainty in the scores makes it unlikely that
+those differences are meaningful.
+That being said, we did not observe any quantitative improvement in the image captioning task for
+the Improved model compared to the Baseline model, even though the qualitative results suggested oth-
+erwise. This could be attributed to the distribution shift between the images used for demonstrations
+and the MS COCO images used for quantitative evaluation: while the images used for demonstration
+might have been more semantically varied in their content (e.g. astronaut and beer, monkey and
+gun), the images on MS COCO, capturing day-to-day scenes, were less varied, which could prevent
+the Improved model from leveraging its ability to caption images with semantically varied objects or
+concepts.
 
+Overall, we can see that the SM using the open-source FLAN-T5 can perform at least as well as
+the SM which employed the proprietary GPT-3. However, further analyses using more data should be
+conducted before any conclusions are taken.
+
+#### Chain-of-thought and visual question answering.
+
+The results for the 2 reasoning tasks, i.e.,
+CoT reasoning and VQA reveal some intriguing insights. Confirming our hypothesis, the SM frame-
+work is well suited to such tasks, possibly because the exchange of information across modalities leads
+to emergent properties like reasoning through cross-modal discourse and knowledge-sharing. This is
+in accordance with the findings of the authors on reasoning tasks such as question-answering from
+egocentric video perception. We highlight 2 key insights: (i) SMs exhibit strong zero-shot multimodal
+reasoning abilities, judging by their performance on the zero-shot CoT & VQA tasks, thereby cor-
+roborating the author’s claims; (ii) the reasoning capabilities improve in a few-shot setting; this is
+particularly evident in the CoT reasoning task where 1-shot prompting leads to a drastic jump in
+performance across all metrics. Our methodology serves as a framework and a proof-of-concept and
+invites further exploration of SMs in this domain. We believe that combining the socratic framework
+of cross-modal intercourse with abilities reasoning abilities like chain-of-thought could lead to the
+development of artificial agents with more robust and generalizable intelligence.
 
 ### 3.1 Limitations and future research
 
+#### Limitations
+A key limitation in all our experiments was the sample size for evaluation. We used a
+random sample of 50 images from MS-COCO for the image captioning tasks, and 50 samples of the
+ScienceQA dataset for the reasoning tasks. This was primarily due to (i) computational constraints and
+(ii) costs of using the proprietary GPT-3 model for the reasoning tasks. This limits our ability to make
+broad generalizations and benchmark comparisons; nonetheless, our results still reveal informative
+trends. Another drawback is that we only experimented with 2 LMs (FLAN-T5 and GPT-3); a
+more comprehensive experimentation with various SoTA (preferably open-source) LMs such as maybe
+FLAN-UL2 should be pursued. Finally, the dataset of choice might have been unsuitable for testing
+the differences in performance between the Baseline and Improved model. Future replication efforts
+should include a dataset with images containing more semantically diverse objects.
+
+#### Future work
+An important benefit of the SM framework comes in the form of its modularity, which
+allows certain models to be easily exchanged for more capable alternatives. In our case, we have noticed
+that CLIP was often a bottleneck in the pipeline since it often struggled with finding relevant features
+in the image. As such, future research should analyze whether different VLM can handle the image
+captioning task better. For instance, VLMs from the Flamingo suite[28] could potentially replace
+CLIP and lead to increased performance. Flamingo models were trained on arbitrarily interleaved
+text and images, endowing them with in-context few-shot learning capabilities on a range of image
+and video tasks such as captioning, where they outperform the state-of-the-art. An alternative could
+come in the form of FROMAGe [29], a method for grounding LMs to the visual domain by freezing
+the LM and finetuning the input and output layers to enable cross-modality interaction, showcasing
+strong zero-shot capabilities on grounded tasks such as image captioning and contextual image-to-text
+retrieval.
 
 ## 4 Conclusion
+Through this project, we have managed to democratize the SM framework for the image captioning
+task and bridged the gap between SMs using open-source LMs and SMs employing proprietary LMs.
+We have further extended the capabilities of SMs in multimodal reasoning tasks. We hope our work
+will serve as a useful prototype and proof-of-concept for the general scientific community to develop
+more open-source models and further research in the areas of multimodal learning and reasoning.
 
+### 4.1 Individual contributions
+Writing on the report was a group effort, each member contributing to all sections. Similarly, we all made sure our parts of the code were neatly arranged and well documented.
 
-### 4.1 Individual contributions and conflict of interest
+As for the code itself:
+Alexandru Turcu: Model evaluation
+Bogdan Palfi: Synonim Exclusion Algorithm
+Ryan Amaudruz: Synonim Exclusion Algorithm
+Abhinav Bhuyan: Chaing-of-thought reasoning, visual-question answering
+Milena Kapralova: Model evaluation
 
 ## References
+[1] Zeng, A. et al. Socratic models: Composing zero-shot multimodal reasoning with language. arXiv
+preprint arXiv:2204.00598 (2022).
+[2] Geva, M., Gupta, A. & Berant, J. Injecting Numerical Reasoning Skills into Language Models
+2020. arXiv: 2004.04487 [cs.CL].
+      [3] Wei, J. et al. Chain of thought prompting elicits reasoning in large language models. arXiv
+      preprint arXiv:2201.11903 (2022).
+      [4] Lu, P. et al. Learn to Explain: Multimodal Reasoning via Thought Chains for Science Question
+      Answering in The 36th Conference on Neural Information Processing Systems (NeurIPS) (2022).
+      [5] Kojima, T., Gu, S. S., Reid, M., Matsuo, Y. & Iwasawa, Y. Large language models are zero-shot
+      reasoners. arXiv preprint arXiv:2205.11916 (2022).
+      [6] Zhang, Z. et al. Multimodal chain-of-thought reasoning in language models. arXiv preprint arXiv:2302.00923
+      (2023).
+      [7] Radford, A. et al. Learning Transferable Visual Models From Natural Language Supervision 2021.
+      arXiv: 2103.00020 [cs.CV].
+      [8] Brown, T. et al. Language models are few-shot learners. Advances in neural information processing
+      systems 33, 1877–1901 (2020).
+      [9] Tewel, Y., Shalev, Y., Schwartz, I. & Wolf, L. ZeroCap: Zero-Shot Image-to-Text Generation for
+      Visual-Semantic Arithmetic 2022. arXiv: 2111.14447 [cs.CV].
+      [10] Mokady, R., Hertz, A. & Bermano, A. H. ClipCap: CLIP Prefix for Image Captioning 2021.
+      arXiv: 2111.09734 [cs.CV].
+      [11] Radford, A. et al. Language models are unsupervised multitask learners. OpenAI blog 1, 9 (2019).
+      [12] Fang, H., Xiong, P., Xu, L. & Chen, Y. CLIP2Video: Mastering Video-Text Retrieval via Image
+      CLIP 2021. arXiv: 2106.11097 [cs.CV].
+      [13] Kreiss, E., Fang, F., Goodman, N. D. & Potts, C. Concadia: Towards Image-Based Text Gener-
+      ation with a Purpose 2022. arXiv: 2104.08376 [cs.CL].
+      [14] Chung, H. W. et al. Scaling Instruction-Finetuned Language Models 2022. arXiv: 2210.11416
+      [cs.LG].
+      [15] Longpre, S. et al. The Flan Collection: Designing Data and Methods for Effective Instruction
+      Tuning 2023. arXiv: 2301.13688 [cs.AI].
+      [16] Wang, J. et al. GIT: A Generative Image-to-text Transformer for Vision and Language 2022.
+      arXiv: 2205.14100 [cs.CV].
+      [17] Li, J., Li, D., Xiong, C. & Hoi, S. BLIP: Bootstrapping Language-Image Pre-training for Uni-
+      fied Vision-Language Understanding and Generation in Proceedings of the 39th International
+      Conference on Machine Learning (eds Chaudhuri, K. et al.) 162 (PMLR, 2022), 12888–12900.
+      https://proceedings.mlr.press/v162/li22n.html.
+      [18] Li, J., Li, D., Savarese, S. & Hoi, S. BLIP-2: Bootstrapping Language-Image Pre-training with
+      Frozen Image Encoders and Large Language Models 2023. arXiv: 2301.12597 [cs.CV].
+      [19] L ́opez-Cifuentes, A., Escudero-Vi ̃nolo, M., Besc ́os, J. & Garcıa-Martın,  ́A. Semantic-aware scene
+      recognition. Pattern Recognition 102, 107256. https://doi.org/10.1016%2Fj.patcog.2020.
+      107256 (June 2020).
+      [20] Wu, B. et al. Tencent ML-Images: A Large-Scale Multi-Label Image Database for Visual Rep-
+      resentation Learning. IEEE Access 7, 172683–172693. https://doi.org/10.1109%2Faccess.
+      2019.2956775 (2019).
+      [21] Lin, T.-Y. et al. Microsoft COCO: Common Objects in Context 2015. arXiv: 1405.0312 [cs.CV].
+      [22] Papineni, K., Roukos, S., Ward, T. & Zhu, W.-J. BLEU: a method for automatic evaluation of
+      machine translation. Proceedings of the 40th annual meeting of the Association for Computational
+      Linguistics, 311–318 (2002).
+      [23] Banerjee, S. & Lavie, A. METEOR: An automatic metric for MT evaluation with improved
+      correlation with human judgments in Proceedings of the acl workshop on intrinsic and extrinsic
+      evaluation measures for machine translation and/or summarization (2005), 65–72.
+      [24] Vedantam, R., Zitnick, C. L. & Parikh, D. CIDEr: Consensus-based Image Description Evaluation
+2015. arXiv: 1411.5726 [cs.CV].
+      [25] Anderson, P., Fernando, B., Johnson, M. & Gould, S. SPICE: Semantic Propositional Image
+      Caption Evaluation 2016. arXiv: 1607.08822 [cs.CV].
+      [26] Lin, C.-Y. ROUGE: A package for automatic evaluation of summaries in Text summarization
+      branches out (2004), 74–81.
+      [27] Zhang, T., Kishore, V., Wu, F., Weinberger, K. Q. & Artzi, Y. BERTScore: Evaluating Text
+      Generation with BERT in International Conference on Learning Representations (2020).
+      [28] Alayrac, J.-B. et al. Flamingo: a visual language model for few-shot learning. Advances in Neural
+      Information Processing Systems 35, 23716–23736 (2022).
+      [29] Koh, J. Y., Salakhutdinov, R. & Fried, D. Grounding Language Models to Images for Multimodal
+      Generation 2023. arXiv: 2301.13823 [cs.CL].
