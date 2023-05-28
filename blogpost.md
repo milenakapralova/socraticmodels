@@ -304,6 +304,7 @@ In the VQA task, the zero-shot accuracy is already high (66.72%) and jumps to 72
 case. We refrain from comparing with existing benchmarks as our sample size is too small to make
 meaningful comparisons.
 
+<small>
 
 #### 3.2.1 Zero-shot CoT
 <center>
@@ -311,18 +312,26 @@ meaningful comparisons.
   <p>Figure 3: Zero-shot CoT</p>
 </center>
 
+- **Prompt**: This image was taken in a drugstore. It contains a spring, spring scale, coil, volute, sprig, set gun, whipping cream, elastic, spar, whisk.
+Question: Which property matches this object?
+Choices: ['flexible', 'slippery']
+Hint: Select the better answer.
+Answer: Let's think step by step...
+- **Output**: The objects in the image include a spring, spring scale, coil, volute, sprig, set gun, whipping cream, elastic, spar, and whisk. None of these objects are explicitly described as slippery, so we can eliminate that option. However, there are several objects that could be described as flexible, such as the spring, coil, and elastic. Therefore, the correct answer is "flexible."
+- **GT solution**: A flexible object can be folded or bent without breaking easily. The spring is flexible. A slippery object is hard to hold onto or stand on. The spring is not slippery.
+
 #### 3.2.2 Few-shot CoT
-<div style="display:flex; justify-content:center;">
-  <div style="flex: 0 0 50%;">
-    <figure style="text-align:center;">
-      <img src="blogpost_images/spring.png" alt="Image 1" style="width:400px;height:300px;">
-      <figcaption style="text-align:center;">(a) Example sample</figcaption>
+<div style="display:flex; justify-content:center; align-items: center; flex-direction: row">
+  <div style="flex:;">
+    <figure>
+      <img src="blogpost_images/spring.png" alt="Image 1" width="200px">
+      <figcaption>(a) Example sample</figcaption>
     </figure>
   </div>
   <div style="flex: 0 0 50%;">
-    <figure style="text-align:center;">
-      <img src="blogpost_images/lemon.png" alt="Image 2" style="width:400px;height:300px;">
-      <figcaption style="text-align:center;">(b) Target sample</figcaption>
+    <figure>
+      <img src="blogpost_images/lemon.png" alt="Image 2" width=200px">
+      <figcaption>(b) Target sample</figcaption>
     </figure>
   </div>
 </div>
@@ -330,6 +339,31 @@ meaningful comparisons.
   Figure 4: Few-shot CoT
 </div>
 
+- **Example prompt**: This image was taken in a drugstore. It contains a spring, coil spring, volute spring, spring balance, spring scale, coil, spiral, volute, whorl, helix, sprig, spiral, volute, spritzer, set gun, spring gun, annual, whipping cream, light whipping cream.
+Question: Which property matches this object?
+Choices: ['flexible', 'slippery']
+Hint: Select the better answer.
+Answer: Let's think step by step...Look at the object. Think about each property.
+A flexible object can be folded or bent without breaking easily. The spring is flexible. A slippery object is hard to hold onto or stand on. The spring is not slippery.. So the answer is flexible.
+
+- **Target prompt**:
+This image was taken in a ball pit. It contains a citron, lemon, lemon, lemon tree, Citrus limon, fruit drink, ade, vitamin C, C, ascorbic acid, citrus, citrus fruit, citrous fruit, vitamin B2, vitamin G, riboflavin, lactoflavin, ovoflavin, hepatoflavin, lime, bergamot, bergamot orange, Citrus bergamia, lemon curd, lemon cheese.
+Question: Which property matches this object?
+Choices: ['yellow', 'salty']
+Hint: Select the better answer.
+Answer: Let's think step by step...
+
+- **Final prompt** = Example prompt + Target prompt
+
+- **Output**: Look at the object. Think about each property. The object is yellow, as it contains citrons, lemons, and limes which are all yellow fruits. It is not salty, as none of the items listed are salty. Therefore, the answer is yellow.
+- **GT solution**: Look at the object. Think about each property. Potato chips have a salty taste. The lemon is not salty. Yellow is a color. This color is yellow. The lemon is yellow.
+
+- **Prompt**: This image was taken in a rainforest. It contains a Black African, region, African, geographical area, geographic area, geographical region, geographic region, region, part, asclepiad, North American, sphere, sphere of influence, map, South African. Using this information, answer the following question: Which continent is highlighted?
+Hint: Select the index of the correct choice: ['0 Asia', '1 North America', '2 Africa', '3 South America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
+Answer: 
+
+- **Output**: 2
+- **GT answer**: 2
 
 
 #### 3.2.3 Zero-shot VQA
@@ -337,9 +371,50 @@ meaningful comparisons.
   <img src="blogpost_images/africa.png" alt="Image" style="width:300px;height:300px;">
     <figcaption>Figure 5: Zero-shot VQA</figcaption>
 </div>
+- **Example prompt**: This image was taken in a rainforest. It contains a Black African, region, African, geographical area, geographic area, geographical region, geographic region, region, part, asclepiad, North American, sphere, sphere of influence, map, South African. Using this information, answer the following question: Which continent is highlighted?
+Hint: 
+Select the index of the correct choice: ['0 Asia', '1 North America', '2 Africa', '3 South America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
+Answer: 2
 
+- **Target prompt**: This image was taken in a rainforest. It contains a Latin American, Latino, region, region, part, South American, North American, geographical area, geographic area, geographical region, geographic region, representation, earth, ground, district, territory, territorial dominion, dominion, map. Using this information, answer the following question: Which continent is highlighted?
+Hint: 
+Select the index of the correct choice: ['0 South America', '1 Antarctica', '2 North America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
+Answer: 
 
 #### 3.2.3 Few-shot VQA
+<div style="display:flex; justify-content:center align-items: center flex-direction: row; ">
+  <div style="flex: 0 0 50%;">
+    <figure>
+      <img src="blogpost_images/africa.png" alt="Image 1" style="width:200px;height:200px;">
+      <figcaption>(a) Example sample</figcaption>
+    </figure>
+  </div>
+  <div style="flex: 0 0 50%;">
+    <figure>
+      <img src="blogpost_images/south_america.png" alt="Image 2" style="width:200px;height:200px;">
+      <figcaption>(b) Target sample</figcaption>
+    </figure>
+  </div>
+</div>
+<div align="center">
+  Figure 3: Few-shot CoT
+</div>
+
+- **Example prompt**: This image was taken in a rainforest. It contains a Black African, region, African, geographical area, geographic area, geographical region, geographic region, region, part, asclepiad, North American, sphere, sphere of influence, map, South African. Using this information, answer the following question: Which continent is highlighted?
+Hint: 
+Select the index of the correct choice: ['0 Asia', '1 North America', '2 Africa', '3 South America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
+Answer: 2
+
+- **Target prompt**: This image was taken in a rainforest. It contains a Latin American, Latino, region, region, part, South American, North American, geographical area, geographic area, geographical region, geographic region, representation, earth, ground, district, territory, territorial dominion, dominion, map. Using this information, answer the following question: Which continent is highlighted?
+Hint: 
+Select the index of the correct choice: ['0 South America', '1 Antarctica', '2 North America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
+Answer: 
+
+- **Final prompt** = example prompt + target prompt
+- **Output**: 0
+- **GT answer**: 0
+
+</small>
 
 ## 4 Discussion
 
