@@ -314,21 +314,22 @@ meaningful comparisons.
 #### 3.2.2 Few-shot CoT
 <div style="display:flex; justify-content:center;">
   <div style="flex: 0 0 50%;">
-    <figure>
+    <figure style="text-align:center;">
       <img src="blogpost_images/spring.png" alt="Image 1" style="width:400px;height:300px;">
-      <figcaption>(a) Example sample</figcaption>
+      <figcaption style="text-align:center;">(a) Example sample</figcaption>
     </figure>
   </div>
   <div style="flex: 0 0 50%;">
-    <figure>
+    <figure style="text-align:center;">
       <img src="blogpost_images/lemon.png" alt="Image 2" style="width:400px;height:300px;">
-      <figcaption>(b) Target sample</figcaption>
+      <figcaption style="text-align:center;">(b) Target sample</figcaption>
     </figure>
   </div>
 </div>
 <div align="center">
   Figure 4: Few-shot CoT
 </div>
+
 
 
 #### 3.2.3 Zero-shot VQA
