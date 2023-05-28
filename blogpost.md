@@ -197,7 +197,7 @@ for the baseline and improved model.
 ### 2.2 Chain-of-Thought and Visual Question Answering
 
 #### 2.2.1 Model
-The pipeline for CoT & VQA tasks is illustrated in ??. It partially mimics the captioning pipeline;
+The pipeline for CoT & VQA tasks is illustrated below. It partially mimics the captioning pipeline;
 however, we use GPT-3 (version GPT-3.5 turbo, i.e., ChatGPT) as the LM since the reasoning tasks
 are more complex than the captioning task and hence require a more powerful model. In the 1st
 stage, we extract information from the image I by prompting CLIP to ground the image context to a
@@ -211,6 +211,8 @@ Example CoT tasks (zero-shot & few-shot) are shown the presented figure. For the
 task, the input prompt P is identical to the zero-shot CoT task but the final sentence SCOT is omitted.
 In this way, the desired output is the answer A in the form of a single choice. On the other hand, the
 few-shot VQA task appends a solved example E to the initial prompt.
+
+
 
 #### 2.2.2 Dataset
 We use the ScienceQA [4] dataset which contains multiple-choice science questions containing text
