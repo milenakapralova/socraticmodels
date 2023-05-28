@@ -342,17 +342,17 @@ Answer: Let's think step by step...
 - **GT solution**: A flexible object can be folded or bent without breaking easily. The spring is flexible. A slippery object is hard to hold onto or stand on. The spring is not slippery.
 
 #### 3.2.2 Few-shot CoT
-<div style="display:flex; justify-content:center; align-items: center; flex-direction: row">
-  <div style="flex:;">
-    <figure>
-      <img src="blogpost_images/spring.png" alt="Image 1" width="200px">
-      <figcaption>(a) Example sample</figcaption>
+<div style="display:flex; justify-content:center;">
+  <div style="flex: 0 0 50%;">
+    <figure style="text-align:center;">
+      <img src="blogpost_images/spring.png" alt="Image 1" style="width:400px;height:300px;">
+      <figcaption style="text-align:center;">(a) Example sample</figcaption>
     </figure>
   </div>
   <div style="flex: 0 0 50%;">
-    <figure>
-      <img src="blogpost_images/lemon.png" alt="Image 2" width=200px">
-      <figcaption>(b) Target sample</figcaption>
+    <figure style="text-align:center;">
+      <img src="blogpost_images/lemon.png" alt="Image 2" style="width:400px;height:300px;">
+      <figcaption style="text-align:center;">(b) Target sample</figcaption>
     </figure>
   </div>
 </div>
