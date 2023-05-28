@@ -57,14 +57,15 @@ ways:
    prompt engineering methods were tested but were not included since no performance increase
    was seen. We will refer to the model where SE is employed as the *Improved model*.
 
-3. Extending the evaluation on the image captioning task.
+3. **Extending the evaluation on the image captioning task**.
    The original paper used qualitative and lexical-based quantitative metrics. However, those often
    do not correlate with human judgments, and have blind spots to syntactically pathological caption
    constructions [17], taking into account only information such as n-gram matching, word order,
    TF-IDF weights, and overlapping sequences of words. We therefore also utilize embedding- and
    learning-based metrics that better correlate with human judgement [18] such as BERT scores to
    evaluate the capabilities of the image captioners.
-4. Comparing the models’ performance to GIT and BLIP.
+
+4. **Comparing the models’ performance to GIT and BLIP**.
    We also aimed to compare the performance of SM to non-Socratic models such as GIT and BLIP.
    Generative Image-to-Text Transformer (GIT) [16] is a generative VLM with a simplified pipeline
    that achieves high performance in image/video captioning and question-answering tasks. On
@@ -73,7 +74,8 @@ ways:
    on various vision-language tasks including zero-shot image-to-text generation and image/video
    captioning.
 
-5. Applying the SM framework to multimodal reasoning tasks. We additionally explore
+5. **Applying the SM framework to multimodal reasoning tasks**. 
+   We additionally explore
    the capabilities of Socratic models on 2 types of multimodal reasoning tasks: chain-of-thought
    (CoT) reasoning and visual question-answering, in both zero-shot and few-shot settings.
    Intuitively, we would expect the SM framework to excel in reasoning tasks due to their ability
@@ -86,7 +88,8 @@ ways:
    abilities. Our efforts would serve as a handy framework and proof-of-concept for the application
    of SMs in multimodal reasoning tasks, leading to more robust, intelligent systems which can
    apply reasoning and generalize across multiple domains.
-6. Making the pipeline more flexible, reproducible and efficient.
+
+6. **Making the pipeline more flexible, reproducible and efficient**.
    We bring forth a modular codebase that makes it easy to build upon and test different captioning
    methods, including the usage of seeds, split between train, valid and test sets. We also provide a
    random and grid search pipeline to find the best hyperparameters. Finally, as the loading of the
@@ -149,6 +152,28 @@ colors (right). In both cases, we saw that image and text cluster together, even
 scenario. This indicates that texts exhibit greater similarity among themselves than with images,
 emphasizing the need for higher thresholds to filter out text-text synonyms.
 
+> ##### The SE Algorithm
+> 1. *Input*:
+>    - CLIP embeddings of `images`
+>    - CLIP embeddings of `object categories`
+>
+>   *Output*:
+>    - `objects` (list of selected objects for all images)
+>
+> 2. Initialize an empty list `objects`.
+>
+>3. For each `image` in `images`:
+>    - Initialize an empty list `objects_image` to store selected objects for one image.
+>    - Get the 100 most similar `object categories` to `image` based on cosine similarity and order them.
+>    - Find the `object` corresponding to the maximum cosine similarity value
+>    - Add `object` to `objects_image`.
+>    - For each subsequent `object` in the rest of the ordered list of object categories:
+>        - Calculate the cosine similarity between `object` and all the objects in `objects_image`.
+>        - If none of the calculated cosine similarities is higher than the pre-specified threshold:
+>            - Add `object` to `objects_image`.
+>    - Add `objects_image` to `objects`.
+>
+>4. Return `objects` as the final list of selected objects.
 
 
 #### 2.1.3 Hyperparameter search
@@ -190,27 +215,29 @@ for the baseline and improved model.
 
 <div style="text-align:center;">
   <img src="blogpost_images/pca.png" alt="Image" style="width:700px;height:420px;">
-    <figcaption>Figure 2: Image for which CLIP produces too many synonyms</figcaption>
+    <figcaption>Figure 2: Visualisation of CLIP's embedding space</figcaption>
 </div>
 
 
 ### 2.2 Chain-of-Thought and Visual Question Answering
 
 #### 2.2.1 Model
-The pipeline for CoT & VQA tasks is illustrated in ??. It partially mimics the captioning pipeline;
+The pipeline for CoT & VQA tasks is illustrated below. It partially mimics the captioning pipeline;
 however, we use GPT-3 (version GPT-3.5 turbo, i.e., ChatGPT) as the LM since the reasoning tasks
 are more complex than the captioning task and hence require a more powerful model. In the 1st
 stage, we extract information from the image I by prompting CLIP to ground the image context to a
 text summary CI , which is then fed as an input prompt to the LM (GPT-3), which finally generates
 the output. In the zero-shot CoT tasks, the prompt P consists of the question Q, choices MC, text
 context CT and image context CI . We also append the phrase ”Let’s think step by step...” (SCOT ) to
-the prompt, which has been shown to elicit CoT reasoning[5], and the desired rationale R (reasoning
+the prompt, which has been shown to elicit CoT reasoning [5], and the desired rationale R (reasoning
 steps) and answer A. In the few-shot CoT task, the prompt P is composed by first creating solved
 examples E (question prompt + solution), and then concatenating the prompt for the zero-shot task.
 Example CoT tasks (zero-shot & few-shot) are shown the presented figure. For the zero-shot VQA
 task, the input prompt P is identical to the zero-shot CoT task but the final sentence SCOT is omitted.
 In this way, the desired output is the answer A in the form of a single choice. On the other hand, the
 few-shot VQA task appends a solved example E to the initial prompt.
+
+
 
 #### 2.2.2 Dataset
 We use the ScienceQA [4] dataset which contains multiple-choice science questions containing text
@@ -281,33 +308,34 @@ meaningful comparisons.
 #### 3.2.1 Zero-shot CoT
 <div style="text-align:center;">
   <img src="blogpost_images/spring.png" alt="Image" style="width:300px;height:300px;">
-    <figcaption>Figure 2: Zero-shot CoT</figcaption>
+    <figcaption>Figure 3: Zero-shot CoT</figcaption>
 </div>
 
 #### 3.2.2 Few-shot CoT
 <div style="display:flex; justify-content:center;">
   <div style="flex: 0 0 50%;">
-    <figure>
+    <figure style="text-align:center;">
       <img src="blogpost_images/spring.png" alt="Image 1" style="width:400px;height:300px;">
-      <figcaption>(a) Example sample</figcaption>
+      <figcaption style="text-align:center;">(a) Example sample</figcaption>
     </figure>
   </div>
   <div style="flex: 0 0 50%;">
-    <figure>
+    <figure style="text-align:center;">
       <img src="blogpost_images/lemon.png" alt="Image 2" style="width:400px;height:300px;">
-      <figcaption>(b) Target sample</figcaption>
+      <figcaption style="text-align:center;">(b) Target sample</figcaption>
     </figure>
   </div>
 </div>
 <div align="center">
-  Figure 3: Few-shot CoT
+  Figure 4: Few-shot CoT
 </div>
+
 
 
 #### 3.2.3 Zero-shot VQA
 <div style="text-align:center;">
   <img src="blogpost_images/africa.png" alt="Image" style="width:300px;height:300px;">
-    <figcaption>Figure 4: Zero-shot VQA</figcaption>
+    <figcaption>Figure 5: Zero-shot VQA</figcaption>
 </div>
 
 
