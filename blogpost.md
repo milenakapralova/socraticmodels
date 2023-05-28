@@ -98,7 +98,7 @@ ways:
 
 
 <center>
-  <img src="blogpost_images/wedding.jpg" alt="Image" style="display:block; margin:auto; width:300px;height:300px;">
+  <img src="blogpost_images/wedding.jpg" alt="Image" style="width:400px;height:300px;">
     <figcaption>Figure 1: Image for which CLIP produces too many synonyms</figcaption>
 </center>
 
@@ -342,15 +342,15 @@ Answer: Let's think step by step...
 
 #### 3.2.2 Few-shot CoT
 <div style="display:flex; justify-content:center; align-items: center; flex-direction: row">
-  <div style="flex: 1;">
-    <figure style="text-align:center">
+  <div style="flex:;">
+    <figure>
       <img src="blogpost_images/spring.png" alt="Image 1" width="200px">
       <figcaption>(a) Example sample</figcaption>
     </figure>
   </div>
-  <div style="flex: 1;">
-    <figure style="text-align:center">
-      <img src="blogpost_images/lemon.png" alt="Image 2" width="200px">
+  <div style="flex: 0 0 50%;">
+    <figure>
+      <img src="blogpost_images/lemon.png" alt="Image 2" width=200px">
       <figcaption>(b) Target sample</figcaption>
     </figure>
   </div>
