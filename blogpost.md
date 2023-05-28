@@ -50,25 +50,24 @@ description are added and all other not-so-relevant terms are filtered out. Fina
 
 ## Image Object Selection Algorithm
 
-1. **Procedure** `select_objects`:
-   - **Input**: `images` (list of images)
-   - **Output**: `objects` (list of selected objects)
+1. **Input**: `images` (list of images)
+   **Output**: `objects` (list of selected objects)
 
-2. **Initialize** an empty list `objects` to store selected objects.
+2. Initialize an empty list `objects` to store selected objects.
 
-3. **For each** `image` **in** `images`:
-     - **Get** the 100 most similar object categories to `image` based on cosine similarity.
-     - **Order** the 100 most similar object categories by cosine similarity.
-     - **Set** `selected_object` as the object category with the highest cosine similarity.
-     - **Add** `selected_object` **to** `objects`.
+3. For each `image` in `images`:
+     - Initialize an empty list `objects_image` to store selected objects.
+     - Get the 100 most similar object categories to `image` based on cosine similarity and order them.
+     - Find the `object` corresponding to the maximum cosine similarity value
+     - Add `object` to `objects_image`.
+     - For each sebsequent `object` in the rest of the ordered list of object categories:
+         - Calculate the cosine similarity between `object` and all the objects in `objects_image`.
+         - If none of the calculated cosine similarities is higher than the pre-specified threshold:
+             - Add `object` to `objects_image`.
+     - Add `objects_image` to `objects`.
 
-4. **For each** `object` **in** `objects`:
-     - **For each** `next_object` **in** the ordered list of object categories after `object`:
-         - **Calculate** the cosine similarity between `next_object` and all the previously selected objects in `objects`.
-         - **If none** of the calculated cosine similarities is higher than the pre-specified threshold:
-             - **Include** `next_object` in `objects`.
+4. Return `objects` as the final list of selected objects.
 
-5. **Return** `objects` as the final list of selected objects.
 
 
 ![A picture of the CLIP embedding space of texts an images](pca.png)
