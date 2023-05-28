@@ -153,7 +153,7 @@ colors (right). In both cases, we saw that image and text cluster together, even
 scenario. This indicates that texts exhibit greater similarity among themselves than with images,
 emphasizing the need for higher thresholds to filter out text-text synonyms.
 
-> ##### The SE Algorithm
+##### The SE Algorithm
 > 1. *Input*:
 >    - CLIP embeddings of `images`
 >    - CLIP embeddings of `object categories`
@@ -163,7 +163,7 @@ emphasizing the need for higher thresholds to filter out text-text synonyms.
 >
 > 2. Initialize an empty list `objects`.
 >
->3. For each `image` in `images`:
+> 3. For each `image` in `images`:
 >    - Initialize an empty list `objects_image` to store selected objects for one image.
 >    - Get the 100 most similar `object categories` to `image` based on cosine similarity and order them.
 >    - Find the `object` corresponding to the maximum cosine similarity value
@@ -243,13 +243,10 @@ few-shot VQA task appends a solved example E to the initial prompt.
 
 > **Zero-shot CoT**
 > **Input**: Q + C_T + I -> **VLM** -> P = Q + C_T + C_I + S_COT -> **LM** -> **Output**: R + A
-
 > **Few-shot CoT**
 > **Input**: Q + C_T + I + E -> **VLM** -> P = Q + C_T + C_I + S_COT -> **LM** -> **Output**: R + A
-
 > **Zero-shot VQA**
 > **Input**: Q + C_T + I -> **VLM** -> P = Q + C_T + C_I + E -> **LM** -> **Output**: A
-
 > **Few-shot VQA**
 > **Input**: Q + C_T + I + E -> **VLM** -> P = Q + C_T + C_I + E -> **LM** -> **Output**: A
 
@@ -328,7 +325,7 @@ Section 3.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few
 
 #### 3.2.1 Zero-shot CoT
 <center>
-  <img src="blogpost_images/spring.png" alt="Image" style="width:200px;height:200px;">
+  <img src="blogpost_images/spring.png" alt="Image" style="width:200px;height:300px;">
   <p> <b> Figure 3: Zero-shot CoT <b> </p>
 </center>
 
@@ -344,14 +341,14 @@ Answer: Let's think step by step...
 <div style="display:flex; justify-content:center; align-items: center; flex-direction: row">
   <div style="flex:;">
     <figure>
-      <img src="blogpost_images/spring.png" alt="Image 1" width="200px">
-      <figcaption>(a) Example sample</figcaption>
+      <img src="blogpost_images/spring.png" alt="Image 1" width="300px">
+      <p> Example sample </p>
     </figure>
   </div>
   <div style="flex: 0 0 50%;">
     <figure>
-      <img src="blogpost_images/lemon.png" alt="Image 2" width=200px">
-      <figcaption>(b) Target sample</figcaption>
+      <img src="blogpost_images/lemon.png" alt="Image 2" width=300px">
+      <p> Target sample </p>
     </figure>
   </div>
 </div>
@@ -389,7 +386,7 @@ Answer:
 
 #### 3.2.3 Zero-shot VQA
 <div style="text-align:center;">
-  <img src="blogpost_images/africa.png" alt="Image" style="width:200px;height:200px;">
+  <img src="blogpost_images/africa.png" alt="Image" width=300px">
     <figcaption> <b> Figure 5: Zero-shot VQA </b> </figcaption>
 </div>
 
