@@ -42,6 +42,7 @@ outputs/
 /baseline_outputs.csv
 /scripts/test.py
 /data/
+essay/
 /scripts/__pycache__/
 /notebooks/.ipynb_checkpoints/coco_captioning_baseline-checkpoint.ipynb
 /scripts/image_captioning_lisa.py
@@ -59,3 +60,4 @@ env.yml
 /lisa_2/
 /lisa_3/
 /notebooks/.ipynb_checkpoints/
+.DS_Store
