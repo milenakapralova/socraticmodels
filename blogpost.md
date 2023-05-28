@@ -220,11 +220,6 @@ We evaluated the CoT tasks using the following metrics: BLEU [22], Rouge [26], M
 Bertscore [27] between the generated responses (rationales) and ground-truth solutions. For the VQA
 tasks, we simply computed the accuracy between generated answers and ground-truths.
 
-<div style="text-align:center;">
-  <img src="blogpost_images/wedding.jpg" alt="Image" style="width:400px;height:300px;">
-    <figcaption>Figure 1: Image for which CLIP produces too many synonyms</figcaption>
-</div>
-
 ## 2 Method
 ### 2.1 Image captioning
 
