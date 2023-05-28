@@ -98,7 +98,7 @@ ways:
 
 
 <center>
-  <img src="blogpost_images/wedding.jpg" alt="Image" style="display:block; margin:auto; width:300px;height:300px;">
+  <img src="blogpost_images/wedding.jpg" alt="Image" style="width:400px;height:300px;">
     <figcaption>Figure 1: Image for which CLIP produces too many synonyms</figcaption>
 </center>
 
