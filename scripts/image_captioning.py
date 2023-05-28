@@ -543,17 +543,16 @@ class LmPromptGenerator:
         There might be a {', '.join(object_list)} in this {img_type}.
         A creative short caption I can generate to describe this image is:'''
     
-    # def create_cot_prompt(sample, sorted_places, object_list):
-    def create_cot_prompt(self, sample, clip_manager, vocab_manager, place_feats, obj_feats):
-        _, _, sorted_places, sorted_obj_texts, obj_list, obj_scores = clip_manager.get_img_info(sample['image'], place_feats, obj_feats, vocab_manager)
-        filtered_objs = filter_objs(sorted_obj_texts, obj_scores, clip_manager, obj_topk=10, sim_threshold=0.7)
-        prompt = f'''This image was taken in a {sorted_places[0]}. It contains a {', '.join(filtered_objs)}.\nQuestion: {sample['question']}\nChoices: {sample['choices']}\nHint: {sample['hint']}\nAnswer: Let's think step by step...'''
+    def create_cot_prompt(self, sample, clip_manager, vocab_manager, place_feats, obj_feats, obj_topk=10):
+        _, _, sorted_places, sorted_objs, _, _ = clip_manager.get_img_info(sample['image'], place_feats, obj_feats, vocab_manager)
+        # filtered_objs = filter_objs(sorted_objs, obj_scores, clip_manager, obj_topk=10, sim_threshold=0.7)
+        prompt = f'''This image was taken in a {sorted_places[0]}. It contains a {', '.join(sorted_objs[:obj_topk])}.\nQuestion: {sample['question']}\nChoices: {sample['choices']}\nHint: {sample['hint']}\nAnswer: Let's think step by step...'''
         return prompt
 
-    def create_vqa_prompt(self, sample, clip_manager, vocab_manager, place_feats, obj_feats):
-        _, _, sorted_places, sorted_obj_texts, obj_list, obj_scores = clip_manager.get_img_info(sample['image'], place_feats, obj_feats, vocab_manager)
-        filtered_objs = filter_objs(sorted_obj_texts, obj_scores, clip_manager, obj_topk=10, sim_threshold=0.7)
-        prompt = f'''This image was taken in a {sorted_places[0]}. It contains a {', '.join(filtered_objs)}. Using this information, answer the following question: {sample['question']}\nChoices: {sample['choices']}\nHint: {sample['hint']}\nAnswer: '''
+    def create_vqa_prompt(self, sample, clip_manager, vocab_manager, place_feats, obj_feats, obj_topk=10):
+        _, _, sorted_places, sorted_objs, _, obj_scores = clip_manager.get_img_info(sample['image'], place_feats, obj_feats, vocab_manager)
+        # filtered_objs = filter_objs(sorted_objs, obj_scores, clip_manager, obj_topk=10, sim_threshold=0.7)
+        prompt = f'''This image was taken in a {sorted_places[0]}. It contains a {', '.join(sorted_objs[:obj_topk])}. Using this information, answer the following question: {sample['question']}\nHint: {sample['hint']}\nSelect the index of the correct choice: {[f'{i} {choice}' for i, choice in enumerate(sample['choices'])]}. Your answer should be a single integer (no text) and you must choose exactly one of the options.\nAnswer: '''
         return prompt
         
     @staticmethod
