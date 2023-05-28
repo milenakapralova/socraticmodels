@@ -416,12 +416,12 @@ more open-source models and further research in the areas of multimodal learning
 ### 5.1 Individual contributions
 Writing on the report was a group effort, each member contributing to all sections. Similarly, we all made sure our parts of the code were neatly arranged and well documented.
 
-As for the code itself:
-Alexandru Turcu: Model evaluation
-Bogdan Palfi: Synonim Exclusion Algorithm
-Ryan Amaudruz: Synonim Exclusion Algorithm
-Abhinav Bhuyan: Chaing-of-thought reasoning, visual-question answering
-Milena Kapralova: Model evaluation
+As for the code itself:<br>
+**Alexandru Turcu**: Model evaluation<br>
+**Bogdan Palfi**: Synonym Exclusion Algorithm<br>
+**Ryan Amaudruz**: Synonym Exclusion Algorithm<br>
+**Abhinav Bhuyan**: Chaing-of-thought reasoning, visual-question answering<br>
+**Milena Kapralova**: Model evaluation<br>
 
 ## References
 [1] Zeng, A. et al. Socratic models: Composing zero-shot multimodal reasoning with language. arXiv
