@@ -45,23 +45,23 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
         sorted_caption_map = {}
         caption_score_map = {}
 
-        for img_name in self.img_dic:
+        for img_file in self.img_dic:
 
-            prompt_dic[img_name] = pg_map[caption_strategy](
-                self.img_type_dic[img_name], self.n_people_dic[img_name], self.location_dic[img_name][:n_places],
-                self.sorted_obj_dic[img_name][:n_objects]
+            prompt_dic[img_file] = pg_map[caption_strategy](
+                self.img_type_dic[img_file], self.n_people_dic[img_file], self.location_dic[img_file][:n_places],
+                self.sorted_obj_dic[img_file][:n_objects]
             )
 
             # Generate the caption using the language model
-            caption_texts = self.flan_manager.generate_response(n_captions * [prompt_dic[img_name]], model_params)
+            caption_texts = self.generate_lm_response(n_captions * [prompt_dic[img_file]], model_params)
 
             # Zero-shot VLM: rank captions.
             caption_emb = self.clip_manager.get_text_emb(caption_texts)
             sorted_captions, caption_scores = self.clip_manager.get_nn_text(
-                caption_texts, caption_emb, self.img_feat_dic[img_name]
+                caption_texts, caption_emb, self.img_feat_dic[img_file]
             )
-            sorted_caption_map[img_name] = sorted_captions
-            caption_score_map[img_name] = dict(zip(sorted_captions, caption_scores))
+            sorted_caption_map[img_file] = sorted_captions
+            caption_score_map[img_file] = dict(zip(sorted_captions, caption_scores))
 
         """
         6. Outputs.
@@ -69,21 +69,21 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
 
         # Store the captions
         data_list = []
-        for img_name in self.img_dic:
-            generated_caption = sorted_caption_map[img_name][0]
+        for img_file in self.img_dic:
+            generated_caption = sorted_caption_map[img_file][0]
             data_list.append({
-                'image_name': img_name,
+                'image_name': img_file.split('/')[-1],
                 'generated_caption': generated_caption,
-                'cosine_similarity': caption_score_map[img_name][generated_caption]
+                'cosine_similarity': caption_score_map[img_file][generated_caption]
             })
 
-        file_name_extension = get_file_name_extension_baseline(
-            lm_temperature, n_objects, n_places, caption_strategy, self.set_type
-        )
-        file_path = f'../data/outputs/captions/baseline_caption{file_name_extension}.csv'
+        file_path = self.get_output_file_name(lm_temperature, n_objects, n_places, caption_strategy)
         prepare_dir(file_path)
         self.generated_caption_df = pd.DataFrame(data_list)
         self.generated_caption_df.to_csv(file_path, index=False)
+
+    def generate_lm_response(self, prompt_list, model_params):
+        return self.flan_manager.generate_response(prompt_list, model_params)
 
     def get_nb_of_people_emb(self):
         # Classify number of people
@@ -137,7 +137,19 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
             }
             self.main(**template_params)
 
-
+    def get_output_file_name(self, lm_temperature, n_objects, n_places, caption_strategy):
+        extension = ''
+        # The language model temperature
+        extension += f'_temp_{lm_temperature}'.replace('.', '')
+        # Number of objects
+        extension += f'_nobj_{n_objects}'
+        # Number of places
+        extension += f'_npl_{n_places}'
+        # Caption strategy
+        extension += f'_strat_{caption_strategy}'
+        # Train/test set
+        extension += f'_{self.set_type}'
+        return f'../data/outputs/captions/baseline_caption{extension}.csv'
 
 
 if __name__ == '__main__':

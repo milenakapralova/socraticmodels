@@ -67,6 +67,9 @@ class ImageCaptionerParent:
         # Instantiate the Flan T5 manager
         self.flan_manager = LmManager()
 
+        # Instantiate the GPT manager
+        self.gpt_manager = GPTManager()
+
         # Instantiate the prompt generator
         self.prompt_generator = LmPromptGenerator()
 

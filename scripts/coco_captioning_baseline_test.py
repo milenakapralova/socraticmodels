@@ -32,7 +32,7 @@ if __name__ == '__main__':
     for f in file_list:
         str_split = f.split('_')
         run_params = {
-            'n_captions': 50,
+            'n_captions': 10,
             'lm_temperature': float(f'0.{str_split[3][1:]}'),
             'lm_do_sample': True,
             'n_objects': int(str_split[5]),
