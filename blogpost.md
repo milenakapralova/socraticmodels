@@ -38,8 +38,8 @@
 
 ### 2.1 Image captioning
 
-#### 2.1.1 Dataset
-
+#### 2.1.1 Qualitative demonstrations
+![qualitative_results](blogpost_images/qualitative_results.png)
 
 #### 2.1.2 Quantitative comparisons
 
@@ -57,10 +57,26 @@
 ### 2.2 Chain-of-Thought and Visual Question Answering
 
 #### 2.2.1 Zero-shot CoT
-
+<div style="text-align:center;">
+  <img src="blogpost_images/spring.png" alt="Image" style="width:300px;height:300px;">
+    <figcaption>Figure 2: Zero-shot CoT</figcaption>
+</div>
 
 #### 2.2.2 Few-shot CoT
-
+<div style="display:flex; justify-content:center;">
+  <div style="flex: 0 0 50%;">
+    <figure>
+      <img src="blogpost_images/spring.png" alt="Image 1" style="width:400px;height:300px;">
+      <figcaption>(a) Example sample</figcaption>
+    </figure>
+  </div>
+  <div style="flex: 0 0 50%;">
+    <figure>
+      <img src="blogpost_images/lemon.png" alt="Image 2" style="width:400px;height:300px;">
+      <figcaption>(b) Target sample</figcaption>
+    </figure>
+  </div>
+</div>
 
 
 #### 2.2.3 Zero-shot VQA
