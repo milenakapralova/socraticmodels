@@ -212,7 +212,7 @@ for the baseline and improved model.
 
 <div style="text-align:center;">
   <img src="blogpost_images/pca.png" alt="Image" style="width:700px;height:420px;">
-    <figcaption>Figure 2: Image for which CLIP produces too many synonyms</figcaption>
+    <figcaption>Figure 2: Visualisation of CLIP's embedding space</figcaption>
 </div>
 
 
