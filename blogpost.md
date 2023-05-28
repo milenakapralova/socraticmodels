@@ -51,10 +51,10 @@ description are added and all other not-so-relevant terms are filtered out. Fina
 ## Image Object Selection Algorithm
 
 1. **Input**: 
-      CLIP embeddings of `images`      
-      CLIP embeddings of `object categories`   
+     - CLIP embeddings of `images`      
+     - CLIP embeddings of `object categories`   
    **Output**: 
-      `objects` (list of selected objects for all images)
+     - `objects` (list of selected objects for all images)
 
 2. Initialize an empty list `objects`.
 
