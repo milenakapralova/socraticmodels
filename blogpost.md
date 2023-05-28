@@ -241,17 +241,17 @@ few-shot VQA task appends a solved example E to the initial prompt.
 
 **Algorithm: Reasoning with Socratic models**
 
-**Zero-shot CoT**
-- **Input**: Q + C_T + I -> VLM -> P = Q + C_T + C_I + S_COT -> LM -> **Output**: R + A
+> **Zero-shot CoT**
+> **Input**: Q + C_T + I -> **VLM** -> P = Q + C_T + C_I + S_COT -> **LM** -> **Output**: R + A
 
-**Few-shot CoT**
-- **Input**: Q + C_T + I + E -> VLM -> P = Q + C_T + C_I + S_COT -> LM -> **Output**: R + A
+> **Few-shot CoT**
+> **Input**: Q + C_T + I + E -> **VLM** -> P = Q + C_T + C_I + S_COT -> **LM** -> **Output**: R + A
 
-**Zero-shot VQA**
-- **Input**: Q + C_T + I -> VLM -> P = Q + C_T + C_I + E -> LM -> **Output**: A
+> **Zero-shot VQA**
+> **Input**: Q + C_T + I -> **VLM** -> P = Q + C_T + C_I + E -> **LM** -> **Output**: A
 
-**Few-shot VQA**
-- **Input**: Q + C_T + I + E -> VLM -> P = Q + C_T + C_I + E -> LM -> **Output**: A
+> **Few-shot VQA**
+> **Input**: Q + C_T + I + E -> **VLM** -> P = Q + C_T + C_I + E -> **LM** -> **Output**: A
 
 *Model pipeline for reasoning tasks. Q: question, I: image, A: answer, C_T: text context, C_I: image context, R: rationale, P: prompt, E: solved example, and S_COT: "Let's think step by step..."*
 
@@ -268,8 +268,7 @@ reveal some telling trends and insights.
 
 #### 2.2.3 Evaluation
 We evaluated the CoT tasks using the following metrics: BLEU [22], Rouge [26], METEOR [23], and
-Bertscore [27] between the generated responses (rationales) and ground-truth solutions. For the VQA
-tasks, we simply computed the accuracy between generated answers and ground-truths.
+Bertscore [27] between the generated responses (rationales) and ground-truth solutions. For the VQA tasks, we simply computed the accuracy between generated answers and ground-truths.
 
 
 ## 3 Results
@@ -329,8 +328,8 @@ Section 3.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few
 
 #### 3.2.1 Zero-shot CoT
 <center>
-  <img src="blogpost_images/spring.png" alt="Image" style="width:300px;height:300px;">
-  <p>Figure 3: Zero-shot CoT</p>
+  <img src="blogpost_images/spring.png" alt="Image" style="width:200px;height:200px;">
+  <p> <b> Figure 3: Zero-shot CoT <b> </p>
 </center>
 
 - **Prompt**: This image was taken in a drugstore. It contains a spring, spring scale, coil, volute, sprig, set gun, whipping cream, elastic, spar, whisk.
@@ -343,22 +342,23 @@ Answer: Let's think step by step...
 
 #### 3.2.2 Few-shot CoT
 <div style="display:flex; justify-content:center; align-items: center; flex-direction: row">
-  <div style="flex:;">
-    <figure>
+  <div style="flex: 1;">
+    <figure style="text-align:center">
       <img src="blogpost_images/spring.png" alt="Image 1" width="200px">
       <figcaption>(a) Example sample</figcaption>
     </figure>
   </div>
-  <div style="flex: 0 0 50%;">
-    <figure>
-      <img src="blogpost_images/lemon.png" alt="Image 2" width=200px">
+  <div style="flex: 1;">
+    <figure style="text-align:center">
+      <img src="blogpost_images/lemon.png" alt="Image 2" width="200px">
       <figcaption>(b) Target sample</figcaption>
     </figure>
   </div>
 </div>
-<div align="center">
-  Figure 4: Few-shot CoT
+<div style="text-align:center">
+  <b> Figure 4: Few-shot CoT </b>
 </div>
+
 
 - **Example prompt**: This image was taken in a drugstore. It contains a spring, coil spring, volute spring, spring balance, spring scale, coil, spiral, volute, whorl, helix, sprig, spiral, volute, spritzer, set gun, spring gun, annual, whipping cream, light whipping cream.
 Question: Which property matches this object?
@@ -389,8 +389,8 @@ Answer:
 
 #### 3.2.3 Zero-shot VQA
 <div style="text-align:center;">
-  <img src="blogpost_images/africa.png" alt="Image" style="width:300px;height:300px;">
-    <figcaption>Figure 5: Zero-shot VQA</figcaption>
+  <img src="blogpost_images/africa.png" alt="Image" style="width:200px;height:200px;">
+    <figcaption> <b> Figure 5: Zero-shot VQA </b> </figcaption>
 </div>
 
 - **Example prompt**: This image was taken in a rainforest. It contains a Black African, region, African, geographical area, geographic area, geographical region, geographic region, region, part, asclepiad, North American, sphere, sphere of influence, map, South African. Using this information, answer the following question: Which continent is highlighted?
@@ -402,27 +402,27 @@ Hint: Select the index of the correct choice: ['0 South America', '1 Antarctica'
 Answer: 
 
 #### 3.2.3 Few-shot VQA
-<div style="display:flex; justify-content:center align-items: center flex-direction: row; ">
-  <div style="flex: 0 0 50%;">
-    <figure>
+<div style="display:flex; justify-content:center; align-items: center; flex-direction: row;">
+  <div style="flex: 1;">
+    <figure style="text-align:center">
       <img src="blogpost_images/africa.png" alt="Image 1" style="width:200px;height:200px;">
       <figcaption>(a) Example sample</figcaption>
     </figure>
   </div>
-  <div style="flex: 0 0 50%;">
-    <figure>
+  <div style="flex: 1;">
+    <figure style="text-align:center">
       <img src="blogpost_images/south_america.png" alt="Image 2" style="width:200px;height:200px;">
       <figcaption>(b) Target sample</figcaption>
     </figure>
   </div>
 </div>
-<div align="center">
-  Figure 3: Few-shot CoT
+<div style="text-align:center">
+  <b> Figure 6: Few-shot VQA </b>
 </div>
 
+
 - **Example prompt**: This image was taken in a rainforest. It contains a Black African, region, African, geographical area, geographic area, geographical region, geographic region, region, part, asclepiad, North American, sphere, sphere of influence, map, South African. Using this information, answer the following question: Which continent is highlighted?
-Hint: 
-Select the index of the correct choice: ['0 Asia', '1 North America', '2 Africa', '3 South America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
+Hint: Select the index of the correct choice: ['0 Asia', '1 North America', '2 Africa', '3 South America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
 Answer: 2
 
 - **Target prompt**: This image was taken in a rainforest. It contains a Latin American, Latino, region, region, part, South American, North American, geographical area, geographic area, geographical region, geographic region, representation, earth, ground, district, territory, territorial dominion, dominion, map. Using this information, answer the following question: Which continent is highlighted?
