@@ -377,63 +377,89 @@ Milena Kapralova: Model evaluation
 ## References
 [1] Zeng, A. et al. Socratic models: Composing zero-shot multimodal reasoning with language. arXiv
 preprint arXiv:2204.00598 (2022).
-[2] Geva, M., Gupta, A. & Berant, J. Injecting Numerical Reasoning Skills into Language Models
-2020. arXiv: 2004.04487 [cs.CL].
+
+[2] Geva, M., Gupta, A. & Berant, J. Injecting Numerical Reasoning Skills into Language Models. 2022. arXiv: 2004.04487 [cs.CL].
+      
 [3] Wei, J. et al. Chain of thought prompting elicits reasoning in large language models. arXiv
       preprint arXiv:2201.11903 (2022).
+      
 [4] Lu, P. et al. Learn to Explain: Multimodal Reasoning via Thought Chains for Science Question
       Answering in The 36th Conference on Neural Information Processing Systems (NeurIPS) (2022).
+      
 [5] Kojima, T., Gu, S. S., Reid, M., Matsuo, Y. & Iwasawa, Y. Large language models are zero-shot
       reasoners. arXiv preprint arXiv:2205.11916 (2022).
+      
 [6] Zhang, Z. et al. Multimodal chain-of-thought reasoning in language models. arXiv preprint arXiv:2302.00923
       (2023).
+      
 [7] Radford, A. et al. Learning Transferable Visual Models From Natural Language Supervision 2021.
       arXiv: 2103.00020 [cs.CV].
+      
 [8] Brown, T. et al. Language models are few-shot learners. Advances in neural information processing
       systems 33, 1877–1901 (2020).
+      
 [9] Tewel, Y., Shalev, Y., Schwartz, I. & Wolf, L. ZeroCap: Zero-Shot Image-to-Text Generation for
       Visual-Semantic Arithmetic 2022. arXiv: 2111.14447 [cs.CV].
+      
 [10] Mokady, R., Hertz, A. & Bermano, A. H. ClipCap: CLIP Prefix for Image Captioning 2021.
       arXiv: 2111.09734 [cs.CV].
-      [11] Radford, A. et al. Language models are unsupervised multitask learners. OpenAI blog 1, 9 (2019).
-      [12] Fang, H., Xiong, P., Xu, L. & Chen, Y. CLIP2Video: Mastering Video-Text Retrieval via Image
+      
+[11] Radford, A. et al. Language models are unsupervised multitask learners. OpenAI blog 1, 9 (2019).
+      
+[12] Fang, H., Xiong, P., Xu, L. & Chen, Y. CLIP2Video: Mastering Video-Text Retrieval via Image
       CLIP 2021. arXiv: 2106.11097 [cs.CV].
-      [13] Kreiss, E., Fang, F., Goodman, N. D. & Potts, C. Concadia: Towards Image-Based Text Gener-
+      
+[13] Kreiss, E., Fang, F., Goodman, N. D. & Potts, C. Concadia: Towards Image-Based Text Gener-
       ation with a Purpose 2022. arXiv: 2104.08376 [cs.CL].
-      [14] Chung, H. W. et al. Scaling Instruction-Finetuned Language Models 2022. arXiv: 2210.11416
+      
+[14] Chung, H. W. et al. Scaling Instruction-Finetuned Language Models 2022. arXiv: 2210.11416
       [cs.LG].
-      [15] Longpre, S. et al. The Flan Collection: Designing Data and Methods for Effective Instruction
+      
+[15] Longpre, S. et al. The Flan Collection: Designing Data and Methods for Effective Instruction
       Tuning 2023. arXiv: 2301.13688 [cs.AI].
-      [16] Wang, J. et al. GIT: A Generative Image-to-text Transformer for Vision and Language 2022.
+      
+[16] Wang, J. et al. GIT: A Generative Image-to-text Transformer for Vision and Language 2022.
       arXiv: 2205.14100 [cs.CV].
-      [17] Li, J., Li, D., Xiong, C. & Hoi, S. BLIP: Bootstrapping Language-Image Pre-training for Uni-
+      
+[17] Li, J., Li, D., Xiong, C. & Hoi, S. BLIP: Bootstrapping Language-Image Pre-training for Uni-
       fied Vision-Language Understanding and Generation in Proceedings of the 39th International
       Conference on Machine Learning (eds Chaudhuri, K. et al.) 162 (PMLR, 2022), 12888–12900.
       https://proceedings.mlr.press/v162/li22n.html.
-      [18] Li, J., Li, D., Savarese, S. & Hoi, S. BLIP-2: Bootstrapping Language-Image Pre-training with
+      
+[18] Li, J., Li, D., Savarese, S. & Hoi, S. BLIP-2: Bootstrapping Language-Image Pre-training with
       Frozen Image Encoders and Large Language Models 2023. arXiv: 2301.12597 [cs.CV].
-      [19] L ́opez-Cifuentes, A., Escudero-Vi ̃nolo, M., Besc ́os, J. & Garcıa-Martın,  ́A. Semantic-aware scene
+      
+[19] L ́opez-Cifuentes, A., Escudero-Vi ̃nolo, M., Besc ́os, J. & Garcıa-Martın,  ́A. Semantic-aware scene
       recognition. Pattern Recognition 102, 107256. https://doi.org/10.1016%2Fj.patcog.2020.
       107256 (June 2020).
-      [20] Wu, B. et al. Tencent ML-Images: A Large-Scale Multi-Label Image Database for Visual Rep-
+      
+[20] Wu, B. et al. Tencent ML-Images: A Large-Scale Multi-Label Image Database for Visual Rep-
       resentation Learning. IEEE Access 7, 172683–172693. https://doi.org/10.1109%2Faccess.
       2019.2956775 (2019).
-      [21] Lin, T.-Y. et al. Microsoft COCO: Common Objects in Context 2015. arXiv: 1405.0312 [cs.CV].
-      [22] Papineni, K., Roukos, S., Ward, T. & Zhu, W.-J. BLEU: a method for automatic evaluation of
+      
+[21] Lin, T.-Y. et al. Microsoft COCO: Common Objects in Context 2015. arXiv: 1405.0312 [cs.CV].
+      
+[22] Papineni, K., Roukos, S., Ward, T. & Zhu, W.-J. BLEU: a method for automatic evaluation of
       machine translation. Proceedings of the 40th annual meeting of the Association for Computational
       Linguistics, 311–318 (2002).
-      [23] Banerjee, S. & Lavie, A. METEOR: An automatic metric for MT evaluation with improved
+      
+[23] Banerjee, S. & Lavie, A. METEOR: An automatic metric for MT evaluation with improved
       correlation with human judgments in Proceedings of the acl workshop on intrinsic and extrinsic
       evaluation measures for machine translation and/or summarization (2005), 65–72.
-      [24] Vedantam, R., Zitnick, C. L. & Parikh, D. CIDEr: Consensus-based Image Description Evaluation
-2015. arXiv: 1411.5726 [cs.CV].
-      [25] Anderson, P., Fernando, B., Johnson, M. & Gould, S. SPICE: Semantic Propositional Image
+      
+[24] Vedantam, R., Zitnick, C. L. & Parikh, D. CIDEr: Consensus-based Image Description Evaluation. 2015. arXiv: 1411.5726 [cs.CV].
+      
+[25] Anderson, P., Fernando, B., Johnson, M. & Gould, S. SPICE: Semantic Propositional Image
       Caption Evaluation 2016. arXiv: 1607.08822 [cs.CV].
-      [26] Lin, C.-Y. ROUGE: A package for automatic evaluation of summaries in Text summarization
+      
+[26] Lin, C.-Y. ROUGE: A package for automatic evaluation of summaries in Text summarization
       branches out (2004), 74–81.
-      [27] Zhang, T., Kishore, V., Wu, F., Weinberger, K. Q. & Artzi, Y. BERTScore: Evaluating Text
+      
+[27] Zhang, T., Kishore, V., Wu, F., Weinberger, K. Q. & Artzi, Y. BERTScore: Evaluating Text
       Generation with BERT in International Conference on Learning Representations (2020).
-      [28] Alayrac, J.-B. et al. Flamingo: a visual language model for few-shot learning. Advances in Neural
+      
+[28] Alayrac, J.-B. et al. Flamingo: a visual language model for few-shot learning. Advances in Neural
       Information Processing Systems 35, 23716–23736 (2022).
-      [29] Koh, J. Y., Salakhutdinov, R. & Fried, D. Grounding Language Models to Images for Multimodal
+      
+[29] Koh, J. Y., Salakhutdinov, R. & Fried, D. Grounding Language Models to Images for Multimodal
       Generation 2023. arXiv: 2301.13823 [cs.CL].
