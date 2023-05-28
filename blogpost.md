@@ -10,7 +10,7 @@ the Socratic models framework such that it is entirely open-source and attempt t
 results as the original version. Additionally, we investigate the capabilities of Socratic models on
 multimodal reasoning tasks such as chain-of-thought reasoning and visual question-answering in zeroshot and few-shot settings.
 
-## Introduction
+## 1. Introduction
 Socratic models (SMs) [1] are a fairly new addition to the field of deep learning and comprise a modular framework, which employs multiple pre-trained deep learning (DL) models to solve specific tasks.
 Such models range from pure language models (LM), whose input and output are exclusively textual,
 to visual-language (VLM) and audio-language models (ALM), which transform visual or audio information into text. In addition to these DL models, the framework can also incorporate modules that
@@ -93,10 +93,14 @@ ways:
    files and the generation of the embeddings is quite consuming, we have implemented a caching
    functionality that speeds up the development and testing process.
 
+<div style="text-align:center;">
+  <img src="blogpost_images/wedding.jpg" alt="Image" style="width:400px;height:300px;">
+    <figcaption>Figure 1: Image for which CLIP produces too many synonyms</figcaption>
+</div>
 
-## 1 Method
-### 1.1 Image captioning
-#### 1.1.1 The Socratic method
+## 2 Method
+### 2.1 Image captioning
+#### 2.1.1 The Socratic method
 The general pipeline for the Socratic image captioning follows the formula: caption = fV LM (fLM (fV LM (image))).
 Specifically:
 1. The VLM (CLIP) is fed an image and is used zero-shot to detect variables of interest: place
@@ -110,7 +114,7 @@ Specifically:
    image, the highest-scoring caption being returned.
 
 
-#### 1.1.2 The Synonym Exclusion algorithm
+#### 2.1.2 The Synonym Exclusion algorithm
 
 The reason for this method is the observation that FLAN-T5 produces low-quality captions com-
 pared to GPT-3 when the VLM-informed prompt contains too many similar words referring to the
@@ -147,7 +151,7 @@ emphasizing the need for higher thresholds to filter out text-text synonyms.
 
 
 
-#### 1.1.3 Hyperparameter search
+#### 2.1.3 Hyperparameter search
 
 
 
@@ -155,30 +159,60 @@ emphasizing the need for higher thresholds to filter out text-text synonyms.
 
 
 
-#### 1.1.4 Dataset
+#### 2.1.4 Dataset
 
 
 
-#### 1.1.5 Evaluation metrics
+#### 2.1.5 Evaluation metrics
 
-### 1.2 Chain-of-Thought and Visual Question Answering
-
-#### 1.2.1 Model
+### 2.2 Chain-of-Thought and Visual Question Answering
 
 
-#### 1.2.2 Dataset
 
 
-#### 1.2.3 Evaluation
+<div style="text-align:center;">
+  <img src="blogpost_images/wedding.jpg" alt="Image" style="width:400px;height:300px;">
+    <figcaption>Figure 1: Image for which CLIP produces too many synonyms</figcaption>
+</div>
 
-## 2 Results
-
+## 2 Method
 ### 2.1 Image captioning
 
-#### 2.1.1 Qualitative demonstrations
+#### 2.1.1 The Socratic method
+
+
+#### 2.1.2 Synonym exclusion algorith
+<div style="text-align:center;">
+  <img src="blogpost_images/pca.png" alt="Image" style="width:700px;height:420px;">
+    <figcaption>Figure 2: Image for which CLIP produces too many synonyms</figcaption>
+</div>
+
+#### 2.1.3 Hyperparameter search
+
+#### 2.1.4 Dataset
+
+
+
+#### 2.1.5 Evaluation metrics
+
+### 2.2 Chain-of-Thought and Visual Question Answering
+
+#### 2.2.1 Model
+
+
+#### 2.2.2 Dataset
+
+
+#### 2.2.3 Evaluation
+
+## 3 Results
+
+### 3.1 Image captioning
+
+#### 3.1.1 Qualitative demonstrations
 ![qualitative_results](blogpost_images/qualitative_results.png)
 
-#### 2.1.2 Quantitative comparisons
+#### 3.1.2 Quantitative comparisons
 
 | Approach                          | Bleu 4 | METEOR | ROUGE L | CIDEr | SPICE | BERT p | BERT r   | Cosine Sim |
 |-----------------------------------|--------------|--------------|----------|-------------|-------------|--------|----------|------------|
@@ -191,15 +225,16 @@ emphasizing the need for higher thresholds to filter out text-text synonyms.
 
 
 
-### 2.2 Chain-of-Thought and Visual Question Answering
+### 3.2 Chain-of-Thought and Visual Question Answering
 
-#### 2.2.1 Zero-shot CoT
+#### 3.2.1 Zero-shot CoT
 <div style="text-align:center;">
   <img src="blogpost_images/spring.png" alt="Image" style="width:300px;height:300px;">
     <figcaption>Figure 2: Zero-shot CoT</figcaption>
 </div>
 
-#### 2.2.2 Few-shot CoT
+#### 3.2.2 Few-shot CoT
+
 <div style="display:flex; justify-content:center;">
   <div style="flex: 0 0 50%;">
     <figure>
@@ -214,22 +249,32 @@ emphasizing the need for higher thresholds to filter out text-text synonyms.
     </figure>
   </div>
 </div>
+<div align="center">
+  Figure 3: Few-shot CoT
+</div>
 
 
-#### 2.2.3 Zero-shot VQA
+#### 3.2.3 Zero-shot VQA
+<div style="text-align:center;">
+  <img src="blogpost_images/africa.png" alt="Image" style="width:300px;height:300px;">
+    <figcaption>Figure 4: Zero-shot VQA</figcaption>
+</div>
 
-## 3 Discussion
+
+#### 3.2.3 Few-shot VQA
+
+## 4 Discussion
 
 
 #### Image captioning
 
 
-### 3.1 Limitations and future research
+### 4.1 Limitations and future research
 
 
-## 4 Conclusion
+## 5 Conclusion
 
 
-### 4.1 Individual contributions and conflict of interest
+### 5.1 Individual contributions and conflict of interest
 
 ## References
