@@ -50,14 +50,15 @@ description are added and all other not-so-relevant terms are filtered out. Fina
 
 ## Image Object Selection Algorithm
 
-1. **Input**: `images` (list of images)
-   **Output**: `objects` (list of selected objects)
+1. **Input**: CLIP embeddings of `images`
+              CLIP embeddings of `object categories`
+   **Output**: `objects` (list of selected objects for all images)
 
-2. Initialize an empty list `objects` to store selected objects.
+2. Initialize an empty list `objects`.
 
 3. For each `image` in `images`:
-     - Initialize an empty list `objects_image` to store selected objects.
-     - Get the 100 most similar object categories to `image` based on cosine similarity and order them.
+     - Initialize an empty list `objects_image` to store selected objects for one image.
+     - Get the 100 most similar `object categories` to `image` based on cosine similarity and order them.
      - Find the `object` corresponding to the maximum cosine similarity value
      - Add `object` to `objects_image`.
      - For each sebsequent `object` in the rest of the ordered list of object categories:
