@@ -239,6 +239,22 @@ task, the input prompt P is identical to the zero-shot CoT task but the final se
 In this way, the desired output is the answer A in the form of a single choice. On the other hand, the
 few-shot VQA task appends a solved example E to the initial prompt.
 
+**Algorithm: Reasoning with Socratic models**
+
+**Zero-shot CoT**
+- **Input**: Q + C_T + I -> VLM -> P = Q + C_T + C_I + S_COT -> LM -> **Output**: R + A
+
+**Few-shot CoT**
+- **Input**: Q + C_T + I + E -> VLM -> P = Q + C_T + C_I + S_COT -> LM -> **Output**: R + A
+
+**Zero-shot VQA**
+- **Input**: Q + C_T + I -> VLM -> P = Q + C_T + C_I + E -> LM -> **Output**: A
+
+**Few-shot VQA**
+- **Input**: Q + C_T + I + E -> VLM -> P = Q + C_T + C_I + E -> LM -> **Output**: A
+
+*Model pipeline for reasoning tasks. Q: question, I: image, A: answer, C_T: text context, C_I: image context, R: rationale, P: prompt, E: solved example, and S_COT: "Let's think step by step..."*
+
 
 
 #### 2.2.2 Dataset
@@ -299,12 +315,15 @@ benchmark.
 
 ### 3.2 Chain-of-Thought and Visual Question Answering
 
-Section 3.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few-shot). The results of
-evaluation are summarized in 2. We achieve decent zero-shot performance on the CoT task (BLEU-4=
-9.12, BERT=86.41), and this spikes drastically in the 1-shot setting (BLEU-4=42.03, BERT=90.97).
-In the VQA task, the zero-shot accuracy is already high (66.72%) and jumps to 72.91% in the 1-shot
-case. We refrain from comparing with existing benchmarks as our sample size is too small to make
-meaningful comparisons.
+Section 3.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few-shot). The results of evaluation are summarized in 2. We achieve decent zero-shot performance on the CoT task (BLEU-4=9.12, BERT=86.41), and this spikes drastically in the 1-shot setting (BLEU-4=42.03, BERT=90.97). In the VQA task, the zero-shot accuracy is already high (66.72%) and jumps to 72.91% in the 1-shot case. We refrain from comparing with existing benchmarks as our sample size is too small to make meaningful comparisons.
+
+| Task |   Method   | BLEU-4 | ROUGE-L | METEOR |  BERT  |  Acc  |
+|:----:|:----------:|:------:|:-------:|:------:|:-----:|:-----:|
+| CoT  | zero-shot  |  9.12  |  22.0   |  26.75 |  86.41 |       |
+| CoT  | few-shot   |  42.03 |  47.97  |  50.43 |  90.97 |       |
+| VQA  | zero-shot  |        |         |        |        | 66.72 |
+| VQA  | few-shot   |        |         |        |        | 72.91 |
+
 
 <small>
 
@@ -373,14 +392,13 @@ Answer:
   <img src="blogpost_images/africa.png" alt="Image" style="width:300px;height:300px;">
     <figcaption>Figure 5: Zero-shot VQA</figcaption>
 </div>
+
 - **Example prompt**: This image was taken in a rainforest. It contains a Black African, region, African, geographical area, geographic area, geographical region, geographic region, region, part, asclepiad, North American, sphere, sphere of influence, map, South African. Using this information, answer the following question: Which continent is highlighted?
-Hint: 
-Select the index of the correct choice: ['0 Asia', '1 North America', '2 Africa', '3 South America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
+Hint: Select the index of the correct choice: ['0 Asia', '1 North America', '2 Africa', '3 South America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
 Answer: 2
 
 - **Target prompt**: This image was taken in a rainforest. It contains a Latin American, Latino, region, region, part, South American, North American, geographical area, geographic area, geographical region, geographic region, representation, earth, ground, district, territory, territorial dominion, dominion, map. Using this information, answer the following question: Which continent is highlighted?
-Hint: 
-Select the index of the correct choice: ['0 South America', '1 Antarctica', '2 North America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
+Hint: Select the index of the correct choice: ['0 South America', '1 Antarctica', '2 North America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
 Answer: 
 
 #### 3.2.3 Few-shot VQA
@@ -408,8 +426,7 @@ Select the index of the correct choice: ['0 Asia', '1 North America', '2 Africa'
 Answer: 2
 
 - **Target prompt**: This image was taken in a rainforest. It contains a Latin American, Latino, region, region, part, South American, North American, geographical area, geographic area, geographical region, geographic region, representation, earth, ground, district, territory, territorial dominion, dominion, map. Using this information, answer the following question: Which continent is highlighted?
-Hint: 
-Select the index of the correct choice: ['0 South America', '1 Antarctica', '2 North America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
+Hint: Select the index of the correct choice: ['0 South America', '1 Antarctica', '2 North America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
 Answer: 
 
 - **Final prompt** = example prompt + target prompt
