@@ -6,42 +6,54 @@
 ## Abstract
 
 
-## Introduction
-
-## 1 Method
-### 1.1 Image captioning
-
-#### 1.1.1 The Socratic method
-
-
-#### 1.1.2 Synonym exclusion algorithm
-
-#### 1.1.3 Hyperparameter search
-
-#### 1.1.4 Dataset
+## 1 Introduction
 
 
 
-#### 1.1.5 Evaluation metrics
 
-### 1.2 Chain-of-Thought and Visual Question Answering
+<div style="text-align:center;">
+  <img src="blogpost_images/wedding.jpg" alt="Image" style="width:400px;height:300px;">
+    <figcaption>Figure 1: Image for which CLIP produces too many synonyms</figcaption>
+</div>
 
-#### 1.2.1 Model
-
-
-#### 1.2.2 Dataset
-
-
-#### 1.2.3 Evaluation
-
-## 2 Results
-
+## 2 Method
 ### 2.1 Image captioning
 
-#### 2.1.1 Qualitative demonstrations
+#### 2.1.1 The Socratic method
+
+
+#### 2.1.2 Synonym exclusion algorith
+<div style="text-align:center;">
+  <img src="blogpost_images/pca.png" alt="Image" style="width:700px;height:420px;">
+    <figcaption>Figure 2: Image for which CLIP produces too many synonyms</figcaption>
+</div>
+
+#### 2.1.3 Hyperparameter search
+
+#### 2.1.4 Dataset
+
+
+
+#### 2.1.5 Evaluation metrics
+
+### 2.2 Chain-of-Thought and Visual Question Answering
+
+#### 2.2.1 Model
+
+
+#### 2.2.2 Dataset
+
+
+#### 2.2.3 Evaluation
+
+## 3 Results
+
+### 3.1 Image captioning
+
+#### 3.1.1 Qualitative demonstrations
 ![qualitative_results](blogpost_images/qualitative_results.png)
 
-#### 2.1.2 Quantitative comparisons
+#### 3.1.2 Quantitative comparisons
 
 | Approach                          | Bleu 4 | METEOR | ROUGE L | CIDEr | SPICE | BERT p | BERT r   | Cosine Sim |
 |-----------------------------------|--------------|--------------|----------|-------------|-------------|--------|----------|------------|
@@ -54,15 +66,16 @@
 
 
 
-### 2.2 Chain-of-Thought and Visual Question Answering
+### 3.2 Chain-of-Thought and Visual Question Answering
 
-#### 2.2.1 Zero-shot CoT
+#### 3.2.1 Zero-shot CoT
 <div style="text-align:center;">
   <img src="blogpost_images/spring.png" alt="Image" style="width:300px;height:300px;">
     <figcaption>Figure 2: Zero-shot CoT</figcaption>
 </div>
 
-#### 2.2.2 Few-shot CoT
+#### 3.2.2 Few-shot CoT
+
 <div style="display:flex; justify-content:center;">
   <div style="flex: 0 0 50%;">
     <figure>
@@ -77,22 +90,32 @@
     </figure>
   </div>
 </div>
+<div align="center">
+  Figure 3: Few-shot CoT
+</div>
 
 
-#### 2.2.3 Zero-shot VQA
+#### 3.2.3 Zero-shot VQA
+<div style="text-align:center;">
+  <img src="blogpost_images/africa.png" alt="Image" style="width:300px;height:300px;">
+    <figcaption>Figure 4: Zero-shot VQA</figcaption>
+</div>
 
-## 3 Discussion
+
+#### 3.2.3 Few-shot VQA
+
+## 4 Discussion
 
 
 #### Image captioning
 
 
-### 3.1 Limitations and future research
+### 4.1 Limitations and future research
 
 
-## 4 Conclusion
+## 5 Conclusion
 
 
-### 4.1 Individual contributions and conflict of interest
+### 5.1 Individual contributions and conflict of interest
 
 ## References
