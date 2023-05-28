@@ -420,7 +420,7 @@ As for the code itself:<br>
 **Alexandru Turcu**: Model evaluation<br>
 **Bogdan Palfi**: Synonym Exclusion Algorithm<br>
 **Ryan Amaudruz**: Synonym Exclusion Algorithm<br>
-**Abhinav Bhuyan**: Chaing-of-thought reasoning, visual-question answering<br>
+**Abhinav Bhuyan**: Chain-of-Thought reasoning, visual-question answering<br>
 **Milena Kapralova**: Model evaluation<br>
 
 ## References
