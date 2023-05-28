@@ -57,14 +57,15 @@ ways:
    prompt engineering methods were tested but were not included since no performance increase
    was seen. We will refer to the model where SE is employed as the *Improved model*.
 
-3. Extending the evaluation on the image captioning task.
+3. **Extending the evaluation on the image captioning task**.
    The original paper used qualitative and lexical-based quantitative metrics. However, those often
    do not correlate with human judgments, and have blind spots to syntactically pathological caption
    constructions [17], taking into account only information such as n-gram matching, word order,
    TF-IDF weights, and overlapping sequences of words. We therefore also utilize embedding- and
    learning-based metrics that better correlate with human judgement [18] such as BERT scores to
    evaluate the capabilities of the image captioners.
-4. Comparing the models’ performance to GIT and BLIP.
+
+4. **Comparing the models’ performance to GIT and BLIP**.
    We also aimed to compare the performance of SM to non-Socratic models such as GIT and BLIP.
    Generative Image-to-Text Transformer (GIT) [16] is a generative VLM with a simplified pipeline
    that achieves high performance in image/video captioning and question-answering tasks. On
@@ -73,7 +74,8 @@ ways:
    on various vision-language tasks including zero-shot image-to-text generation and image/video
    captioning.
 
-5. Applying the SM framework to multimodal reasoning tasks. We additionally explore
+5. **Applying the SM framework to multimodal reasoning tasks**. 
+   We additionally explore
    the capabilities of Socratic models on 2 types of multimodal reasoning tasks: chain-of-thought
    (CoT) reasoning and visual question-answering, in both zero-shot and few-shot settings.
    Intuitively, we would expect the SM framework to excel in reasoning tasks due to their ability
@@ -86,7 +88,8 @@ ways:
    abilities. Our efforts would serve as a handy framework and proof-of-concept for the application
    of SMs in multimodal reasoning tasks, leading to more robust, intelligent systems which can
    apply reasoning and generalize across multiple domains.
-6. Making the pipeline more flexible, reproducible and efficient.
+
+6. **Making the pipeline more flexible, reproducible and efficient**.
    We bring forth a modular codebase that makes it easy to build upon and test different captioning
    methods, including the usage of seeds, split between train, valid and test sets. We also provide a
    random and grid search pipeline to find the best hyperparameters. Finally, as the loading of the
