@@ -4,9 +4,6 @@ This script downloads the images from the validation split of the MS COCO Datase
 and the corresponding ground-truth captions and generates captions based on the baseline Socratic model pipeline:
 a Socratic model based on the work by Zeng et al. (2022) where GPT-3 is replaced by FLAN-T5-xl.
 
-Set-up
-If you haven't done so already, please activate the corresponding environment by running in the terminal:
-`conda env create -f environment.yml`. Then type `conda activate socratic`.
 '''
 
 # Package loading
