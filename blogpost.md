@@ -188,6 +188,12 @@ trained BERT embeddings to represent and match the tokens in the reference and c
 sentences via cosine similarity [21]. To this end, we calculated precision, recall and the F1 score
 for the baseline and improved model.
 
+<div style="text-align:center;">
+  <img src="blogpost_images/pca.png" alt="Image" style="width:700px;height:420px;">
+    <figcaption>Figure 2: Image for which CLIP produces too many synonyms</figcaption>
+</div>
+
+
 ### 2.2 Chain-of-Thought and Visual Question Answering
 
 #### 2.2.1 Model
@@ -220,41 +226,12 @@ We evaluated the CoT tasks using the following metrics: BLEU [22], Rouge [26], M
 Bertscore [27] between the generated responses (rationales) and ground-truth solutions. For the VQA
 tasks, we simply computed the accuracy between generated answers and ground-truths.
 
-## 3 Method
+
+## 3 Results
+
 ### 3.1 Image captioning
 
-#### 3.1.1 The Socratic method
-
-
-#### 3.1.2 Synonym exclusion algorith
-<div style="text-align:center;">
-  <img src="blogpost_images/pca.png" alt="Image" style="width:700px;height:420px;">
-    <figcaption>Figure 2: Image for which CLIP produces too many synonyms</figcaption>
-</div>
-
-#### 3.1.3 Hyperparameter search
-
-#### 3.1.4 Dataset
-
-
-
-#### 3.1.5 Evaluation metrics
-
-### 3.2 Chain-of-Thought and Visual Question Answering
-
-#### 3.2.1 Model
-
-
-#### 3.2.2 Dataset
-
-
-#### 3.2.3 Evaluation
-
-## 4 Results
-
-### 4.1 Image captioning
-
-#### 4.1.1 Qualitative demonstrations
+#### 3.1.1 Qualitative demonstrations
 ![qualitative_results](blogpost_images/qualitative_results.png)
 
 Overall, no image captioning method seems to outperform the rest for all images. Specifically, while
@@ -269,7 +246,7 @@ generating captions that mention both the gun and the fruit, thus outperforming 
 for the last two images.
 
 
-#### 4.1.2 Quantitative comparisons
+#### 3.1.2 Quantitative comparisons
 
 | Approach                          | Bleu 4 | METEOR | ROUGE L | CIDEr | SPICE | BERT p | BERT r   | Cosine Sim |
 |-----------------------------------|--------------|--------------|----------|-------------|-------------|--------|----------|------------|
@@ -291,9 +268,9 @@ assessment did not generalize well once we tested it on the MS-Coco dataset with
 benchmark.
 
 
-### 4.2 Chain-of-Thought and Visual Question Answering
+### 3.2 Chain-of-Thought and Visual Question Answering
 
-Section 4.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few-shot). The results of
+Section 3.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few-shot). The results of
 evaluation are summarized in 2. We achieve decent zero-shot performance on the CoT task (BLEU-4=
 9.12, BERT=86.41), and this spikes drastically in the 1-shot setting (BLEU-4=42.03, BERT=90.97).
 In the VQA task, the zero-shot accuracy is already high (66.72%) and jumps to 72.91% in the 1-shot
@@ -301,13 +278,13 @@ case. We refrain from comparing with existing benchmarks as our sample size is t
 meaningful comparisons.
 
 
-#### 4.2.1 Zero-shot CoT
+#### 3.2.1 Zero-shot CoT
 <div style="text-align:center;">
   <img src="blogpost_images/spring.png" alt="Image" style="width:300px;height:300px;">
     <figcaption>Figure 2: Zero-shot CoT</figcaption>
 </div>
 
-#### 4.2.2 Few-shot CoT
+#### 3.2.2 Few-shot CoT
 <div style="display:flex; justify-content:center;">
   <div style="flex: 0 0 50%;">
     <figure>
@@ -327,18 +304,18 @@ meaningful comparisons.
 </div>
 
 
-#### 4.2.3 Zero-shot VQA
+#### 3.2.3 Zero-shot VQA
 <div style="text-align:center;">
   <img src="blogpost_images/africa.png" alt="Image" style="width:300px;height:300px;">
     <figcaption>Figure 4: Zero-shot VQA</figcaption>
 </div>
 
 
-#### 4.2.3 Few-shot VQA
+#### 3.2.3 Few-shot VQA
 
-## 5 Discussion
+## 4 Discussion
 
-### 5.1 Image captioning
+### 4.1 Image captioning
 The performance of the models on image caption generation was somewhat
 expected, with the best-performing models being those that were directly trained on image-captioning:
 GIT, BLIP and BLIP-2. In the case of all three SMs, the performance was similar and slightly better
@@ -357,7 +334,7 @@ Overall, we can see that the SM using the open-source FLAN-T5 can perform at lea
 the SM which employed the proprietary GPT-3. However, further analyses using more data should be
 conducted before any conclusions are taken.
 
-### 5.2 Chain-of-thought and visual question answering.
+### 4.2 Chain-of-thought and visual question answering.
 
 The results for the 2 reasoning tasks, i.e.,
 CoT reasoning and VQA reveal some intriguing insights. Confirming our hypothesis, the SM frame-
@@ -373,9 +350,9 @@ invites further exploration of SMs in this domain. We believe that combining the
 of cross-modal intercourse with abilities reasoning abilities like chain-of-thought could lead to the
 development of artificial agents with more robust and generalizable intelligence.
 
-### 5.3 Limitations and future research
+### 4.3 Limitations and future research
 
-#### 5.3.1 Limitations
+#### 4.3.1 Limitations
 A key limitation in all our experiments was the sample size for evaluation. We used a
 random sample of 50 images from MS-COCO for the image captioning tasks, and 50 samples of the
 ScienceQA dataset for the reasoning tasks. This was primarily due to (i) computational constraints and
@@ -387,7 +364,7 @@ FLAN-UL2 should be pursued. Finally, the dataset of choice might have been unsui
 the differences in performance between the Baseline and Improved model. Future replication efforts
 should include a dataset with images containing more semantically diverse objects.
 
-#### 5.3.2 Future work
+#### 4.3.2 Future work
 An important benefit of the SM framework comes in the form of its modularity, which
 allows certain models to be easily exchanged for more capable alternatives. In our case, we have noticed
 that CLIP was often a bottleneck in the pipeline since it often struggled with finding relevant features
@@ -401,14 +378,14 @@ the LM and finetuning the input and output layers to enable cross-modality inter
 strong zero-shot capabilities on grounded tasks such as image captioning and contextual image-to-text
 retrieval.
 
-## 6 Conclusion
+## 5 Conclusion
 Through this project, we have managed to democratize the SM framework for the image captioning
 task and bridged the gap between SMs using open-source LMs and SMs employing proprietary LMs.
 We have further extended the capabilities of SMs in multimodal reasoning tasks. We hope our work
 will serve as a useful prototype and proof-of-concept for the general scientific community to develop
 more open-source models and further research in the areas of multimodal learning and reasoning.
 
-### 6.1 Individual contributions
+### 5.1 Individual contributions
 Writing on the report was a group effort, each member contributing to all sections. Similarly, we all made sure our parts of the code were neatly arranged and well documented.
 
 As for the code itself:
