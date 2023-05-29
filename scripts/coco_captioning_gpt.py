@@ -1,5 +1,5 @@
 """
-SocraticGPT-3 - Caption Generation | DL2 Project, May 2023
+SocraticGPT-3 - Caption Generation
 This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
 and the corresponding ground-truth captions and generates captions based on the original Socratic model pipeline:
 a Socratic model based on the work by Zeng et al. (2022) where GPT-3 is used as a LLM.
@@ -22,7 +22,7 @@ except FileNotFoundError:
 from scripts.coco_captioning_baseline import ImageCaptionerBaseline
 
 
-class ImageCaptionerGTP(ImageCaptionerBaseline):
+class ImageCaptionerGPT(ImageCaptionerBaseline):
     def generate_lm_response(self, prompt_list, model_params):
         return [
             self.gpt_manager.generate_response(
@@ -47,7 +47,7 @@ class ImageCaptionerGTP(ImageCaptionerBaseline):
 
 
 if __name__ == '__main__':
-    image_captioner = ImageCaptionerGTP(n_images=50, set_type='test')
+    image_captioner = ImageCaptionerGPT(n_images=50, set_type='test')
     caption_dir = '../data/outputs/captions/'
     run_params = {
         'n_captions': 10,
