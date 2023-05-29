@@ -22,7 +22,7 @@ except FileNotFoundError:
     pass
 
 # Local imports
-from scripts.image_captioning import ImageCaptionerGTP
+from scripts.image_captioning import ImageCaptionerGPT
 
 
 def parse_arguments():
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     args = parse_arguments()
 
     # Instantiate the gpt image captioner class.
-    image_captioner = ImageCaptionerGTP(n_images=args.n_images, set_type=args.set_type)
+    image_captioner = ImageCaptionerGPT(n_images=args.n_images, set_type=args.set_type)
 
     # Run the main method to produce the captions
     image_captioner.main(

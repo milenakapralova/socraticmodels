@@ -13,8 +13,10 @@ import zipfile
 import numpy as np
 import openai
 import pandas as pd
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration, \
-    AutoProcessor, AutoModelForCausalLM, BlipProcessor, BlipForConditionalGeneration
+from transformers import (
+    AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration, AutoProcessor,
+    AutoModelForCausalLM, BlipProcessor, BlipForConditionalGeneration
+)
 sys.path.append('..')
 
 # Local imports
@@ -322,7 +324,7 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
         return f'../data/outputs/captions/baseline_caption{extension}.csv'
 
 
-class ImageCaptionerGTP(ImageCaptionerBaseline):
+class ImageCaptionerGPT(ImageCaptionerBaseline):
     def generate_lm_response(self, prompt_list, model_params):
         return [
             self.gpt_manager.generate_response(
@@ -350,7 +352,7 @@ class ImageCaptionerImproved(ImageCaptionerParent):
     @print_time_dec
     def main(
             self, n_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True,
-            cos_sim_thres=0.7, n_objects=5, n_places=2, caption_strategy='original'
+            cos_sim_thres=0.8, n_objects=5, n_places=2, caption_strategy='original'
     ):
         """
         5. Finding both relevant and different objects using cosine similarity

@@ -27,8 +27,10 @@ class SocraticEvalCap:
         """
         Adapted from the COCOEvalCap class from pycocoevalcap/coco_evaluation.py.
 
-        :param coco:
-        :param cocoRes:
+        This class performs the Bleu, METEOR, ROUGE_L, CIDEr and SPICE evaluation.
+
+        :param gts:
+        :param res_raw:
         """
         self.evalImgs = []
         self.eval = {}
@@ -38,7 +40,7 @@ class SocraticEvalCap:
         self.res_cossim = res_raw
         self.res_cossim_map = dict(zip(res_raw['image_id'], res_raw['cosine_similarity']))
 
-        #Make res a suitable format for the rule-based evaluation
+        # Make res a suitable format for the rule-based evaluation
         res = {}
         for i, row in res_raw.iterrows():
             res[row.image_id] = [{
@@ -156,16 +158,17 @@ def load_caption(caption):
     return caption_df
 
 
-def load_all_captions():
+def load_all_captions(set_type):
     """
-    Load all the captions in the '../data/outputs/captions/' directory.
+    Load the captions of the input set_type in the '../data/outputs/captions/' directory.
 
+    :param set_type: The data set type to load for the evaluation.
     :return: Dictionary mapping caption csv file names to the loaded dataframe.
     """
     caption_dir = '../data/outputs/captions/'
     return {
         c.split('.')[0]: load_caption(caption_dir + c) for c in os.listdir(caption_dir)
-        if c.endswith('csv') and any(('train' in c, 'valid' in c, 'test' in c))
+        if c.endswith('csv') and set_type in c
     }
 
 
@@ -178,10 +181,11 @@ def load_gts_captions():
 
     gts = {}
     for item in lines:
+        data_dic = {'image_id': item['image_id'], 'caption': item['caption']}
         if item['image_id'] in gts:
-            gts[item['image_id']].append({'image_id': item['image_id'], 'caption': item['caption']})
+            gts[item['image_id']].append(data_dic)
         else:
-            gts[item['image_id']] = [{'image_id': item['image_id'], 'caption': item['caption']}]
+            gts[item['image_id']] = [data_dic]
 
     return gts
 
@@ -316,38 +320,48 @@ def summarise_analysis(analysis_df):
     return pd.concat([mean_df, std_df[cols_to_keep]], axis=1)
 
 
-# Load the generated captions
-caption_dic = load_all_captions()
+def main(set_type):
+    """
+    The main
 
-# Load the ground truth captions
-gts = load_gts_captions()
+    :param set_type:
+    :return:
+    """
+    # Load the generated captions
+    caption_dic = load_all_captions(set_type)
 
-# Extract the list of images
-all_images = []
-for df in caption_dic.values():
-    all_images += df['image_name'].tolist()
-img_list = list(set(all_images))
+    # Load the ground truth captions
+    gts = load_gts_captions()
 
-# Set the device to use
-device = get_device()
+    # Extract the list of images
+    all_images = []
+    for df in caption_dic.values():
+        all_images += df['image_name'].tolist()
+    img_list = list(set(all_images))
 
-# Instantiate the clip manager
-clip_manager = ClipManager(device)
+    # Set the device to use
+    device = get_device()
 
-# Retrieve the embeddings of the ground truth captions
-gt_caption_emb = load_caption_emb(clip_manager, gts, img_list)
+    # Instantiate the clip manager
+    clip_manager = ClipManager(device)
 
-# Retrieve the embeddings of the images
-image_emb = load_image_emb(clip_manager, img_list)
+    # Retrieve the embeddings of the ground truth captions
+    gt_caption_emb = load_caption_emb(clip_manager, gts, img_list)
 
-analysis_df = evaluate_captions(caption_dic, gt_caption_emb, image_emb)
-analysis_df_gr = summarise_analysis(analysis_df)
+    # Retrieve the embeddings of the images
+    image_emb = load_image_emb(clip_manager, img_list)
 
-# Prepare output folder
-out_folder = '../data/outputs/analysis/'
-prepare_dir(out_folder)
+    analysis_df = evaluate_captions(caption_dic, gt_caption_emb, image_emb)
+    analysis_df_gr = summarise_analysis(analysis_df)
 
-# Output analysis
-analysis_df.to_csv(out_folder + 'caption_eval.csv', index=False)
-analysis_df_gr.to_csv(out_folder + 'caption_eval_summary.csv', index=False)
+    # Prepare output folder
+    out_folder = '../data/outputs/analysis/'
+    prepare_dir(out_folder)
+
+    # Output analysis
+    analysis_df.to_csv(out_folder + f'{set_type}_caption_eval.csv', index=False)
+    analysis_df_gr.to_csv(out_folder + f'{set_type}_caption_eval_summary.csv', index=False)
+
+if __name__ == '__main__':
+    main(set_type='train')
 
