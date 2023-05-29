@@ -324,10 +324,10 @@ Section 3.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few
 <small>
 
 #### 3.2.1 Zero-shot CoT
-<center>
-  <img src="blogpost_images/spring.png" alt="Image" style="width:200px;height:300px;">
+<div align="center">
+  <img src="blogpost_images/spring.png" alt="Image" style="width:200px;align:center">
   <p> <b> Figure 3: Zero-shot CoT </b> </p>
-</center>
+</div>
 
 - **Prompt**: This image was taken in a drugstore. It contains a spring, spring scale, coil, volute, sprig, set gun, whipping cream, elastic, spar, whisk.
 Question: Which property matches this object?
@@ -339,17 +339,17 @@ Answer: Let's think step by step...
 
 #### 3.2.2 Few-shot CoT
 <div style="display:flex; justify-content:center; align-items: center; flex-direction: row">
-  <div style="flex:;">
-    <figure style="text-align:center">
-      <img src="blogpost_images/spring.png" alt="Image 1" width="300px">
-      <p> Example sample </p>
-    </figure>
+  <div style="flex;">
+    <div align="center">
+      <img src="blogpost_images/spring.png" alt="Image 1" height="300px">
+      <p style="text-align: center"> Example sample </p>
+    </div>
   </div>
-  <div style="flex: 0 0 50%;">
-    <figure style="text-align:center">
-      <img src="blogpost_images/lemon.png" alt="Image 2" width=300px">
-      <p> Target sample </p>
-    </figure>
+  <div style="flex;">
+    <div align="center">
+      <img src="blogpost_images/lemon.png" alt="Image 2" height="300px" align="center">
+      <p style="text-align:center"> Target sample </p>
+    </div>
   </div>
 </div>
 <div style="text-align:center">
@@ -385,9 +385,9 @@ Answer:
 
 
 #### 3.2.3 Zero-shot VQA
-<div style="text-align:center;">
-  <img src="blogpost_images/africa.png" alt="Image" width=300px">
-    <figcaption> <b> Figure 5: Zero-shot VQA </b> </figcaption>
+<div align="center"">
+  <img src="blogpost_images/africa.png" alt="Image" width="300px" align="center" >
+    <p style="text-align: center"> <b> Figure 5: Zero-shot VQA </b> </figcaption>
 </div>
 
 - **Example prompt**: This image was taken in a rainforest. It contains a Black African, region, African, geographical area, geographic area, geographical region, geographic region, region, part, asclepiad, North American, sphere, sphere of influence, map, South African. Using this information, answer the following question: Which continent is highlighted?
@@ -402,14 +402,14 @@ Answer:
 <div style="display:flex; justify-content:center; align-items: center; flex-direction: row;">
   <div style="flex: 1;">
     <figure style="text-align:center">
-      <img src="blogpost_images/africa.png" alt="Image 1" width="300px">
-      <figcaption> Example sample</figcaption>
+      <img src="blogpost_images/africa.png" alt="Image 1" height="100%">
+      <p style="text-align: center"> Example sample </p>
     </figure>
   </div>
   <div style="flex: 1;">
     <figure style="text-align:center">
-      <img src="blogpost_images/south_america.png" alt="Image 2" width="300px">
-      <figcaption> Target sample</figcaption>
+      <img src="blogpost_images/south_america.png" alt="Image 2" height="100%">
+      <p style="text-align:center"> Target sample </p>
     </figure>
   </div>
 </div>
