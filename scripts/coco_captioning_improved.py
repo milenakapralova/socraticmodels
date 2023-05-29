@@ -1,8 +1,5 @@
 """
 SocraticFlanT5 - Caption Generation (improved) | DL2 Project, May 2023
-This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
-and the corresponding ground-truth captions and generates captions based on the improved Socratic model pipeline:
-an improved baseline model where the template prompt filled by CLIP is processed before passing to FLAN-T5-xl
 """
 
 # Package loading
