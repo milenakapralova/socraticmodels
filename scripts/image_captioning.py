@@ -203,8 +203,9 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
         sorted_caption_map = {}
         caption_score_map = {}
 
+        # Loop through the image dictionary.
         for img_file in self.img_dic:
-
+            # Generate a prompt
             prompt_dic[img_file] = pg_map[caption_strategy](
                 self.img_type_dic[img_file], self.n_people_dic[img_file], self.location_dic[img_file][:n_places],
                 self.sorted_obj_dic[img_file][:n_objects]
@@ -218,6 +219,7 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
             sorted_captions, caption_scores = self.clip_manager.get_nn_text(
                 caption_texts, caption_emb, self.img_feat_dic[img_file]
             )
+            # Store the caption outputs and score in memory.
             sorted_caption_map[img_file] = sorted_captions
             caption_score_map[img_file] = dict(zip(sorted_captions, caption_scores))
 
@@ -682,6 +684,7 @@ class CocoManager:
         else:
             raise ValueError(f'set_type {test_set} not supported.')
 
+
 class ImageManager:
     def __init__(self):
         """
@@ -962,6 +965,7 @@ class ClipManager:
         for i, output in enumerate(sorted_outputs[:k]):
             print(f'{i + 1}. {output} ({output_score_map[output]:.2f})')
 
+
 class CacheManager:
     @staticmethod
     def get_place_emb(clip_manager, vocab_manager):
@@ -1232,6 +1236,12 @@ class LmPromptGenerator:
 
     @staticmethod
     def get_places_string(place_list):
+        """
+        This method takes a list of places and returns a string.
+
+        :param place_list: The list of places to combine in a string.
+        :return:
+        """
         if len(place_list) == 1:
             return place_list[0]
         elif len(place_list) == 2:
