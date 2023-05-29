@@ -227,30 +227,34 @@ for the baseline and improved model.
 The pipeline for CoT & VQA tasks is illustrated below. It partially mimics the captioning pipeline;
 however, we use GPT-3 (version GPT-3.5 turbo, i.e., ChatGPT) as the LM since the reasoning tasks
 are more complex than the captioning task and hence require a more powerful model. In the 1st
-stage, we extract information from the image I by prompting CLIP to ground the image context to a
-text summary CI , which is then fed as an input prompt to the LM (GPT-3), which finally generates
-the output. In the zero-shot CoT tasks, the prompt P consists of the question Q, choices MC, text
-context CT and image context CI . We also append the phrase ”Let’s think step by step...” (SCOT ) to
-the prompt, which has been shown to elicit CoT reasoning [5], and the desired rationale R (reasoning
-steps) and answer A. In the few-shot CoT task, the prompt P is composed by first creating solved
-examples E (question prompt + solution), and then concatenating the prompt for the zero-shot task.
+stage, we extract information from the image $I$ by prompting CLIP to ground the image context to a
+text summary $C_I$ , which is then fed as an input prompt to the LM (GPT-3), which finally generates
+the output. In the zero-shot CoT tasks, the prompt $P$ consists of the question $Q$, choices $MC$, text
+context $C_T$ and image context $C_I$ . We also append the phrase ”Let’s think step by step...” ($S_{COT}$) to
+the prompt, which has been shown to elicit CoT reasoning [5], and the desired rationale $R$ (reasoning
+steps) and answer $A$. In the few-shot CoT task, the prompt $P$ is composed by first creating solved
+examples $E$ (question prompt + solution), and then concatenating the prompt for the zero-shot task.
 Example CoT tasks (zero-shot & few-shot) are shown the presented figure. For the zero-shot VQA
-task, the input prompt P is identical to the zero-shot CoT task but the final sentence SCOT is omitted.
-In this way, the desired output is the answer A in the form of a single choice. On the other hand, the
-few-shot VQA task appends a solved example E to the initial prompt.
+task, the input prompt $P$ is identical to the zero-shot CoT task but the final sentence $S_{COT}$ is omitted.
+In this way, the desired output is the answer $A$ in the form of a single choice. On the other hand, the
+few-shot VQA task appends a solved example $E$ to the initial prompt.
+
 
 **Algorithm: Reasoning with Socratic models**
 
 > **Zero-shot CoT**
-> **Input**: Q + C_T + I -> **VLM** -> P = Q + C_T + C_I + S_COT -> **LM** -> **Output**: R + A
+>    - *Input*: $Q + C_T + I \to$ $VLM$ $\to P = Q + C_T + C_I + S_{COT} \to$ $LM$ $\to$ *Output*: $R + A$
+>
 > **Few-shot CoT**
-> **Input**: Q + C_T + I + E -> **VLM** -> P = Q + C_T + C_I + S_COT -> **LM** -> **Output**: R + A
+> - *Input*: $Q + C_T + I + E \to$ $VLM$ $\to P = Q + C_T + C_I + S_{COT} \to$ $LM$ $\to$ *Output*: $R + A$
+>
 > **Zero-shot VQA**
-> **Input**: Q + C_T + I -> **VLM** -> P = Q + C_T + C_I + E -> **LM** -> **Output**: A
+> - *Input*: $Q + C_T + I \to$ $VLM$ $\to P = Q + C_T + C_I + E \to$ $LM$ $\to$ *Output*: $A$
+>
 > **Few-shot VQA**
-> **Input**: Q + C_T + I + E -> **VLM** -> P = Q + C_T + C_I + E -> **LM** -> **Output**: A
+> - *Input*: $Q + C_T + I + E \to$ $VLM$ $\to P = Q + C_T + C_I + E \to$ $LM$ $\to$ *Output*: $A$
 
-*Model pipeline for reasoning tasks. Q: question, I: image, A: answer, C_T: text context, C_I: image context, R: rationale, P: prompt, E: solved example, and S_COT: "Let's think step by step..."*
+*Model pipeline for reasoning tasks. $Q$: question, $I$: image, $A$: answer, $C_T$: text context, $C_I$: image context, $R$: rationale, $P$: prompt, $E$: solved example, and $S_{COT}$: "Let's think step by step..."*
 
 
 
@@ -313,6 +317,8 @@ benchmark.
 
 Section 3.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few-shot). The results of evaluation are summarized in 2. We achieve decent zero-shot performance on the CoT task (BLEU-4=9.12, BERT=86.41), and this spikes drastically in the 1-shot setting (BLEU-4=42.03, BERT=90.97). In the VQA task, the zero-shot accuracy is already high (66.72%) and jumps to 72.91% in the 1-shot case. We refrain from comparing with existing benchmarks as our sample size is too small to make meaningful comparisons.
 
+<div align="center">
+
 | Task |   Method   | BLEU-4 | ROUGE-L | METEOR |  BERT  |  Acc  |
 |:----:|:----------:|:------:|:-------:|:------:|:-----:|:-----:|
 | CoT  | zero-shot  |  9.12  |  22.0   |  26.75 |  86.41 |       |
@@ -320,13 +326,14 @@ Section 3.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few
 | VQA  | zero-shot  |        |         |        |        | 66.72 |
 | VQA  | few-shot   |        |         |        |        | 72.91 |
 
+</div>
 
 <small>
 
 #### 3.2.1 Zero-shot CoT
 <div align="center">
   <img src="blogpost_images/spring.png" alt="Image" style="width:200px;align:center">
-  <p> <b> Figure 3: Zero-shot CoT </b> </p>
+  <!-- <p> <b> Figure 3: Zero-shot CoT </b> </p> -->
 </div>
 
 - **Prompt**: This image was taken in a drugstore. It contains a spring, spring scale, coil, volute, sprig, set gun, whipping cream, elastic, spar, whisk.
@@ -338,7 +345,7 @@ Answer: Let's think step by step...
 - **GT solution**: A flexible object can be folded or bent without breaking easily. The spring is flexible. A slippery object is hard to hold onto or stand on. The spring is not slippery.
 
 #### 3.2.2 Few-shot CoT
-<div style="display:flex; justify-content:center; align-items: center; flex-direction: row">
+<!-- <div style="display:flex; justify-content:center; align-items: center; flex-direction: row">
   <div style="flex;">
     <div align="center">
       <img src="blogpost_images/spring.png" alt="Image 1" height="300px">
@@ -354,8 +361,11 @@ Answer: Let's think step by step...
 </div>
 <div style="text-align:center">
   <b> Figure 4: Few-shot CoT </b>
-</div>
+</div> -->
 
+Example sample             | Target sample
+:-------------------------:|:-------------------------:
+![spring](blogpost_images/spring.png) | ![lemon](blogpost_images/lemon.png)
 
 - **Example prompt**: This image was taken in a drugstore. It contains a spring, coil spring, volute spring, spring balance, spring scale, coil, spiral, volute, whorl, helix, sprig, spiral, volute, spritzer, set gun, spring gun, annual, whipping cream, light whipping cream.
 Question: Which property matches this object?
@@ -387,7 +397,7 @@ Answer:
 #### 3.2.3 Zero-shot VQA
 <div align="center"">
   <img src="blogpost_images/africa.png" alt="Image" width="300px" align="center" >
-    <p style="text-align: center"> <b> Figure 5: Zero-shot VQA </b> </figcaption>
+    <!-- <p style="text-align: center"> <b> Figure 5: Zero-shot VQA </b> </figcaption> -->
 </div>
 
 - **Example prompt**: This image was taken in a rainforest. It contains a Black African, region, African, geographical area, geographic area, geographical region, geographic region, region, part, asclepiad, North American, sphere, sphere of influence, map, South African. Using this information, answer the following question: Which continent is highlighted?
@@ -399,14 +409,14 @@ Hint: Select the index of the correct choice: ['0 South America', '1 Antarctica'
 Answer: 
 
 #### 3.2.3 Few-shot VQA
-<div style="display:flex; justify-content:center; align-items: center; flex-direction: row;">
-  <div style="flex: 1;">
+<!-- <div style="display:flex; justify-content:center; align-items: center; flex-direction: row;">
+  <div align="center">
     <figure style="text-align:center">
       <img src="blogpost_images/africa.png" alt="Image 1" height="100%">
       <p style="text-align: center"> Example sample </p>
     </figure>
   </div>
-  <div style="flex: 1;">
+  <div align="center">
     <figure style="text-align:center">
       <img src="blogpost_images/south_america.png" alt="Image 2" height="100%">
       <p style="text-align:center"> Target sample </p>
@@ -415,8 +425,10 @@ Answer:
 </div>
 <div style="text-align:center">
   <b> Figure 6: Few-shot VQA </b>
-</div>
-
+</div> -->
+Example sample             | Target sample
+:-------------------------:|:-------------------------:
+![africa](blogpost_images/africa.png) | ![south_america](blogpost_images/south_america.png)
 
 - **Example prompt**: This image was taken in a rainforest. It contains a Black African, region, African, geographical area, geographic area, geographical region, geographic region, region, part, asclepiad, North American, sphere, sphere of influence, map, South African. Using this information, answer the following question: Which continent is highlighted?
 Hint: Select the index of the correct choice: ['0 Asia', '1 North America', '2 Africa', '3 South America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
