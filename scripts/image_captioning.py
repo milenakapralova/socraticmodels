@@ -274,7 +274,7 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
             self.n_people_dic[img_name] = ppl_result
 
     def random_parameter_search(
-            self, n_iterations, n_captions, lm_max_length=40, lm_do_sample=True, lm_temp_min=0.5, lm_temp_max=1,
+            self, n_iterations=100, n_captions=10, lm_max_length=40, lm_do_sample=True, lm_temp_min=0.5, lm_temp_max=1,
             n_objects_min=5, n_objects_max=15, n_places_min=1, n_places_max=6, caption_strategies=None
     ):
         """
@@ -469,7 +469,7 @@ class ImageCaptionerImproved(ImageCaptionerParent):
         self.ppl_emb = self.clip_manager.get_text_emb([f'There {p} in this photo.' for p in self.ppl_texts])
 
     def random_parameter_search(
-            self, n_iterations, n_captions, lm_max_length=40, lm_do_sample=True, lm_temp_min=0.5, lm_temp_max=1,
+            self, n_iterations=100, n_captions=10, lm_max_length=40, lm_do_sample=True, lm_temp_min=0.5, lm_temp_max=1,
             cos_sim_thres_min=0.6, cos_sim_thres_max=1, n_objects_min=5, n_objects_max=15, n_places_min=1,
             n_places_max=6, caption_strategies=None
     ):
