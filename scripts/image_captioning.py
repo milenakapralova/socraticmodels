@@ -308,6 +308,30 @@ class ImageCaptionerBaseline(ImageCaptionerParent):
         return f'../data/outputs/captions/baseline_caption{extension}.csv'
 
 
+class ImageCaptionerGTP(ImageCaptionerBaseline):
+    def generate_lm_response(self, prompt_list, model_params):
+        return [
+            self.gpt_manager.generate_response(
+                prompt, temperature=model_params['temperature'], max_tokens=64, stop=None
+            )
+            for prompt in prompt_list
+        ]
+
+    def get_output_file_name(self, lm_temperature, n_objects, n_places, caption_strategy):
+        extension = ''
+        # The language model temperature
+        extension += f'_temp_{lm_temperature}'.replace('.', '')
+        # Number of objects
+        extension += f'_nobj_{n_objects}'
+        # Number of places
+        extension += f'_npl_{n_places}'
+        # Caption strategy
+        extension += f'_strat_{caption_strategy}'
+        # Train/test set
+        extension += f'_{self.set_type}'
+        return f'../data/outputs/captions/gpt_caption{extension}.csv'
+
+
 class ImageCaptionerImproved(ImageCaptionerParent):
     @print_time_dec
     def main(
@@ -1181,22 +1205,3 @@ class LmPromptGenerator:
             return f'{place_list[0]} or {place_list[1]}'
         else:
             return f'{", ".join(place_list[:-1])} or {place_list[-1]}'
-
-
-def num_params(model):
-    """
-    Calculates the number of parameters in the model.
-
-    :param model:
-    :return: Int
-    """
-    return np.sum([int(np.prod(p.shape)) for p in model.parameters()])
-
-
-def print_clip_info(model):
-    print("Model parameters (total):", num_params(model))
-    print("Model parameters (image encoder):", num_params(model.visual))
-    print("Model parameters (text encoder):", num_params(model.token_embedding) + num_params(model.transformer))
-    print("Input image resolution:", model.visual.input_resolution)
-    print("Context length:", model.context_length)
-    print("Vocab size:", model.vocab_size)

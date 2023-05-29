@@ -22,29 +22,6 @@ except FileNotFoundError:
 from scripts.coco_caption_base_hp_tune import ImageCaptionerBaseline
 
 
-class ImageCaptionerGTP(ImageCaptionerBaseline):
-    def generate_lm_response(self, prompt_list, model_params):
-        return [
-            self.gpt_manager.generate_response(
-                prompt, temperature=model_params['temperature'], max_tokens=64, stop=None
-            )
-            for prompt in prompt_list
-        ]
-
-    def get_output_file_name(self, lm_temperature, n_objects, n_places, caption_strategy):
-        extension = ''
-        # The language model temperature
-        extension += f'_temp_{lm_temperature}'.replace('.', '')
-        # Number of objects
-        extension += f'_nobj_{n_objects}'
-        # Number of places
-        extension += f'_npl_{n_places}'
-        # Caption strategy
-        extension += f'_strat_{caption_strategy}'
-        # Train/test set
-        extension += f'_{self.set_type}'
-        return f'../data/outputs/captions/gpt_caption{extension}.csv'
-
 
 if __name__ == '__main__':
     image_captioner = ImageCaptionerGTP(n_images=50, set_type='test')
