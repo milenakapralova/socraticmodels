@@ -16,7 +16,7 @@ except FileNotFoundError:
     pass
 
 # Local imports
-from scripts.coco_captioning_improved import ImageCaptionerImproved
+from scripts.coco_caption_imp_hp_tune import ImageCaptionerImproved
 
 
 if __name__ == '__main__':

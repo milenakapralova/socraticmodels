@@ -16,7 +16,7 @@ try:
 except FileNotFoundError:
     pass
 from scripts.image_captioning import Blip2Manager
-from scripts.coco_captioning_baseline import ImageCaptionerBaseline
+from scripts.coco_caption_base_hp_tune import ImageCaptionerBaseline
 
 
 from scripts.utils import get_device
