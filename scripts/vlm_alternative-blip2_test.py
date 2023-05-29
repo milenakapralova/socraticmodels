@@ -1,12 +1,19 @@
+"""
+This file was used to obtain the benchmarks for the BLIP2 model.
+
+It uses the ImageCaptionerBaseline to ensure that the selected test images are the same for all the
+different model/hyperparameter runs.
+"""
+# Import packages.
 import os
 import sys
-
 import pandas as pd
-
 sys.path.append('..')
+# Depending on the platform/IDE used, the home directory might be the socraticmodels or the
+# socraticmodels/scripts directory. The following ensures that the current directory is the scripts folder.
 try:
     os.chdir('scripts')
-except:
+except FileNotFoundError:
     pass
 from scripts.image_captioning import Blip2Manager
 from scripts.coco_captioning_baseline import ImageCaptionerBaseline

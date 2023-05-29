@@ -1,26 +1,27 @@
-'''
+"""
 SocraticFlanT5 - Caption Generation (improved) | DL2 Project, May 2023
 This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
 and the corresponding ground-truth captions and generates captions based on the improved Socratic model pipeline:
 an improved baseline model where the template prompt filled by CLIP is processed before passing to FLAN-T5-xl
-
-'''
+"""
 
 # Package loading
 import os
 import numpy as np
 import pandas as pd
-
-# Local imports
 import sys
 
+# Depending on the platform/IDE used, the home directory might be the socraticmodels or the
+# socraticmodels/scripts directory. The following ensures that the current directory is the scripts folder.
 sys.path.append('..')
 try:
     os.chdir('scripts')
 except:
     pass
+
+# Local imports
 from scripts.image_captioning import ImageCaptionerParent
-from scripts.utils import prepare_dir, get_file_name_extension_improved, print_time_dec
+from scripts.utils import prepare_dir, print_time_dec
 
 
 class ImageCaptionerImproved(ImageCaptionerParent):

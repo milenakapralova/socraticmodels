@@ -1,4 +1,4 @@
-'''
+"""
 SocraticGPT-3 - Caption Generation | DL2 Project, May 2023
 This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
 and the corresponding ground-truth captions and generates captions based on the original Socratic model pipeline:
@@ -7,7 +7,7 @@ a Socratic model based on the work by Zeng et al. (2022) where GPT-3 is used as 
 Set-up
 If you haven't done so already, please activate the corresponding environment by running in the terminal:
 `conda env create -f environment.yml`. Then type `conda activate socratic`.
-'''
+"""
 
 # Package loading
 import sys
@@ -15,7 +15,7 @@ sys.path.append('..')
 import os
 try:
     os.chdir('scripts')
-except:
+except FileNotFoundError:
     pass
 
 # Local imports

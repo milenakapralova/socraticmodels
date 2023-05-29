@@ -2,7 +2,6 @@
 import sys
 import os
 from typing import List, Union
-import pandas as pd
 import requests
 import clip
 import cv2

@@ -12,7 +12,7 @@ import sys
 sys.path.append('..')
 try:
     os.chdir('scripts')
-except:
+except FileNotFoundError:
     pass
 
 # Local imports

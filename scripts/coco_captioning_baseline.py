@@ -1,13 +1,9 @@
-'''
+"""
 SocraticFlanT5 - Caption Generation (baseline) | DL2 Project, May 2023
 This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
 and the corresponding ground-truth captions and generates captions based on the baseline Socratic model pipeline:
 a Socratic model based on the work by Zeng et al. (2022) where GPT-3 is replaced by FLAN-T5-xl.
-
-Set-up
-If you haven't done so already, please activate the corresponding environment by running in the terminal:
-`conda env create -f environment.yml`. Then type `conda activate socratic`.
-'''
+"""
 
 # Package loading
 import pandas as pd
@@ -15,9 +11,12 @@ import numpy as np
 import os
 import sys
 sys.path.append('..')
+
+# Depending on the platform/IDE used, the home directory might be the socraticmodels or the
+# socraticmodels/scripts directory. The following ensures that the current directory is the scripts folder.
 try:
     os.chdir('scripts')
-except:
+except FileNotFoundError:
     pass
 
 # Local imports
