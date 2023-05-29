@@ -13,14 +13,16 @@ If you haven't done so already, please activate the corresponding environment by
 import sys
 sys.path.append('..')
 import os
+
+# Depending on the platform/IDE used, the home directory might be the socraticmodels or the
+# socraticmodels/scripts directory. The following ensures that the current directory is the scripts folder.
 try:
     os.chdir('scripts')
 except FileNotFoundError:
     pass
 
 # Local imports
-from scripts.coco_caption_base_hp_tune import ImageCaptionerBaseline
-
+from scripts.image_captioning import ImageCaptionerGTP
 
 
 if __name__ == '__main__':
