@@ -25,4 +25,4 @@ from scripts.image_captioning import ImageCaptionerBaseline
 
 if __name__ == '__main__':
     image_captioner = ImageCaptionerBaseline(n_images=50, set_type='train')
-    image_captioner.random_parameter_search(n_iterations=200, n_captions=10)
+    image_captioner.random_parameter_search(n_iterations=100, n_captions=10)
