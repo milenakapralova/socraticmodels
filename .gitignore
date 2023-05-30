@@ -52,3 +52,6 @@
 /scripts/bert.py
 requirements.txt
 env.yml
+.vscode/
+*.sh
+outputs/
