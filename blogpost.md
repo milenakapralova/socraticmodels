@@ -4,7 +4,7 @@
 >  Project Report, Deep Learning 2 University of Amsterdam
 
 ## Abstract
-Socratic models [1] is a modular framework in which multiple pre-trained models are composed zeroshot via multimodal informed prompting. This is done to exchange information between models and
+Socratic models [1] is a modular framework in which multiple pre-trained models are composed zeroshot via multimodal informed prompting, using language as a common modality. This is done to exchange information between models and
 capture new multimodal capabilities, without requiring finetuning. As a proof of concept, we modify
 the Socratic models framework such that it is entirely open-source and attempt to achieve the same
 results as the original version. Additionally, we investigate the capabilities of Socratic models on
@@ -16,8 +16,7 @@ Such models range from pure language models (LM), whose input and output are exc
 to visual-language (VLM) and audio-language models (ALM), which transform visual or audio information into text. In addition to these DL models, the framework can also incorporate modules that
 rely on the user’s input or on specific APIs (e.g. robot actions). The framework uses prompting as a
 form of exchanging information between these models, a technique known as the ’Socratic method’.
-The main benefit of such an approach is that it offers zero-shot multimodal capabilities without requiring task-specific fine-tuning. This has far-reaching consequences for the future development of more
-generalized artificial intelligent systems.
+The main benefit of such an approach is that it offers zero-shot multimodal capabilities without requiring task-specific fine-tuning. This has far-reaching consequences for the future development of more generalized artificial intelligent systems.
 
 Because of their ability to communicate across multiple modalities and the dominant role of LMs
 in the framework, SMs have been hypothesized to perform well on reasoning tasks. Various authors
