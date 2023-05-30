@@ -254,8 +254,7 @@ few-shot VQA task appends a solved example $E$ to the initial prompt.
 > **Few-shot VQA**
 > - *Input*: $Q + C_T + I + E \to$ $VLM$ $\to P = Q + C_T + C_I + E \to$ $LM$ $\to$ *Output*: $A$
 
-*Model pipeline for reasoning tasks. $Q$: question, $I$: image, $A$: answer, $C_T$: text context, $C_I$: image context, $R$: rationale, $P$: prompt, $E$: solved example, and $S_{COT}$: "Let's think step by step..."*
-
+Model pipeline for reasoning tasks. $Q$: question, $I$: image, $A$: answer, $C_T$: text context, $C_I$: image context, $R$: rationale, $P$: prompt, $E$: solved example, and $S_{COT}$: *"Let's think step by step..."*
 
 
 #### 2.2.2 Dataset
@@ -408,24 +407,10 @@ Answer: 2
 Hint: Select the index of the correct choice: ['0 South America', '1 Antarctica', '2 North America']. Your answer should be a single integer (no text) and you must choose exactly one of the options.
 Answer: 
 
+- **Ouput**: 0
+- **GT answer**: 0
+
 #### 3.2.3 Few-shot VQA
-<!-- <div style="display:flex; justify-content:center; align-items: center; flex-direction: row;">
-  <div align="center">
-    <figure style="text-align:center">
-      <img src="blogpost_images/africa.png" alt="Image 1" height="100%">
-      <p style="text-align: center"> Example sample </p>
-    </figure>
-  </div>
-  <div align="center">
-    <figure style="text-align:center">
-      <img src="blogpost_images/south_america.png" alt="Image 2" height="100%">
-      <p style="text-align:center"> Target sample </p>
-    </figure>
-  </div>
-</div>
-<div style="text-align:center">
-  <b> Figure 6: Few-shot VQA </b>
-</div> -->
 Example sample             | Target sample
 :-------------------------:|:-------------------------:
 ![africa](blogpost_images/africa.png) | ![south_america](blogpost_images/south_america.png)
