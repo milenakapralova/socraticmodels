@@ -214,7 +214,7 @@ Example sample             | Target sample
 **Example prompt:**: This image was taken in a drugstore. It contains a spring, spring scale, coil, volute. 
 Question: Which property matches this object? 
 Choices: flexible, slippery.  
-Answer: Let's think step by step...A flexible object can be folded or bent without breaking easily. The spring is flexible. A slippery object is hard to hold onto or stand on. The spring is not slippery.. So the answer is flexible.
+Answer: Let's think step by step...A flexible object can be folded or bent without breaking easily. The spring is flexible. A slippery object is hard to hold onto or stand on. The spring is not slippery... So the answer is flexible.
 
 **Target prompt:** This image was taken in a ball pit. It contains a citron, lemon, Citrus limon,, vitamin C, citrus fruit. 
 Question: Which property matches this object? 
