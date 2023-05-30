@@ -1,12 +1,7 @@
 """
-SocraticGPT-3 - Caption Generation | DL2 Project, May 2023
-This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
-and the corresponding ground-truth captions and generates captions based on the original Socratic model pipeline:
-a Socratic model based on the work by Zeng et al. (2022) where GPT-3 is used as a LLM.
+This file is used to generate captions for the Coco dataset using the GPT image captioner.
 
-Set-up
-If you haven't done so already, please activate the corresponding environment by running in the terminal:
-`conda env create -f environment.yml`. Then type `conda activate socratic`.
+For more info on the ImageCaptionerGpt class, please check out the docstrings in the image_captioning.py file.
 """
 import argparse
 # Package loading
@@ -22,10 +17,15 @@ except FileNotFoundError:
     pass
 
 # Local imports
-from scripts.image_captioning import ImageCaptionerGPT
+from scripts.image_captioning import ImageCaptionerGpt
 
 
 def parse_arguments():
+    """
+    Parses the arguments for the GPT COCO captioning.
+
+    :return:
+    """
     # init argparser
     parser = argparse.ArgumentParser(description='Baseline Image Captioning')
 
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     args = parse_arguments()
 
     # Instantiate the gpt image captioner class.
-    image_captioner = ImageCaptionerGPT(n_images=args.n_images, set_type=args.set_type)
+    image_captioner = ImageCaptionerGpt(n_images=args.n_images, set_type=args.set_type)
 
     # Run the main method to produce the captions
     image_captioner.main(

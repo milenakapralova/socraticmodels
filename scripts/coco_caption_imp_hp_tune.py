@@ -20,8 +20,13 @@ from scripts.image_captioning import ImageCaptionerImproved
 
 
 def parse_arguments():
+    """
+    Parses the arguments for the improved COCO captioning hyperparameter tuning.
+
+    :return:
+    """
     # init argparser
-    parser = argparse.ArgumentParser(description='Baseline Image Captioning Hyperparameter tuning')
+    parser = argparse.ArgumentParser(description='Improved Image Captioning Hyperparameter tuning')
 
     # Additional variables
     parser.add_argument('--n-images', type=int, default=50, help='# images to include in the dataset')
@@ -56,6 +61,7 @@ if __name__ == '__main__':
     # Parse the arguments.
     args = parse_arguments()
 
+    # Instantiate the improved image captioner class.
     image_captioner = ImageCaptionerImproved(n_images=args.n_images, set_type=args.set_type)
 
     # Run the hyperparameter search

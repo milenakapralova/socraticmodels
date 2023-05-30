@@ -1,8 +1,7 @@
 """
-SocraticFlanT5 - Caption Generation (baseline) | DL2 Project, May 2023
-This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
-and the corresponding ground-truth captions and generates captions based on the baseline Socratic model pipeline:
-a Socratic model based on the work by Zeng et al. (2022) where GPT-3 is replaced by FLAN-T5-xl.
+This file is used to perform a random hyperparameter search on the Coco dataset using the baseline image captioner.
+
+For more info on the ImageCaptionerBaseline class, please check out the docstrings in the image_captioning.py file.
 """
 
 # Package loading
@@ -23,6 +22,11 @@ from scripts.image_captioning import ImageCaptionerBaseline
 
 
 def parse_arguments():
+    """
+    Parses the arguments for the baseline COCO captioning hyperparameter tuning.
+
+    :return:
+    """
     # init argparser
     parser = argparse.ArgumentParser(description='Baseline Image Captioning Hyperparameter tuning')
 

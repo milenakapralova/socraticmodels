@@ -21,6 +21,11 @@ except FileNotFoundError:
 from scripts.coco_caption_base_hp_tune import ImageCaptionerBaseline
 
 def parse_arguments():
+    """
+    Parses the arguments for the baseline COCO captioning.
+
+    :return:
+    """
     # init argparser
     parser = argparse.ArgumentParser(description='Baseline Image Captioning')
 

@@ -1,8 +1,7 @@
 """
-SocraticFlanT5 - Caption Generation (improved) | DL2 Project, May 2023
-This script downloads the images from the validation split of the MS COCO Dataset (2017 version)
-and the corresponding ground-truth captions and generates captions based on the improved Socratic model pipeline:
-an improved baseline model where the template prompt filled by CLIP is processed before passing to FLAN-T5-xl
+This file is used to generate captions for the Coco dataset using the improved image captioner.
+
+For more info on the ImageCaptionerImproved class, please check out the docstrings in the image_captioning.py file.
 """
 
 # Package loading
@@ -20,8 +19,13 @@ from scripts.coco_caption_imp_hp_tune import ImageCaptionerImproved
 
 
 def parse_arguments():
+    """
+    Parses the arguments for the improved COCO captioning.
+
+    :return:
+    """
     # init argparser
-    parser = argparse.ArgumentParser(description='Baseline Image Captioning')
+    parser = argparse.ArgumentParser(description='Improved Image Captioning')
 
     # add args
     parser.add_argument('--n-images', type=int, default=50, help='# images to include in the dataset')
@@ -46,7 +50,7 @@ if __name__ == '__main__':
     # Parse the arguments.
     args = parse_arguments()
 
-    # Instantiate the baseline image captioner class.
+    # Instantiate the improved image captioner class.
     image_captioner = ImageCaptionerImproved(n_images=args.n_images, set_type=args.set_type)
 
     # Run the main method to produce the captions
