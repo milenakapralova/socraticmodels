@@ -9,6 +9,9 @@
 /fruit_bowl.jpg
 /__pycache__/
 .env
+.vscode/
+outputs/
+*.sh
 /annotations/captions_train2014.json
 /annotations/captions_val2014.json
 /captions_val2014_fakecap_results.json
@@ -18,7 +21,6 @@
 /annotations/person_keypoints_val2014.json
 /captions_val2014.json
 /coco_eval_example.py
-/scripts/coco_evaluation.py
 /scripts/quantitative_evaluation_local.py
 /annotations/
 /test.py
@@ -40,6 +42,7 @@
 /baseline_outputs.csv
 /scripts/test.py
 /data/
+essay/
 /scripts/__pycache__/
 /notebooks/.ipynb_checkpoints/coco_captioning_baseline-checkpoint.ipynb
 /scripts/image_captioning_lisa.py
@@ -52,6 +55,9 @@
 /scripts/bert.py
 requirements.txt
 env.yml
-.vscode/
-*.sh
-outputs/
+/lisa_0/
+/lisa_1/
+/lisa_2/
+/lisa_3/
+/notebooks/.ipynb_checkpoints/
+.DS_Store

@@ -1,13 +1,48 @@
 # Socratic Models: Composing Zero-Shot Multimodal Reasoning with Language
 
-Project website: https://socraticmodels.github.io/
+**Abstract** Socratic models is a modular framework in which multiple pre-trained models are composed zeroshot via multimodal informed prompting. This is done to exchange information between models and capture new multimodal capabilities, without requiring finetuning. As a proof of concept, we modify the Socratic models framework such that it is entirely open-source and attempt to achieve the same results as the original version. Additionally, we investigate the capabilities of Socratic models on multimodal reasoning tasks such as chain-of-thought reasoning and visual question-answering in zeroshot and few-shot settings.
 
-**Abstract** Large pretrained (e.g., “foundation”) models exhibit distinct capabilities depending on the domain of data they are trained on. While these domains are generic, they may only barely overlap. For example, visual-language models (VLMs) are trained on Internet-scale image captions, but large language models (LMs) are further trained on Internet-scale text with no images (e.g., spreadsheets, SAT questions, code). As a result, these models store different forms of commonsense knowledge across different domains.  In this work, we show that this diversity is symbiotic, and can be leveraged through Socratic Models (SMs):  a modular framework in which multiple pretrained models may be composed zero-shot i.e., via multimodal-informed prompting, to exchange information with each other and capture new multimodal capabilities, without requiring finetuning. With minimal engineering, SMs are not only competitive with state-of-the-art zero-shot image captioning and video-to-text retrieval, but also enable new applications such as (i) answering free-form questions about egocentric video, (ii) engaging in multimodal assistive dialogue with people (e.g., for cooking recipes) by interfacing with external APIs and databases (e.g., web search), and (iii) robot perception and planning.
+
+## Install
+To install the environment, run:
+
+`conda env create -f environment.yml`  
+`conda activate socratic`  
+`python -m spacy download en`
 
 ## Instructions
+This repository provides scripts for CLIP with GPT-3, FLAN-T5, GitVision, BLIP and BLIP2 prompting, and self-contained ipython notebooks with prototype implementations of Socratic Models for image captioning geenration, chain-of-thought and visual question answering.
 
-This repository provides scripts for CLIP with FLAN-T5 prompting, and self-contained colabs with prototype implementations of Socratic Models for various applications.
+## Notes on files in this repository
+* `blogpost.md`: the research corresponding to experiments documented in this repository
 
-## Colab notebooks
+* **blogpost_images**: contains images for the `blogpost.md` report
 
-There are a couple of Colab notebooks with the [T5 prompting pipeline](https://colab.research.google.com/drive/1o-q4QQYfdYIXq10e3BctO2h_980aLt3t#scrollTo=29352228) and [CLIP embedding space visualisations](https://colab.research.google.com/drive/1PG6BXF-I89mvqAjl17Ms2WSAvQUI_w8d#scrollTo=bkwvovEQQz5H).
+* **scripts**
+  * `coco_captioning_baseline.py`
+  * `coco_captioning_baseline_test.py`
+  * `coco_captioning_improved.py`
+  * `coco_captioning_improved_test.py`
+  * `coco_captioning_gpt.py`
+  * `vlm_alternative-gitvision_test.py`
+  * `vlm_alternative-blip_test.py`
+  * `vlm_alternative-blip2_test.py`
+  * `image_captioning.py`
+  * `utils.py`
+  * `coco_evaluation.py`
+
+* **notebooks**
+    * `demo_baseline.ipynb`
+    * `demo_improved.ipynb`
+    * `demo_gpt.ipynb`
+    * `demo_gitvision.ipynb`
+    * `demo_blip.ipynb`
+    * `demo_blip2.ipynb`
+    * `display_images_captions.ipynb`
+    * `visualise_CLIP.ipynb`
+    * `socratic_mm_reasoning.ipynb`
+
+
+## License
+This project is licensed under the terms of the [MIT License](https://opensource.org/licenses/MIT), allowing free use of the code.
+
