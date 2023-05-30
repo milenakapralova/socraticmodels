@@ -1,3 +1,7 @@
+"""
+This file contains the functionality related to the image captioning task.
+
+"""
 # Package loading
 import sys
 import os
@@ -8,6 +12,7 @@ import cv2
 from PIL import Image
 from dotenv import load_dotenv
 from profanity_filter import ProfanityFilter
+import matplotlib.pyplot as plt
 import torch
 import zipfile
 import numpy as np
@@ -70,7 +75,7 @@ class ImageCaptionerParent:
         self.flan_manager = LmManager()
 
         # Instantiate the GPT manager
-        self.gpt_manager = GPTManager()
+        self.gpt_manager = GptManager()
 
         # Instantiate the prompt generator
         self.prompt_generator = LmPromptGenerator()
@@ -180,6 +185,17 @@ class ImageCaptionerParent:
         :return:
         """
         pass
+
+    def show_demo_image(self, img_name):
+        """
+        Creates a visualisation of the image using matplotlib.
+
+        :param img_name: Input image to show
+        :return:
+        """
+        # Show the image
+        plt.imshow(self.img_dic[self.image_manager.image_folder + img_name])
+        plt.show()
 
 
 class ImageCaptionerBaseline(ImageCaptionerParent):
@@ -1096,12 +1112,13 @@ class LmManager:
         return response.json()
 
 
-class GPTManager:
+class GptManager:
     def __init__(self, version="text-davinci-002"):
         """
-           The GPT handles all the method related to the GPT-3 model.
+           The GPT manager handles the functionality related to the GPT API. By default, 'text-davinci-002' is used, the
+           same as the original Socratic Models paper.
 
-           :param version:
+           :param version: The engine version to query.
        """
         self.version = version
 
@@ -1112,12 +1129,29 @@ class GPTManager:
     def generate_response(
             self, prompt, max_tokens=64, temperature=0, stop=None
     ):
-        response = openai.Completion.create(engine=self.version, prompt=prompt, max_tokens=max_tokens, temperature=temperature, stop=stop)
+        """
+        Makes an API call to generate a response from an open AI model.
+
+        :param prompt: The prompt passed to the model.
+        :param max_tokens: The maximum token desired in the response.
+        :param temperature: The temperature of the language model to use.
+        :param stop: Whether to perform early stopping or not.
+        :return:
+        """
+        response = openai.Completion.create(
+            engine=self.version, prompt=prompt, max_tokens=max_tokens, temperature=temperature, stop=stop
+        )
         return response["choices"][0]["text"].strip()
 
 
 class BlipManager:
     def __init__(self, device, version="Salesforce/blip-image-captioning-base"):
+        """
+        This helper class makes it easy to generate responses from BLIP.
+
+        :param device: The device to use.
+        :param version: The BLIP model version to use.
+        """
         self.processor = BlipProcessor.from_pretrained(version)
         self.model = BlipForConditionalGeneration.from_pretrained(version, torch_dtype=torch.float16)
         self.device = device
@@ -1144,6 +1178,12 @@ class BlipManager:
 
 class Blip2Manager:
     def __init__(self, device, version="Salesforce/blip2-opt-2.7b"):
+        """
+        This helper class makes it easy to generate responses from BLIP2.
+
+        :param device: The device to use.
+        :param version: The BLIP2 model version to use.
+        """
         self.processor = Blip2Processor.from_pretrained(version)
         self.model = Blip2ForConditionalGeneration.from_pretrained(version, torch_dtype=torch.float16)
         self.device = device
@@ -1169,26 +1209,45 @@ class Blip2Manager:
 
 
 class GitVisionManager:
-    def __init__(self, device, version="Salesforce/blip2-opt-2.7b"):
-        self.processor = AutoProcessor.from_pretrained("microsoft/git-base-coco")
-        self.model = AutoModelForCausalLM.from_pretrained("microsoft/git-base-coco")
+    def __init__(self, device, version="microsoft/git-base-coco"):
+        """
+        This helper class makes it easy to generate responses from GIT.
+
+        :param device: The device to use.
+        :param version: The GIT model version to use.
+        """
+        self.processor = AutoProcessor.from_pretrained(version)
+        self.model = AutoModelForCausalLM.from_pretrained(version)
         self.device = device
 
-    def generate_response(self, image):
+    def generate_response(self, image, max_length=50):
         """
         Returns a caption for the given image.
 
-        :param image: Input image.
+        :param image: The image to caption.
+        :param max_length: Max length of the caption.
         :return:
         """
         pixel_values = self.processor(images=image, return_tensors="pt").pixel_values
-        generated_ids = self.model.generate(pixel_values=pixel_values, max_length=50)
+        generated_ids = self.model.generate(pixel_values=pixel_values, max_length=max_length)
         return self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
 
 
 class LmPromptGenerator:
+    """
+    The LmPromptGenerator makes it easy to try out new prompt designs. It contains all the prompts that were tested.
+    """
     @staticmethod
     def create_baseline_lm_prompt(img_type, ppl_result, sorted_places, object_list_str):
+        """
+        This method is a replica of the prompt from the original Socratic Models paper.
+
+        :param img_type: The image type inferred by CLIP. A string.
+        :param ppl_result: How many people were detected in the image. Inferred by CLIP. A string.
+        :param sorted_places: The most likely places. Inferred by CLIP. A string.
+        :param object_list_str: A comma separated set of objects. A string.
+        :return:
+        """
         return f'''I am an intelligent image captioning bot.
         This image is a {img_type}. There {ppl_result}.
         I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
@@ -1196,6 +1255,16 @@ class LmPromptGenerator:
         A creative short caption I can generate to describe this image is:'''
 
     def create_socratic_original_prompt(self, img_type, ppl_result, sorted_places, object_list):
+        """
+        This method generates the same prompt from the original Socratic Models paper. However, it makes it easier to
+        change the number of places/objects passed and still create a well formatted prompt.
+
+        :param img_type: The image type inferred by CLIP. A string.
+        :param ppl_result: How many people were detected in the image. Inferred by CLIP. A string.
+        :param sorted_places: The most likely places. Inferred by CLIP. A list of strings.
+        :param object_list_str: A list of the most likely objects inferred by CLIP.
+        :return: A prompt string to be passed to the language model of choice.
+        """
         places_string = self.get_places_string(sorted_places)
         return f'''I am an intelligent image captioning bot.
         This image is a {img_type}. There {ppl_result}.
@@ -1204,6 +1273,16 @@ class LmPromptGenerator:
         A creative short caption I can generate to describe this image is:'''
 
     def create_baseline_lm_prompt_likely(self, img_type, ppl_result, sorted_places, object_list):
+        """
+        This method generates a prompt alternative that was reported to work well in some contexts according to the
+        original Socratic Models paper.
+
+        :param img_type: The image type inferred by CLIP. A string.
+        :param ppl_result: How many people were detected in the image. Inferred by CLIP. A string.
+        :param sorted_places: The most likely places. Inferred by CLIP. A list of strings.
+        :param object_list_str: A list of the most likely objects inferred by CLIP.
+        :return: A prompt string to be passed to the language model of choice.
+        """
         places_string = self.get_places_string(sorted_places)
         return f'''I am an intelligent image captioning bot.
         This image is a {img_type}. There {ppl_result}.
@@ -1212,6 +1291,17 @@ class LmPromptGenerator:
         A short, likely caption I can generate to describe this image is:'''
 
     def create_gpt_prompt_likely(self, img_type, ppl_result, sorted_places, object_list_str):
+        """
+        This method generates a prompt alternative that was reported to work well in some contexts according to the
+        original Socratic Models paper. This is the prompt that was used in the image captioning notebook of the
+        original paper.
+
+        :param img_type: The image type inferred by CLIP. A string.
+        :param ppl_result: How many people were detected in the image. Inferred by CLIP. A string.
+        :param sorted_places: The most likely places. Inferred by CLIP. A string.
+        :param object_list_str: A list of the most likely objects inferred by CLIP.
+        :return: A prompt string to be passed to the language model of choice.
+        """
         places_string = self.get_places_string(sorted_places)
         return f'''I am an intelligent image captioning bot.
         This image is a {img_type}. There {ppl_result}.
@@ -1221,12 +1311,32 @@ class LmPromptGenerator:
 
     @staticmethod
     def create_improved_lm_prompt(img_type, ppl_result, terms_to_include):
+        """
+        One of the prompts that was experimented on.
+        This was a prompt that performed well on some demo images. However, it did not offer the best performance during
+        the COCO dataset benchmark. It does not include the location information.
+
+        :param img_type: The image type inferred by CLIP. A string.
+        :param ppl_result: How many people were detected in the image. Inferred by CLIP. A string.
+        :param terms_to_include: The list of objects/terms to use.
+        :return: A prompt string to be passed to the language model of choice.
+        """
         return f'''Create a creative beautiful caption from this context:
         "This image is a {img_type}. There {ppl_result}.
         The context is: {', '.join(terms_to_include)}.
         A creative short caption I can generate to describe this image is:'''
 
     def create_improved_lm_creative(self, img_type, ppl_result, sorted_places, object_list):
+        """
+        One of the prompts that was experimented on.
+        This was a prompt that performed well on some demo images. However, it did not offer the best performance during
+        the COCO dataset benchmark. It does not include the location information.
+
+        :param img_type: The image type inferred by CLIP. A string.
+        :param ppl_result: How many people were detected in the image. Inferred by CLIP. A string.
+        :param terms_to_include: The list of objects/terms to use.
+        :return: A prompt string to be passed to the language model of choice.
+        """
         places_string = self.get_places_string(sorted_places)
         return f'''I am a poetic writer that creates image captions.
         This image is a {img_type}. There {ppl_result}.
