@@ -18,6 +18,7 @@ import zipfile
 import numpy as np
 import openai
 import pandas as pd
+from datasets import load_dataset
 from transformers import (
     AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration, AutoProcessor,
     AutoModelForCausalLM, BlipProcessor, BlipForConditionalGeneration
@@ -126,6 +127,13 @@ class ImageCaptionerParent:
                 self.image_manager.image_folder + d
                 for d in self.image_manager.demo_names
             ]
+        elif self.set_type == 'mm_reasoning':
+            # load scienceQA dataset and filter out samples with no image
+            self.science_qa_dataset = [
+                sample for sample in load_dataset('derek-thomas/ScienceQA', split='validation')
+                if sample['image'] is not None
+            ]
+            return
         else:
             # Randomly select images from the COCO dataset
             img_files = self.coco_manager.get_random_image_paths(n_images=n_images, set_type=set_type)
@@ -1518,6 +1526,20 @@ class LmPromptGenerator:
         This photo may have been taken at a {places_string}.
         There might be a {', '.join(object_list)} in this {img_type}.
         A creative short caption I can generate to describe this image is:'''
+
+    def create_cot_prompt(self, sample, sorted_places, sorted_obj_texts, obj_topk=10):
+        prompt = (
+            f"This image was taken in a {sorted_places[0]}. It contains a {', '.join(sorted_obj_texts[:obj_topk])}.\n"
+            f"Question: {sample['question']}\nChoices: {sample['choices']}\nHint: {sample['hint']}\n"
+            f"Answer: Let's think step by step..."
+        )
+        return prompt
+
+    def create_vqa_prompt(self, sample, clip_manager, vocab_manager, place_feats, obj_feats, obj_topk=10):
+        _, _, sorted_places, sorted_objs, _, obj_scores = clip_manager.get_img_info(sample['image'], place_feats, obj_feats, vocab_manager)
+        # filtered_objs = filter_objs(sorted_objs, obj_scores, clip_manager, obj_topk=10, sim_threshold=0.7)
+        prompt = f'''This image was taken in a {sorted_places[0]}. It contains a {', '.join(sorted_objs[:obj_topk])}. Using this information, answer the following question: {sample['question']}\nHint: {sample['hint']}\nSelect the index of the correct choice: {[f'{i} {choice}' for i, choice in enumerate(sample['choices'])]}. Your answer should be a single integer (no text) and you must choose exactly one of the options.\nAnswer: '''
+        return prompt
 
     @staticmethod
     def get_places_string(place_list):
