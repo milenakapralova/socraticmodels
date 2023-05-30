@@ -1326,6 +1326,22 @@ class GptManager:
         )
         return response["choices"][0]["text"].strip()
 
+    def get_response_gpt(self, prompt, model='gpt-3.5-turbo', temperature=1., max_tokens=100, **kwargs):
+        """
+        Get response by prompting GPT-3
+
+        :param model: prompt to GPT-3
+        :param temperature: GPT-3 model
+        :param max_tokens: temperature for sampling
+        :param kwargs: maximum number of tokens to generate
+        :return: generated response from GPT-3
+        """
+        response = openai.ChatCompletion.create(model=model, temperature=temperature, max_tokens=max_tokens, messages=[
+            {"role": "user", "content": prompt}
+        ], **kwargs)
+        output = response['choices'][0]['message']['content']
+        return output
+
 
 class BlipManager:
     def __init__(self, device, version="Salesforce/blip-image-captioning-base"):
@@ -1535,10 +1551,14 @@ class LmPromptGenerator:
         )
         return prompt
 
-    def create_vqa_prompt(self, sample, clip_manager, vocab_manager, place_feats, obj_feats, obj_topk=10):
-        _, _, sorted_places, sorted_objs, _, obj_scores = clip_manager.get_img_info(sample['image'], place_feats, obj_feats, vocab_manager)
-        # filtered_objs = filter_objs(sorted_objs, obj_scores, clip_manager, obj_topk=10, sim_threshold=0.7)
-        prompt = f'''This image was taken in a {sorted_places[0]}. It contains a {', '.join(sorted_objs[:obj_topk])}. Using this information, answer the following question: {sample['question']}\nHint: {sample['hint']}\nSelect the index of the correct choice: {[f'{i} {choice}' for i, choice in enumerate(sample['choices'])]}. Your answer should be a single integer (no text) and you must choose exactly one of the options.\nAnswer: '''
+    def create_vqa_prompt(self, sample, sorted_places, sorted_objs, obj_topk=10):
+        prompt = (
+            f"This image was taken in a {sorted_places[0]}. It contains a {', '.join(sorted_objs[:obj_topk])}. "
+            f"Using this information, answer the following question: {sample['question']}\nHint: {sample['hint']}\n"
+            f"Select the index of the correct choice: "
+            f"{[f'{i} {choice}' for i, choice in enumerate(sample['choices'])]}."
+            f"Your answer should be a single integer (no text) and you must choose exactly one of the options.\nAnswer:"
+        )
         return prompt
 
     @staticmethod
