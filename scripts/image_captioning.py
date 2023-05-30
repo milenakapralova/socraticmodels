@@ -436,7 +436,7 @@ class ImageCaptionerImproved(ImageCaptionerParent):
     @print_time_dec
     def main(
             self, n_captions=10, lm_temperature=0.9, lm_max_length=40, lm_do_sample=True,
-            cos_sim_thres=0.8, n_objects=5, n_places=2, caption_strategy='original'
+            cos_sim_thres=0.7, n_objects=5, n_places=2, caption_strategy='original'
     ):
         """
         The main method contains all of the image captioning functionality that is dependent on the hyperparameters.
@@ -847,6 +847,17 @@ class ImageManager:
         :return:
         """
         return cv2.cvtColor(cv2.imread(image_path), cv2.COLOR_BGR2RGB)
+
+    def show_image(self, image):
+        """
+        Creates a visualisation of the image using matplotlib.
+
+        :param image: Input image to show.
+        :return:
+        """
+        # Show the image
+        plt.imshow(image)
+        plt.show()
 
 
 class VocabManager:

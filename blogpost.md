@@ -169,12 +169,12 @@ Section 3.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few
 
 <div align="center">
 
-| Task |   Method   | BLEU-4 | ROUGE-L | METEOR |  BERT  |  Acc  |
+| Task |   Method   | BLEU-4 | ROUGE-L | METEOR | BERT  |  Acc  |
 |:----:|:----------:|:------:|:-------:|:------:|:-----:|:-----:|
-| CoT  | zero-shot  |  9.12  |  22.0   |  26.75 |  86.41 |       |
-| CoT  | few-shot   |  42.03 |  47.97  |  50.43 |  90.97 |       |
-| VQA  | zero-shot  |        |         |        |        | 66.72 |
-| VQA  | few-shot   |        |         |        |        | 72.91 |
+| CoT  | zero-shot  |  9.12  |  22.0   | 26.75  | 86.41 |   -   |
+| CoT  | few-shot   | 42.03  |  47.97  | 50.43  | 90.97 |   -   |
+| VQA  | zero-shot  |   -    |    -    |   -    |   -   | 66.72 |
+| VQA  | few-shot   |   -    |    -    |   -    |   -   | 72.91 |
 
 </div>
 
