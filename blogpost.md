@@ -187,7 +187,7 @@ Section 3.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few
 
 <table>
   <tr>
-    <td width=30%><img src="blogpost_images/spring.png" alt="spring"></td>
+    <td width=30%><img src="blogpost_images/spring.png" alt="spring" style="width:250px;height:300px;"></td>
     <td>
       <strong>Prompt:</strong> This image was taken in a drugstore. It contains a spring, spring scale, coil, volute.<br>
       Question Which property matches this object?<br>
@@ -209,7 +209,8 @@ Section 3.2 illustrates examples of each of the CoT & VQA tasks (zero-shot & few
 
 Example sample             | Target sample
 :-------------------------:|:-------------------------:
-![spring](blogpost_images/spring.png) | ![lemon](blogpost_images/lemon.png)
+<img src="blogpost_images/spring.png" alt="spring" style="width:250px;height:300px;"> | <img src="blogpost_images/lemon.png" alt="lemon" style="width:250px;height:300px;">
+
 
 **Example prompt:**: This image was taken in a drugstore. It contains a spring, spring scale, coil, volute. 
 Question: Which property matches this object? 
