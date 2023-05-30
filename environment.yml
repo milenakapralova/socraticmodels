@@ -25,3 +25,10 @@ dependencies:
       - pycocoevalcap
       - openai
       - python-dotenv
+      - bert-score
+      - python-dotenv
+      - datasets==2.10.0
+      - evaluate
+      - nltk
+      - rouge-score
+      - git+https://github.com/google-research/bleurt.git
