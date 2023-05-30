@@ -1,0 +1,27 @@
+name: socratic
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pip
+  - pytorch-cuda
+  - pytorch
+  - torchvision
+  - requests
+  - numpy
+  - openai
+  - ffmpeg
+  - pip:
+      - pillow
+      - openai-clip
+      - opencv-python-headless
+      - notebook
+      - profanity-filter
+      - transformers
+      - matplotlib
+      - pycocoevalcap
+      - openai
+      - python-dotenv
