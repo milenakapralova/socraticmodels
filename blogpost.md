@@ -11,9 +11,10 @@ Socratic models (SMs) [1] are a fairly new addition to the field of deep learnin
 
 Because of their ability to communicate across multiple modalities and the dominant role of LMs in the framework, SMs have been hypothesized to perform well on reasoning tasks. Various authors have explored the ability of LMs to perform tasks such as arithmetic [2] and symbolic reasoning, with promising results. Notably, [3] introduced chain-of-thought (CoT) reasoning, a method for prompting LMs to perform reasoning tasks such as solving algebraic questions by generating the intermediate steps or rationale for the problem. While this is usually done in a few-shot setting by prompting the LM with exemplar rationales and answers [3, 4], this effect has also been demonstrated in a zero-shot manner, by carefully designing the question prompt [5]. While current studies have relied on the LM to perform reasoning, [6] also explore the possibility of CoT reasoning in a multimodal setting, using a combination of text and image prompts.
 
-All tasks presented in [1] employ the VLM CLIP [7] to extract information from the images, which is then passed to a GPT-3 [8] LM via prompting, whose role is to create a fitting caption or description. A quantitative analysis shows that SM have a higher performance on the zero-shot image captioning task compared to the state-of-the-art (SoTA) ZeroCap [9] but highly under-perform compared to finetuned methods such as ClipCap [10], which uses a CLIP [7] encoding as a prefix to a caption and then fine-tunes an LM (GPT2, [11]) to generate the image caption. A similar trend can be seen for videoto-text retrieval, where SM outperform the zero-shot SoTA algorithms but under-perform when being compared to fine-tuned methods such as CLIP2Video [12]. As for the contextual image description task, SM managed to outperform even the fine-tuned method introduced by [13]. Therefore, the aim of this project is to build on top of the model proposed by [1] in the following ways:
+All tasks presented in [1] employ the CLIP [7] VLM to extract information from the images, which is then via prompting passed to GPT-3 [8] LM - an autoregressive decoder - whose role is to create a fitting caption or description. A quantitative analysis shows that SM have a higher performance on the zero-shot image captioning task compared to the state-of-the-art (SoTA) ZeroCap [9] but highly under-perform compared to finetuned methods such as ClipCap [10], which uses a CLIP [7] encoding as a prefix to a caption and then fine-tunes an LM (GPT2, [11]) to generate the image caption. A similar trend can be seen for videoto-text retrieval, where SM outperform the zero-shot SoTA algorithms but under-perform when being compared to fine-tuned methods such as CLIP2Video [12]. As for the contextual image description task, SM managed to outperform even the fine-tuned method introduced by [13]. Therefore, the aim of this project is to build on top of the model proposed by [1] in the following ways:
 
-1. **Using FLAN-T5 XL instead of GPT-3**. The model proposed by [1] uses the GPT-3 LM, which is a proprietary API of OpenAI. We will refer to this model as the *Original Socratic model*. To make the SM framework truly free and open-source, we replace the costly GPT-3 LM model with a freely accessible although less capable language model FLAN-T5 [14, 15] developed by Google, trained using instruction fine-tuning. This will comprise our *Baseline model*.
+1. **Using FLAN-T5 XL instead of GPT-3**. The model proposed by [1] uses the GPT-3 LM, which is a proprietary API of OpenAI. We will refer to this model as the *original Socratic model*. To make the SM framework truly free and open-source, we replace the costly GPT-3 LM model with a freely accessible - although smaller and possible less capable - language model FLAN-T5 [14, 15]. This model was developed by Google, has an autoregressive encoder-decoder architecture and was trained using instruction fine-tuning. This will comprise our *baseline model*.
+
 2. **Improving the performance on FLAN-T5 XL**.
    GPT-3 has demonstrated a strong ability to summarise and paraphrase information, which allows
    it to create a clear and concise caption, being less affected by sub-optimal prompts. On the
@@ -24,7 +25,7 @@ All tasks presented in [1] employ the VLM CLIP [7] to extract information from t
    are synonyms. Therefore, we propose a new prompt pre-processing method, called Synonym
    Exclusion (SE), which is based upon the PCA analysis of CLIP’s embedding space. Additional
    prompt engineering methods were tested but were not included since no performance increase
-   was seen. We will refer to the model where SE is employed as the *Improved model*.
+   was seen. We will refer to the model where SE is employed as the *improved model*.
 
 3. **Extending the evaluation on the image captioning task**.
 The original paper used qualitative and lexical-based quantitative metrics. However, those often do not correlate with human judgments, and have blind spots to syntactically pathological caption constructions [17], taking into account only information such as n-gram matching, word order, TF-IDF weights, and overlapping sequences of words. We therefore also utilize embedding- and learning-based metrics that better correlate with human judgement [18] such as BERT scores to evaluate the capabilities of the image captioners.
@@ -50,7 +51,7 @@ Specifically:
 
 #### 2.1.2 The Synonym Exclusion algorithm
 
-The reason for this method is the observation that FLAN-T5 produces low-quality captions compared to GPT-3 when the VLM-informed prompt contains too many similar words referring to the same object. For example, when given the wedding image below (Figure 1), The VLM prompt contains the sentence: I think there might be a dress suit, full dress, tailcoat, tail coat, (etc.) in this photo.” and FLAN-T5 might generate this caption: ”A wedding dress is paired with a tuxedo for an elegant wedding.”
+The reason for this method is the observation that FLAN-T5 produces low-quality captions compared to GPT-3 when the VLM-informed prompt contains too many similar words referring to the same object. For example, when given the wedding image below (Figure 1), The VLM prompt contains the sentence: I think there might be a dress suit, full dress, tailcoat, tail coat, (etc.) in this photo.” and FLAN-T5 might generate this caption: ”A wedding dress is paired with a tuxedo for an elegant wedding.” This might be because even though both GPT-3 and FLAN-T5 use masking for self-supervision, GPT-3 relies on an autoregressive decoder that predicts subsequent words based on the previously generated ones (known as unidirectional language modeling) and FLAN-T5 has an encoder-decoder architecture with span-corruption: by masking specific segments of the text phrase, FLAN-T5's decoder is trained to predict the words that were hidden within these masked regions. Therefore, when summarizing text with many synonyms, a model trained with span corruption - like FLAN-T5 - may struggle, as the presence of multiple synonymous phrases can introduce ambiguity and make it harder for the model to generate concise summaries. In contrast, a model trained with unidirectional language modeling - like GPT-3 - focuses on coherence and capturing long-range dependencies, and so can produce better summaries.
 
 
 <center>
@@ -85,7 +86,7 @@ Our method (outlined in the SE Algorithm snippet below) creates prompts that are
 >4. Return `objects` as the final list of selected objects.
 
 
-As can be seen from Figure 2 below, we visualized 25 random images (in yellow) and their corresponding 25 random object categories (in blue) by reducing their CLIP embeddings from 768 to 3 dimensions (left). Additionally, we examined the best-matching object category for each of 10 random images and represented them with matching colors (right). In both cases, we saw that image and text cluster together, even in the best-matching scenario. This indicates that texts exhibit greater similarity among themselves than with images, emphasizing the need for higher thresholds to filter out text-text synonyms.
+As can be seen from Figure 2 below, we visualized 25 random images (in yellow) and their corresponding 25 random object categories (in blue) by reducing their CLIP embeddings from 768 to 3 dimensions (left). Additionally, we examined the best-matching object category for each of 10 random images and represented them with matching colors (right). In both cases, we saw that image and text cluster together, even in the best-matching scenario. This indicates that texts exhibit greater similarity among themselves than with images, emphasizing the need for higher thresholds to filter out text-text synonyms. 
 
 <center>
   <img src="blogpost_images/pca.png" alt="Image" style="width:780px;height:420px;">
@@ -161,13 +162,14 @@ Overall, no image captioning method seems to outperform the rest for all images.
 | Original Socratic                 | 2.0 ± 9.4    | 15.4 ± 7.4   | 34.4 ± 15.1 | 45.4 ± 50.3  | 9.6 ± 6.6   | 89.8 ± 3.4 | 85.2 ± 1.8 | 25.8 ± 3.2 |
 | Baseline Socratic with best params | 6.8 ± 17.4   | 16.8 ± 8.4   | 38.5 ± 15.9 | 57.6 ± 57.8  | 11.9 ± 8.9  | 90.7 ± 3.0 | 85.4 ± 1.7 | 25.3 ± 2.9 |
 | Improved Socratic with best params | 2.4 ± 9.9    | 15.1 ± 6.5   | 34.8 ± 14.4 | 49.4 ± 41.7  | 9.7 ± 8.1   | 90.2 ± 2.9 | 84.7 ± 1.7 | 24.6 ± 2.6 |
+Table 1: Quantitative results on MS COCO.
 
-It can be seen from the results above that the non-Socratic models perform significantly better than the Socratic ones. This is somewhat expected as some of these models were specifically trained for the task of image captioning, whilst the SMs were used zero-shot. Surprisingly, our baseline SM with the fine-tuned parameters performs better than the original SM, despite using a smaller language model. This means that it is possible to obtain similar or even superior results than the original SM by carefully prompting the LM. However, the fine-tuned improved SM performed less well than the baseline model. This means that the promising results that we obtained in the qualitative assessment did not generalize well once we tested it on the MS COCO dataset with the quantitative benchmark.
+It can be seen from the Table 1 above that the non-Socratic models perform significantly better than the Socratic ones. This is somewhat expected as some of these models were specifically trained for the task of image captioning, whilst the SMs were used zero-shot. Surprisingly, our baseline SM with the fine-tuned parameters performs better than the original SM, despite using a smaller language model. This means that it is possible to obtain similar or even superior results than the original SM by carefully prompting the LM. However, the fine-tuned improved SM performed less well than the baseline model. This means that the promising results that we obtained in the qualitative assessment did not generalize well once we tested it on the MS COCO dataset with the quantitative benchmark.
 
 
 ### 3.2 Chain-of-Thought and Visual Question Answering
 
-This section illustrates examples of each of the CoT & VQA tasks (zero-shot & few-shot). The results of evaluation are summarized in the table below. We achieve decent zero-shot performance on the CoT task (BLEU-4=9.12, BERT=86.41), and this spikes drastically in the 1-shot setting (BLEU-4=42.03, BERT=90.97). In the VQA task, the zero-shot accuracy is already high (66.72%) and jumps to 72.91% in the 1-shot case. We refrain from comparing with existing benchmarks as our sample size is too small to make meaningful comparisons.
+This section illustrates examples of each of the CoT & VQA tasks (zero-shot & few-shot). The results of evaluation are summarized in the Table 2 below. We achieve decent zero-shot performance on the CoT task (BLEU-4=9.12, BERT=86.41), and this spikes drastically in the 1-shot setting (BLEU-4=42.03, BERT=90.97). In the VQA task, the zero-shot accuracy is already high (66.72%) and jumps to 72.91% in the 1-shot case. We refrain from comparing with existing benchmarks as our sample size is too small to make meaningful comparisons.
 
 <div align="center">
 
@@ -177,7 +179,7 @@ This section illustrates examples of each of the CoT & VQA tasks (zero-shot & fe
 | CoT  | few-shot   | 42.03  |  47.97  | 50.43  | 90.97 |   -   |
 | VQA  | zero-shot  |   -    |    -    |   -    |   -   | 66.72 |
 | VQA  | few-shot   |   -    |    -    |   -    |   -   | 72.91 |
-
+Table 2: Quantitative results on ScienceQA.
 </div>
 
 <small>
