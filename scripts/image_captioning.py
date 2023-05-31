@@ -1310,7 +1310,7 @@ class GptManager:
 
 
     def generate_response(
-            self, prompt, max_tokens=64, temperature=0, stop=None
+            self, prompt, max_tokens=64, temperature=0, stop=None, n=1
     ):
         """
         Makes an API call to generate a response from an open AI model.
@@ -1322,11 +1322,11 @@ class GptManager:
         :return:
         """
         response = openai.Completion.create(
-            engine=self.version, prompt=prompt, max_tokens=max_tokens, temperature=temperature, stop=stop
+            engine=self.version, prompt=prompt, max_tokens=max_tokens, temperature=temperature, stop=stop, n=n
         )
         return response["choices"][0]["text"].strip()
 
-    def get_response_gpt(self, prompt, model='gpt-3.5-turbo', temperature=1., max_tokens=100, **kwargs):
+    def get_response_gpt(self, prompt, model='gpt-3.5-turbo', temperature=1., max_tokens=100, n=1, **kwargs):
         """
         Get response by prompting GPT-3
 
@@ -1336,7 +1336,7 @@ class GptManager:
         :param kwargs: maximum number of tokens to generate
         :return: generated response from GPT-3
         """
-        response = openai.ChatCompletion.create(model=model, temperature=temperature, max_tokens=max_tokens, messages=[
+        response = openai.ChatCompletion.create(model=model, temperature=temperature, max_tokens=max_tokens, n=n, messages=[
             {"role": "user", "content": prompt}
         ], **kwargs)
         output = response['choices'][0]['message']['content']
