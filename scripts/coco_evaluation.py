@@ -58,6 +58,11 @@ class SocraticEvalCap:
         self.img_ids = self.gts.keys()
 
     def evaluate_rulebased(self):
+        """
+        Run the evaluation on the gts and res attributes.
+
+        :return:
+        """
         # =================================================
         # Set up scorers
         # =================================================
@@ -95,9 +100,24 @@ class SocraticEvalCap:
         self.setEvalImgs()
 
     def setEval(self, score, method):
+        """
+        Sets the score for a method.
+
+        :param score: Score to set.
+        :param method: Method to score.
+        :return:
+        """
         self.eval[method] = score
 
     def setImgToEvalImgs(self, scores, imgIds, method):
+        """
+        Stores the evaluations.
+
+        :param scores: Scores to set.
+        :param imgIds: Image ids.
+        :param method: Evaluation method.
+        :return:
+        """
         for imgId, score in zip(imgIds, scores):
             if not imgId in self.imgToEval:
                 self.imgToEval[imgId] = {}
@@ -105,9 +125,21 @@ class SocraticEvalCap:
             self.imgToEval[imgId][method] = score
 
     def setEvalImgs(self):
+        """
+        Create a list of the image evaluations.
+
+        :return:
+        """
         self.evalImgs = [eval for imgId, eval in self.imgToEval.items()]
 
     def evaluate_cossim(self, gt_caption_emb, image_emb):
+        """
+        Evaluates the cosine similarities.
+
+        :param gt_caption_emb: The caption ground truth embeddings.
+        :param image_emb: The image embedding.
+        :return:
+        """
 
         # Calculate similarities between images and captions
         for img_id in self.intersect_keys:
@@ -123,6 +155,11 @@ class SocraticEvalCap:
         }
 
     def evaluate_bert(self):
+        """
+        BERT score evaluation.
+
+        :return:
+        """
         cands = []
         for image_id, caption_list in self.res.items():
             cpt_dict = caption_list[0]
@@ -173,6 +210,11 @@ def load_all_captions(set_type):
 
 
 def load_gts_captions():
+    """
+    This function loads COCO's ground truth captions.
+
+    :return: A dictionary mapping the image id to a list of 5 ground truth captions.
+    """
     # Load the ground truth annotations
     annotation_file = '../data/coco/annotations/captions_val2017.json'
 
@@ -191,6 +233,16 @@ def load_gts_captions():
 
 
 def load_caption_emb(clip_manager, gts, img_list):
+    """
+    Loads the ground truth caption embeddings.
+
+    It uses a cache to speed up execution.
+
+    :param clip_manager: The CLIP helper object.
+    :param gts: The ground truth captions.
+    :param img_list: The list of images.
+    :return: The embeddings of the ground truth captions.
+    """
 
     emb_pickle_path = f'../data/cache/caption_emb_{get_uuid_for_imgs(img_list)}.pickle'
 
@@ -218,6 +270,15 @@ def load_caption_emb(clip_manager, gts, img_list):
 
 
 def load_image_emb(clip_manager, img_list):
+    """
+    Loads the image embeddings.
+
+    It uses a cache to speed up execution.
+
+    :param clip_manager: CLIP helper object.
+    :param img_list: The list of images.
+    :return: The embeddings of the images.
+    """
 
     emb_pickle_path = f'../data/cache/img_emb_{get_uuid_for_imgs(img_list)}.pickle'
 
@@ -245,7 +306,15 @@ def load_image_emb(clip_manager, img_list):
     return image_emb
 
 
-def evaluate_captions(data_to_analyse, gt_caption_emb, image_emb):
+def evaluate_captions(data_to_analyse, gt_caption_emb, image_emb, gts):
+    """
+
+
+    :param data_to_analyse:
+    :param gt_caption_emb:
+    :param image_emb:
+    :return:
+    """
     # Create a data list to store the outputs
     data_list = []
 
@@ -313,6 +382,13 @@ def perform_agg(analysis_df, numerical_cols, agg_type):
 
 
 def summarise_analysis(analysis_df):
+    """
+    Performs an aggregation by approach of all of the image scores.
+    Calculates the mean of the standard deviation.
+
+    :param analysis_df: Input dataframe where each row corresponds to an image and approach pair.
+    :return: Aggregated output dataframe where each row corresponds to an approach.
+    """
     numerical_cols = [c for c in analysis_df.columns if c not in ('approach', 'caption', 'image_id', 'gts_sims')]
     mean_df = perform_agg(analysis_df, numerical_cols, agg_type='mean')
     std_df = perform_agg(analysis_df, numerical_cols, agg_type='std')
@@ -322,9 +398,12 @@ def summarise_analysis(analysis_df):
 
 def main(set_type):
     """
-    The main
+    The main evaluation function.
 
-    :param set_type:
+    Loads the generated and ground truth captions. Performs the evaluation. Aggregates the evaluation by approach.
+    Both the evaluation and aggregated evaluation are stored.
+
+    :param set_type: The data set type (train/valid/test) to evaluate.
     :return:
     """
     # Load the generated captions
@@ -351,7 +430,7 @@ def main(set_type):
     # Retrieve the embeddings of the images
     image_emb = load_image_emb(clip_manager, img_list)
 
-    analysis_df = evaluate_captions(caption_dic, gt_caption_emb, image_emb)
+    analysis_df = evaluate_captions(caption_dic, gt_caption_emb, image_emb, gts)
     analysis_df_gr = summarise_analysis(analysis_df)
 
     # Prepare output folder
