@@ -90,9 +90,8 @@ As can be seen from Figure 2 below, we visualized 25 random images (in yellow) a
 
 <center>
   <img src="blogpost_images/pca.png" alt="Image" style="width:780px;height:420px;">
-    <figcaption>Figure 2: Visualisation of CLIP's embedding space.</figcaption>
 </center>
-
+> Figure 2: Visualisation of CLIP's embedding space.
 
 #### 2.1.3 Dataset
 Images used in this project were extracted from the MS COCO [21], a large-scale dataset often used for image captioning tasks. The dataset also contains natural language image descriptions. We used the 2017 validation split which contains 5000 images, out of which we randomly selected two groups of 50 images to be used during hyperparameter search and testing, under the constraint that there is no overlap between the two groups of images.
@@ -147,7 +146,7 @@ We evaluated the CoT tasks using the following metrics: BLEU [22], Rouge [26], M
 
 #### 3.1.1 Qualitative demonstrations
 ![qualitative_results](blogpost_images/qualitative_results.png)
-Figure 3: Qualitative results on the image captioning task.
+> Figure 3: Qualitative results on the image captioning task.
 
 Overall, no image captioning method seems to outperform the rest for all images. Specifically, while the original SM outputs an appropriate caption for the top left image, it seems to hallucinate for the top right, stating that ”the astronaut is waiting for a meeting”. This hallucination might be caused by the limited vocabulary given to the VLM, which does not include the moon as a viable location. In this way, the VLM seems to associate the sitting astronaut with the scenario of a ”waiting room”. Another reason for this hallucination can be that GPT-3 was fine-tuned by few-shot learning, whereas FLAN-T5 was fine-tuned by instruction tuning, which incorporates explicit prompts to guide the model's behavior, providing more control over its output. As for the bottom images, the original SM struggles to recognize the pistol and the fruits. However, it should be stated that GPT-3 is non-deterministic and might generate more appropriate captions. In contrast, the improved model has a higher chance of detecting the relevant objects in the image, generating captions that mention both the gun and the fruit, thus outperforming the original SM for the last two images.
 
@@ -162,7 +161,7 @@ Overall, no image captioning method seems to outperform the rest for all images.
 | Original Socratic                 | 2.0 ± 9.4    | 15.4 ± 7.4   | 34.4 ± 15.1 | 45.4 ± 50.3  | 9.6 ± 6.6   | 89.8 ± 3.4 | 85.2 ± 1.8 | 25.8 ± 3.2 |
 | Baseline Socratic with best params | 6.8 ± 17.4   | 16.8 ± 8.4   | 38.5 ± 15.9 | 57.6 ± 57.8  | 11.9 ± 8.9  | 90.7 ± 3.0 | 85.4 ± 1.7 | 25.3 ± 2.9 |
 | Improved Socratic with best params | 2.4 ± 9.9    | 15.1 ± 6.5   | 34.8 ± 14.4 | 49.4 ± 41.7  | 9.7 ± 8.1   | 90.2 ± 2.9 | 84.7 ± 1.7 | 24.6 ± 2.6 |
-Table 1: Quantitative results on MS COCO.
+> Table 1: Quantitative results on MS COCO.
 
 It can be seen from the Table 1 above that the non-Socratic models perform significantly better than the Socratic ones. This is somewhat expected as some of these models were specifically trained for the task of image captioning, whilst the SMs were used zero-shot. Surprisingly, our baseline SM with the fine-tuned parameters performs better than the original SM, despite using a smaller language model. This means that it is possible to obtain similar or even superior results than the original SM by carefully prompting the LM. However, the fine-tuned improved SM performed less well than the baseline model. This means that the promising results that we obtained in the qualitative assessment did not generalize well once we tested it on the MS COCO dataset with the quantitative benchmark.
 
@@ -179,7 +178,7 @@ This section illustrates examples of each of the CoT & VQA tasks (zero-shot & fe
 | CoT  | few-shot   | 42.03  |  47.97  | 50.43  | 90.97 |   -   |
 | VQA  | zero-shot  |   -    |    -    |   -    |   -   | 66.72 |
 | VQA  | few-shot   |   -    |    -    |   -    |   -   | 72.91 |
-Table 2: Quantitative results on ScienceQA.
+> Table 2: Quantitative results on ScienceQA.
 </div>
 
 <small>
@@ -208,7 +207,7 @@ Table 2: Quantitative results on ScienceQA.
     </td>
   </tr>
 </table>
-Figure 4: Example of a zero-shot CoT task. The model is prompted to reason about the property of a spring.
+> Figure 4: Example of a zero-shot CoT task. The model is prompted to reason about the property of a spring.
    
 
 #### 3.2.2 Few-shot CoT
