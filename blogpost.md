@@ -88,7 +88,7 @@ As can be seen from Figure 2 below, we visualized 25 random images (in yellow) a
 
 <center>
   <img src="blogpost_images/pca.png" alt="Image" style="width:780px;height:420px;">
-    <figcaption>Figure 2: Visualisation of CLIP's embedding space</figcaption>
+    <figcaption>*Figure 2: Visualisation of CLIP's embedding space*</figcaption>
 </center>
 
 
