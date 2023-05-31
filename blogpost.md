@@ -230,6 +230,8 @@ Choices: yellow, salty. Answer: Let's think step by step...
 **Output:** The object is yellow, as it contains citrons, lemons, and limes which are all yellow fruits. It is not salty, as none of the items listed are salty. Therefore, the answer is yellow.
 
 **GT solution:** Potato chips have a salty taste. The lemon is not salty. Yellow is a color. This color is yellow. The lemon is yellow.
+
+   
 Figure 4: Example of a few-shot CoT task. This time the model is prompted to reason about the property of a lemon, but is provided a reasoning example as well.
   
 
