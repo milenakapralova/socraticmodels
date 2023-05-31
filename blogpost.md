@@ -38,12 +38,6 @@ We additionally explore the capabilities of Socratic models on 2 types of multim
 6. **Making the pipeline more flexible, reproducible and efficient**.
 We bring forth a modular codebase that makes it easy to build upon and test different captioning methods, including the usage of seeds, split between train, valid and test sets. We also provide a random and grid search pipeline to find the best hyperparameters. Finally, as the loading of the files and the generation of the embeddings is quite consuming, we have implemented a caching functionality that speeds up the development and testing process.
 
-
-<center>
-  <img src="blogpost_images/wedding.jpg" alt="Image" style="width:400px;height:300px;">
-    <figcaption>Figure 1: Image for which CLIP produces too many synonyms</figcaption>
-</center>
-
 ## 2 Method
 ### 2.1 Image captioning
 #### 2.1.1 The Socratic method
@@ -56,11 +50,15 @@ Specifically:
 
 #### 2.1.2 The Synonym Exclusion algorithm
 
-The reason for this method is the observation that FLAN-T5 produces low-quality captions compared to GPT-3 when the VLM-informed prompt contains too many similar words referring to the same object. For example, when given the wedding image seen above, The VLM prompt contains the sentence: I think there might be a dress suit, full dress, tailcoat, tail coat, (etc.) in this photo.” and FLAN-T5 might generate this caption: ”A wedding dress is paired with a tuxedo for an elegant wedding.”
+The reason for this method is the observation that FLAN-T5 produces low-quality captions compared to GPT-3 when the VLM-informed prompt contains too many similar words referring to the same object. For example, when given the wedding image below (Figure 1), The VLM prompt contains the sentence: I think there might be a dress suit, full dress, tailcoat, tail coat, (etc.) in this photo.” and FLAN-T5 might generate this caption: ”A wedding dress is paired with a tuxedo for an elegant wedding.”
+
+<center>
+  <img src="blogpost_images/wedding.jpg" alt="Image" style="width:400px;height:300px;">
+    <figcaption>Figure 1: Image for which CLIP produces too many synonyms</figcaption>
+</center>
 
 Our method (outlined in the SE Algorithm snippet below) creates prompts that are more suitable for FLAN-T5 by paying closer attention to the words that are passed onto the prompt. In this way, the goal would be to not have similar terms that might be redundant and thus confuse the model. To this end, we build a list of candidate terms that have a high cosine similarity with the image, but a low cosine similarity with the other terms in the candidate list. This is done by looping through the first 100 terms and considering the terms in succession. The first term is included as a default, as it has the highest cosine similarity and is therefore assumed to be the most relevant. The subsequent terms are then compared to previously included candidate terms and are added only if they fall below a predefined cosine similarity threshold. The list of candidate terms also has a predefined maximum number of allowed candidates, *n*. In this way, the top *n* positions are more likely to contain relevant and distinctive terms. We determined threshold for cosine similarities using Principal Component Analysis (PCA), a dimensionality reduction technique that identifies the most significant directions of variation in a dataset. This enables the representation of data with fewer dimensions while preserving its key features. We noticed that even though the ground truth captions have similarity between the corresponding image of around 0.25, using this threshold for our SE algorithm did not filter synonyms effectively and produced subpar captions. Since both images and text share embedding space in CLIP, we analyzed this space using the PCA.
 
-We visualized 25 random images (in yellow) and their corresponding 25 random object categories (in blue) by reducing their CLIP embeddings from 768 to 3 dimensions (left). Additionally, we examined the best-matching object category for each of 10 random images and represented them with matching colors (right). In both cases, we saw that image and text cluster together, even in the best-matching scenario. This indicates that texts exhibit greater similarity among themselves than with images, emphasizing the need for higher thresholds to filter out text-text synonyms.
 
 ##### The SE Algorithm
 > 1. *Input*:
@@ -86,6 +84,14 @@ We visualized 25 random images (in yellow) and their corresponding 25 random obj
 >4. Return `objects` as the final list of selected objects.
 
 
+As can be seen from Figure 2 below, we visualized 25 random images (in yellow) and their corresponding 25 random object categories (in blue) by reducing their CLIP embeddings from 768 to 3 dimensions (left). Additionally, we examined the best-matching object category for each of 10 random images and represented them with matching colors (right). In both cases, we saw that image and text cluster together, even in the best-matching scenario. This indicates that texts exhibit greater similarity among themselves than with images, emphasizing the need for higher thresholds to filter out text-text synonyms.
+
+<center>
+  <img src="blogpost_images/pca.png" alt="Image" style="width:780px;height:420px;">
+    <figcaption>Figure 2: Visualisation of CLIP's embedding space</figcaption>
+</center>
+
+
 #### 2.1.3 Dataset
 Images used in this project were extracted from the MS COCO [21], a large-scale dataset often used for image captioning tasks. The dataset also contains natural language image descriptions. We used the 2017 validation split which contains 5000 images, out of which we randomly selected two groups of 50 images to be used during hyperparameter search and testing, under the constraint that there is no overlap between the two groups of images.
 
@@ -103,16 +109,10 @@ We tuned several hyperparameters, including the temperature of the language mode
 - *Learning-based metric*. We used one learning-based metric, specifically the BERT score, which is a method exploiting the pretrained BERT embeddings. Once the final embeddings for each of the words in ground truth and generated captions are obtained, an n-squared computation is performed by calculating similarity for each of the words from ground truth to each of the words in the generated caption. Most similar word from reference to the ground truth one is found and precision and recall are calculated for each model [21].
 
 
-<center>
-  <img src="blogpost_images/pca.png" alt="Image" style="width:780px;height:420px;">
-    <figcaption>Figure 2: Visualisation of CLIP's embedding space</figcaption>
-</center>
-
-
 ### 2.2 Chain-of-Thought and Visual Question Answering
 
 #### 2.2.1 Model
-The pipeline for CoT & VQA tasks is illustrated below. It partially mimics the captioning pipeline. However, we use the GPT-3.5 turbo version (i.e., ChatGPT) as the LM since the reasoning tasks are more complex than the captioning task and hence require a more powerful model. In the 1st stage, we extract information from the image $I$ by prompting CLIP to ground the image context to a text summary $C_I$ , which is then fed as an input prompt to the LM (GPT-3), which finally generates the output. In the zero-shot CoT tasks, the prompt $P$ consists of the question $Q$, choices $MC$, text context $C_T$ and image context $C_I$ . We also append the phrase ”Let’s think step by step...” ($S_{COT}$) to the prompt, which has been shown to elicit CoT reasoning [5], and the desired rationale $R$ (reasoning steps) and answer $A$. In the few-shot CoT task, the prompt $P$ is composed by first creating solved examples $E$ (question prompt + solution), and then concatenating the prompt for the zero-shot task. Example CoT tasks (zero-shot & few-shot) are shown the presented figure. For the zero-shot VQA task, the input prompt $P$ is identical to the zero-shot CoT task but the final sentence $S_{COT}$ is omitted. In this way, the desired output is the answer $A$ in the form of a single choice. On the other hand, the few-shot VQA task appends a solved example $E$ to the initial prompt.
+The pipeline for CoT & VQA tasks is illustrated in the snippet below. It partially mimics the captioning pipeline. However, we used the GPT-3.5 turbo version (i.e., ChatGPT) as the LM since the reasoning tasks are more complex than the captioning task and hence require a more powerful model. In the 1st stage, we extracted information from the image $I$ by prompting CLIP to ground the image context to a text summary $C_I$ , which was then fed as an input prompt to the LM, which finally generated the output. In the zero-shot CoT tasks, the prompt $P$ consisted of the question $Q$, choices $MC$, text context $C_T$ and image context $C_I$ . We also appended the phrase ”Let’s think step by step...” ($S_{COT}$) to the prompt, which has been shown to elicit CoT reasoning [5], and the desired rationale $R$ (reasoning steps) and answer $A$. In the few-shot CoT task, the prompt $P$ was composed by first creating solved examples $E$ (question prompt + solution), and then concatenating the prompt for the zero-shot task. Example CoT tasks (zero-shot & few-shot) are shown in the result section below. For the zero-shot VQA task, the input prompt $P$ was identical to the zero-shot CoT task but the final sentence $S_{COT}$ was omitted. In this way, the desired output was the answer $A$ in the form of a single choice. In contrast to this, the few-shot VQA task appended a solved example $E$ to the initial prompt.
 
 
 **Algorithm: Reasoning with Socratic models**
