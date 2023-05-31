@@ -18,7 +18,6 @@ import zipfile
 import numpy as np
 import openai
 import pandas as pd
-from datasets import load_dataset
 from transformers import (
     AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration, AutoProcessor,
     AutoModelForCausalLM, BlipProcessor, BlipForConditionalGeneration
