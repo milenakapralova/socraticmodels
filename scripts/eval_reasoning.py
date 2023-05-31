@@ -2,6 +2,16 @@ import argparse
 import pandas as pd
 from evaluate import load
 from utils import print_time_dec
+import os
+import sys
+sys.path.append('..')
+# Depending on the platform/IDE used, the home directory might be the socraticmodels or the
+# socraticmodels/scripts directory. The following ensures that the current directory is the scripts folder.
+try:
+    os.chdir('scripts')
+except FileNotFoundError:
+    pass
+
 
 def calculate_metrics(gts, gens, metrics):
     """
@@ -32,16 +42,25 @@ def calculate_metrics(gts, gens, metrics):
     return results
 
 @print_time_dec
-def main(args):
-    print(f'evaluating {args.task} task...')
+def main(task, lm_model, data_dir, file_suffix):
+    """
+    Runs the multimodel reasoning evaluation.
+
+    :param task: The reasoning task.
+    :param lm_model: The language model to use for the reasoning task.
+    :param data_dir: The data directory.
+    :param file_suffix: The file suffix.
+    :return:
+    """
+    print(f'evaluating {task} task...')
     # load the data
-    responses_path = f'{args.data_dir}/{args.lm_model}/responses_{args.task}{args.file_suffix}.csv'
+    responses_path = f'{data_dir}/{lm_model}/responses_{task}{file_suffix}.csv'
     data = pd.read_csv(responses_path)
     gts = data['gt'].tolist()
     gens = data['gen'].tolist()
     
     # calculate metrics for each sample
-    if args.task == 'cot_zs' or args.task == 'cot_fs':
+    if task in ('cot_zs',  'cot_fs'):
         metrics = ['bleu', 'rouge', 'meteor', 'bertscore']
     else:
         metrics = ['accuracy']
@@ -50,7 +69,7 @@ def main(args):
     # save results
     df_samples = pd.DataFrame(sample_results)
     results = df_samples.describe().loc[['mean', 'std']].transpose()
-    results_path = f'{args.data_dir}/{args.lm_model}/res_{args.task}{args.file_suffix}.csv'
+    results_path = f'{data_dir}/{lm_model}/res_{task}{file_suffix}.csv'
     results.to_csv(results_path, index=True)
     print('done.')
     print(f'results saved to {results_path}')
@@ -59,7 +78,7 @@ if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(description='Evaluate generated responses.')
     parser.add_argument(
-        '--data-dir', type=str, default='outputs/reasoning',
+        '--data-dir', type=str, default='../outputs/reasoning',
         help='Path to the input dir containing the generated responses.'
     )
     parser.add_argument('--file-suffix',  type=str, default='', help='suffix for output file')
@@ -70,4 +89,4 @@ if __name__ == "__main__":
     error_message = f'Invalid task: {args.task}. Please choose from: cot_zs, cot_fs, vqa_zs, vqa_fs'
     assert args.task in ['cot_zs', 'cot_fs', 'vqa_zs', 'vqa_fs'], error_message
     print(args)
-    main(args)
+    main(args.task, args.lm_model, args.data_dir, args.file_suffix)

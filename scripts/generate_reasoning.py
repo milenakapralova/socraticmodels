@@ -4,14 +4,19 @@ import pandas as pd
 from tqdm import tqdm
 import os
 import json
-import torch
 import argparse
-import time
-from datasets import load_dataset
-import image_captioning as ic
 from scripts.mm_reasoning import MmReasoner
-from utils import print_time_dec, get_samples_sqa, get_device, prepare_dir
+from utils import print_time_dec, get_samples_sqa, prepare_dir
 import openai
+import sys
+sys.path.append('..')
+# Depending on the platform/IDE used, the home directory might be the socraticmodels or the
+# socraticmodels/scripts directory. The following ensures that the current directory is the scripts folder.
+try:
+    os.chdir('scripts')
+except FileNotFoundError:
+    pass
+
 
 @print_time_dec
 def main(
