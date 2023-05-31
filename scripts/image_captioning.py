@@ -5,6 +5,7 @@ This file contains the functionality related to the image captioning task.
 # Package loading
 import sys
 import os
+import time
 from typing import List, Union
 import requests
 import clip
@@ -1329,11 +1330,22 @@ class GptManager:
         :param kwargs: maximum number of tokens to generate
         :return: generated response from GPT-3
         """
-        response = openai.ChatCompletion.create(
-            model=model, temperature=temperature, max_tokens=max_tokens, n=n, messages=[
-                {"role": "user", "content": prompt}
-            ], **kwargs
-        )
+        try:
+            response = openai.ChatCompletion.create(
+                model=model, temperature=temperature, max_tokens=max_tokens, n=n, messages=[
+                    {"role": "user", "content": prompt}
+                ], **kwargs
+            )
+        except openai.error.RateLimitError:
+            # sleep if API rate limit exceeded
+            print('API rate limit exceeded,sleeping for 120s...')
+            time.sleep(120)
+            response = openai.ChatCompletion.create(
+                model=model, temperature=temperature, max_tokens=max_tokens, n=n, messages=[
+                    {"role": "user", "content": prompt}
+                ], **kwargs
+            )
+
         output = response['choices'][0]['message']['content']
         return output
 

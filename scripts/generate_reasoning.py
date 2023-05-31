@@ -9,6 +9,7 @@ from scripts.mm_reasoning import MmReasoner
 from utils import print_time_dec, get_samples_sqa, prepare_dir
 import openai
 import sys
+import time
 sys.path.append('..')
 # Depending on the platform/IDE used, the home directory might be the socraticmodels or the
 # socraticmodels/scripts directory. The following ensures that the current directory is the scripts folder.
@@ -81,13 +82,7 @@ def main(
         # generate output
         if lm_model == 'gpt':
             lm_params = {'max_tokens': max_tokens, 'temperature': temperature}
-            try:
-                output = mm_reasoner.gpt_manager.get_response_gpt(prompt, **lm_params)
-            except openai.error.RateLimitError:
-                # sleep if API rate limit exceeded
-                print('API rate limit exceeded,sleeping for 120s...')
-                time.sleep(120)
-                output = mm_reasoner.gpt_manager.get_response_gpt(prompt, **lm_params)
+            output = mm_reasoner.gpt_manager.get_response_gpt(prompt, **lm_params)
         else:
             lm_params = {
                 'max_new_tokens': max_tokens, 'temperature': temperature, 'do_sample': False, 'length_penalty': 2.
