@@ -131,7 +131,7 @@ The pipeline for chain-of-thought reasoning (CoTR) & visual question-answering (
 > **Few-shot VQA**
 > - *Input*: $Q + C_T + I + E \to$ $VLM$ $\to P = Q + C_T + C_I + E \to$ $LM$ $\to$ *Output*: $A$
 
-<small> Model pipeline for reasoning tasks. $Q$: question, $I$: image, $A$: answer, $C_T$: text context, $C_I$: image context, $R$: rationale, $P$: prompt, $E$: solved example, and $S_{COT}$: *"Let's think step by step..."* </small>
+> Model pipeline for reasoning tasks. $Q$: question, $I$: image, $A$: answer, $C_T$: text context, $C_I$: image context, $R$: rationale, $P$: prompt, $E$: solved example, and $S_{COT}$: *"Let's think step by step..."*.
 
 
 #### 2.2.2 Dataset
