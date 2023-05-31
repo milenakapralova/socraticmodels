@@ -12,6 +12,8 @@ To install the environment, run:
 
 ## Instructions
 This repository provides scripts for CLIP with GPT-3, FLAN-T5, GitVision, BLIP and BLIP2 prompting, and self-contained ipython notebooks with prototype implementations of Socratic Models for image captioning geenration, chain-of-thought and visual question answering.
+The project was organised such that the downloading, caching and organisation of files is managed by the code.
+The classes were built in a modular fashion such that they could be adapted to different use-cases.
 
 ## Notes on files in this repository
 * `blogpost.md`: the research corresponding to experiments documented in this repository
@@ -19,28 +21,34 @@ This repository provides scripts for CLIP with GPT-3, FLAN-T5, GitVision, BLIP a
 * **blogpost_images**: contains images for the `blogpost.md` report
 
 * **scripts**
-  * `coco_captioning_baseline.py`
-  * `coco_captioning_baseline_test.py`
-  * `coco_captioning_improved.py`
-  * `coco_captioning_improved_test.py`
-  * `coco_captioning_gpt.py`
-  * `vlm_alternative-gitvision_test.py`
-  * `vlm_alternative-blip_test.py`
-  * `vlm_alternative-blip2_test.py`
-  * `image_captioning.py`
-  * `utils.py`
-  * `coco_evaluation.py`
+  * `coco_caption_base.py` - Run a train/valid/test dataset on the Baseline Image Captioner.
+  * `coco_caption_base_hp_tune.py` - Run a parameter search on the Baseline Image Captioner.
+  * `coco_caption_imp.py` - Run a train/valid/test dataset on the Improved Image Captioner.
+  * `coco_caption_imp_hp_tune.py` - Run a parameter search on the Improved Image Captioner.
+  * `coco_caption_gpt.py` - Run a train/valid/test dataset on the Original Socratic Captioner.
+  * `coco_caption_git.py` - Run a train/valid/test dataset using GIT.
+  * `coco_caption_blip.py` - Run a train/valid/test dataset using BLIP.
+  * `coco_caption_blip2.py` - Run a train/valid/test dataset using BLIP2.
+  * `image_captioning.py` - Contains the functionality relating to the image captioning.
+  * `mm_reasoning.py` - Contains the functionality relating to the multimodal reasoning.
+  * `generate_reasoning.py` - Run a reasoning task.
+  * `utils.py` - Contains utilities functions.
+  * `coco_evaluation.py` - Run the evalutaion of the captions that were generated using different approaches.
+  * `reasoning_evaluation.py` - Run the multimodal reasoning evalutation.
 
 * **notebooks**
-    * `demo_baseline.ipynb`
-    * `demo_improved.ipynb`
-    * `demo_gpt.ipynb`
-    * `demo_gitvision.ipynb`
-    * `demo_blip.ipynb`
-    * `demo_blip2.ipynb`
-    * `display_images_captions.ipynb`
-    * `visualise_CLIP.ipynb`
-    * `socratic_mm_reasoning.ipynb`
+    * `demo_baseline.ipynb` - A demo of the Baseline Image Captioner in action.
+    * `demo_improved.ipynb` - A demo of the Improved Image Captioner in action.
+    * `demo_gpt.ipynb` - A demo of the Original Socratic Image Captioner in action.
+    * `demo_gitvision.ipynb` - A demo of GIT in action.
+    * `demo_blip.ipynb` - A demo of BLIP in action.
+    * `demo_blip2.ipynb` - A demo of BLIP2 in action.
+    * `display_images_captions.ipynb` - A display of a selection of captions that were obtained with the captioners.
+    * `visualise_CLIP.ipynb` - Visualisations of the embedding space of CLIP.
+    * `socratic_mm_reasoning.ipynb` - A showcase of the multimodal reasoning tasks.
+
+* **data**
+  * The data directory stores the input and generated data. It is automatically created when the code is run.
 
 
 ## License
