@@ -18,6 +18,7 @@ import zipfile
 import numpy as np
 import openai
 import pandas as pd
+from datasets import load_dataset
 from transformers import (
     AutoModelForSeq2SeqLM, AutoTokenizer, Blip2Processor, Blip2ForConditionalGeneration, AutoProcessor,
     AutoModelForCausalLM, BlipProcessor, BlipForConditionalGeneration
@@ -1300,9 +1301,8 @@ class GptManager:
         if 'OPENAI_API_KEY' in os.environ:
             openai.api_key = os.environ['OPENAI_API_KEY']
 
-
     def generate_response(
-            self, prompt, max_tokens=64, temperature=0, stop=None
+            self, prompt, max_tokens=64, temperature=0, stop=None, n=1
     ):
         """
         Makes an API call to generate a response from an open AI model.
@@ -1311,12 +1311,32 @@ class GptManager:
         :param max_tokens: The maximum token desired in the response.
         :param temperature: The temperature of the language model to use.
         :param stop: Whether to perform early stopping or not.
+        :param n: How many completions to generate for each prompt.
         :return:
         """
         response = openai.Completion.create(
-            engine=self.version, prompt=prompt, max_tokens=max_tokens, temperature=temperature, stop=stop
+            engine=self.version, prompt=prompt, max_tokens=max_tokens, temperature=temperature, stop=stop, n=n
         )
         return response["choices"][0]["text"].strip()
+
+    def get_response_gpt(self, prompt, model='gpt-3.5-turbo', temperature=1., max_tokens=100, n=1, **kwargs):
+        """
+        Get response by prompting GPT-3
+
+        :param model: prompt to GPT-3
+        :param temperature: GPT-3 model
+        :param max_tokens: temperature for sampling
+        :param n: How many completions to generate for each prompt.
+        :param kwargs: maximum number of tokens to generate
+        :return: generated response from GPT-3
+        """
+        response = openai.ChatCompletion.create(
+            model=model, temperature=temperature, max_tokens=max_tokens, n=n, messages=[
+                {"role": "user", "content": prompt}
+            ], **kwargs
+        )
+        output = response['choices'][0]['message']['content']
+        return output
 
 
 class BlipManager:
@@ -1518,6 +1538,24 @@ class LmPromptGenerator:
         This photo may have been taken at a {places_string}.
         There might be a {', '.join(object_list)} in this {img_type}.
         A creative short caption I can generate to describe this image is:'''
+
+    def create_cot_prompt(self, sample, sorted_places, sorted_obj_texts, obj_topk=10):
+        prompt = (
+            f"This image was taken in a {sorted_places[0]}. It contains a {', '.join(sorted_obj_texts[:obj_topk])}.\n"
+            f"Question: {sample['question']}\nChoices: {sample['choices']}\nHint: {sample['hint']}\n"
+            f"Answer: Let's think step by step..."
+        )
+        return prompt
+
+    def create_vqa_prompt(self, sample, sorted_places, sorted_objs, obj_topk=10):
+        prompt = (
+            f"This image was taken in a {sorted_places[0]}. It contains a {', '.join(sorted_objs[:obj_topk])}. "
+            f"Using this information, answer the following question: {sample['question']}\nHint: {sample['hint']}\n"
+            f"Select the index of the correct choice: "
+            f"{[f'{i} {choice}' for i, choice in enumerate(sample['choices'])]}."
+            f"Your answer should be a single integer (no text) and you must choose exactly one of the options.\nAnswer:"
+        )
+        return prompt
 
     @staticmethod
     def get_places_string(place_list):
