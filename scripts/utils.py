@@ -114,5 +114,6 @@ def get_samples_sqa(sample_idxs_path='../data/scienceqa/sample_idxs.json'):
         ]
     }
     # save samples to file
+    prepare_dir(sample_idxs_path)
     with open(sample_idxs_path, 'w') as f:
         json.dump(sqa_samples, f)

@@ -9,91 +9,96 @@ import argparse
 import time
 from datasets import load_dataset
 import image_captioning as ic
-from utils import print_time_dec, get_samples_sqa
+from scripts.mm_reasoning import MmReasoner
+from utils import print_time_dec, get_samples_sqa, get_device, prepare_dir
 import openai
 
 @print_time_dec
-def main(args):
-    '''1. Set up'''
-    # set device
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+def main(
+        num_samples, task, eg_idx, lm_model, data_path, random_seed, max_tokens, temperature, output_dir,
+        output_file_suffix, verbose
+):
+    """
 
-    # instantiate managers
-    clip_manager = ic.ClipManager(device)
-    vocab_manager = ic.VocabManager()
-    cache_manager = ic.CacheManager()
-    if args.lm_model != 'gpt':
-        lm_manager = ic.LmManager(version=args.lm_model, use_api=True, device=device)
-    # instantiate prompt generator
-    prompt_generator = ic.LmPromptGenerator()
-    
-    # compute place & object features
-    place_feats = cache_manager.get_place_emb(clip_manager, vocab_manager)
-    obj_feats = cache_manager.get_object_emb(clip_manager, vocab_manager)
-    
-    # load scienceQA dataset
-    scienceQA_dataset = load_dataset('derek-thomas/ScienceQA', split='validation')
-    # filter out samples with no image
-    scienceQA_dataset = [sample for sample in scienceQA_dataset if sample['image'] is not None]
-    # load sample indices file
-    if not os.path.exists(args.data_path):
-        get_samples_sqa(args.data_path)
-    with open(args.data_path, 'r') as f:
+    :param num_samples: Number of samples to include in the analysis.
+    :param task: Task to run
+    :param eg_idx: Index of example sample for few-shot CoT/VQA (default = 142 (CoT), 148 (VQA)).
+    :param lm_model: Language model to use.
+    :param data_path: Path to sample indices file.
+    :param random_seed: Random seed for sampling & inference.
+    :param max_tokens: Max length (tokens) of language model generated output.
+    :param temperature: Temperature parameter of the language model.
+    :param output_dir: Path to output directory.
+    :param output_file_suffix: Suffix for output file.
+    :param verbose: Whether to print intermediate results
+    :return:
+    """
+    """1. Set up"""
+    # Instantiate the multimodal reasoner class.
+    mm_reasoner = MmReasoner(random_seed=random_seed)
+
+    # Load sample indices file.
+    if not os.path.exists(data_path):
+        get_samples_sqa(data_path)
+    with open(data_path, 'r') as f:
         sample_idxs_file = json.load(f)
-    sample_idxs = sample_idxs_file['cot'] if args.task in ['cot_zs', 'cot_fs'] else sample_idxs_file['vqa']
-    np.random.seed(args.rand_seed)
-    sample_idxs = np.random.choice(sample_idxs, args.num_samples, replace=False)
-    samples = [scienceQA_dataset[int(idx)] for idx in sample_idxs]
+    sample_idxs = sample_idxs_file['cot'] if task in ['cot_zs', 'cot_fs'] else sample_idxs_file['vqa']
+    sample_idxs = np.random.choice(sample_idxs, num_samples, replace=False)
+    samples = [mm_reasoner.sqa_dataset[int(idx)] for idx in sample_idxs]
 
-    '''2. Generate outputs for each sample'''
+    """2. Generate outputs for each sample"""
     outputs = []
-    print(f'generating {args.num_samples} samples for {args.task} task...')
+    print(f'generating {num_samples} samples for {task} task...')
     for i, sample in tqdm(enumerate(samples)):
         # generate prompt
         # zero-shot CoT
-        if args.task == 'cot_zs':
-            prompt = prompt_generator.create_cot_prompt(sample, clip_manager, vocab_manager, place_feats, obj_feats)
+        if task == 'cot_zs':
+            prompt = mm_reasoner.create_cot_prompt(sample)
         # few-shot CoT
-        elif args.task == 'cot_fs':
-            eg_sample = scienceQA_dataset[args.eg_idx]
-            prompt = prompt_generator.create_cot_prompt(eg_sample, clip_manager, vocab_manager, place_feats, obj_feats) + f'{sample["solution"]}. So the answer is {sample["choices"][sample["answer"]]}\n' + prompt_generator.create_cot_prompt(sample, clip_manager, vocab_manager, place_feats, obj_feats)
+        elif task == 'cot_fs':
+            eg_sample = mm_reasoner.sqa_dataset[eg_idx]
+            question1 = mm_reasoner.create_cot_prompt(eg_sample)
+            response1 = f'{sample["solution"]}. So the answer is {sample["choices"][sample["answer"]]}\n'
+            question2 = mm_reasoner.create_cot_prompt(sample)
+            prompt = question1 + response1 + question2
         # VQA
-        elif args.task == 'vqa_zs':
-            prompt = prompt_generator.create_vqa_prompt(sample, clip_manager, vocab_manager, place_feats, obj_feats)
-        elif args.task == 'vqa_fs':
-            eg_sample = scienceQA_dataset[args.eg_idx]
-            prompt = prompt_generator.create_vqa_prompt(eg_sample, clip_manager, vocab_manager, place_feats, obj_feats) + f'{sample["answer"]}\n' + prompt_generator.create_vqa_prompt(sample, clip_manager, vocab_manager, place_feats, obj_feats)
+        elif task == 'vqa_zs':
+            prompt = mm_reasoner.create_vqa_prompt(sample)
+        elif task == 'vqa_fs':
+            eg_sample = mm_reasoner.sqa_dataset[eg_idx]
+            question1 = mm_reasoner.create_vqa_prompt(eg_sample)
+            response1 = f'{sample["answer"]}\n'
+            question2 = mm_reasoner.create_vqa_prompt(sample)
+            prompt = question1 + response1 + question2
         else:
-            raise ValueError(f'Invalid task: {args.task}. Please choose from: cot_zs, cot_fs, vqa_zs, vqa_fs')
+            raise ValueError(f'Invalid task: {task}. Please choose from: cot_zs, cot_fs, vqa_zs, vqa_fs')
 
         # generate output
-        if args.lm_model == 'gpt':
-            lm_params = {'max_tokens': args.max_tokens, 'temperature': args.temperature}
+        if lm_model == 'gpt':
+            lm_params = {'max_tokens': max_tokens, 'temperature': temperature}
             try:
-                output = ic.get_response_gpt(prompt, **lm_params)
+                output = mm_reasoner.gpt_manager.get_response_gpt(prompt, **lm_params)
             except openai.error.RateLimitError:
                 # sleep if API rate limit exceeded
                 print('API rate limit exceeded,sleeping for 120s...')
                 time.sleep(120)
-                output = ic.get_response_gpt(prompt, **lm_params)
+                output = mm_reasoner.gpt_manager.get_response_gpt(prompt, **lm_params)
         else:
-            lm_params = {'max_new_tokens': args.max_tokens, 'temperature': args.temperature, 'do_sample': False, 'length_penalty': 2.} 
-            output = lm_manager.generate_response(prompt, lm_params)
+            lm_params = {
+                'max_new_tokens': max_tokens, 'temperature': temperature, 'do_sample': False, 'length_penalty': 2.
+            }
+            output = mm_reasoner.lm_manager.generate_response(prompt, lm_params)
         
-        gt = sample['solution'] if args.task in ['cot_zs', 'cot_fs'] else sample['answer']
-        outputs.append({
-                'gt': gt,
-                'gen': output
-            })
+        gt = sample['solution'] if task in ['cot_zs', 'cot_fs'] else sample['answer']
+        outputs.append({'gt': gt, 'gen': output})
         
-        if args.verbose:
+        if verbose:
             print(f'{i+1}\nprompt: {prompt}\ngt: {gt}, gen: {output}\n')
         
     print('done.')
     # save results & params
-    res_dir = f'{args.output_dir}/{args.lm_model}'
-    os.makedirs(res_dir, exist_ok=True)
-    res_path = f'{res_dir}/responses_{args.task}{args.output_file_suffix}.csv'
+    res_path = f'{output_dir}/{lm_model}/responses_{task}{output_file_suffix}.csv'
+    prepare_dir(res_path)
     pd.DataFrame(outputs).to_csv(res_path, index=False)
     print(f'results saved to: {res_path}')
     
@@ -103,12 +108,17 @@ if __name__ == '__main__':
     # add args
     parser.add_argument('--task', type=str, default='cot_zs', help='task to run')
     parser.add_argument('--lm-model', type=str, default='gpt', help='language model to use')
-    parser.add_argument('--data-path', type=str, default='../data/scienceqa/sample_idxs.json', help='path to sample indices file')
+    parser.add_argument(
+        '--data-path', type=str, default='../data/scienceqa/sample_idxs.json', help='path to sample indices file'
+    )
     parser.add_argument('--output-dir', type=str, default='../outputs/reasoning', help='path to output directory')
     parser.add_argument('--output-file-suffix',  type=str, default='', help='suffix for output file')
     parser.add_argument('--num-samples', type=int, default=50, help='# test samples')
-    parser.add_argument('--rand-seed', type=int, default=42, help='random seed for sampling & inference')
-    parser.add_argument('--eg-idx', type=int, default=142, help='index of example sample for few-shot CoT/VQA (default = 142 (CoT), 148 (VQA))')
+    parser.add_argument('--random-seed', type=int, default=42, help='random seed for sampling & inference')
+    parser.add_argument(
+        '--eg-idx', type=int, default=142,
+        help='index of example sample for few-shot CoT/VQA (default = 142 (CoT), 148 (VQA))'
+    )
     parser.add_argument('--verbose', type=bool, default=False, help='whether to print intermediate results')
 
     # LM params
@@ -118,5 +128,9 @@ if __name__ == '__main__':
     # call main with args
     args = parser.parse_args()
     print(args)
-    assert args.task in ['cot_zs', 'cot_fs', 'vqa_zs', 'vqa_fs'], 'Invalid task. Please choose from: cot_zs, cot_fs, vqa_zs, vqa_fs'
-    main(args)
+    error_message = 'Invalid task. Please choose from: cot_zs, cot_fs, vqa_zs, vqa_fs'
+    assert args.task in ['cot_zs', 'cot_fs', 'vqa_zs', 'vqa_fs'], error_message
+    main(
+        args.num_samples, args.task, args.eg_idx, args.lm_model, args.data_path, args.random_seed, args.max_tokens,
+        args.temperature, args.output_dir, args.output_file_suffix, args.verbose
+    )

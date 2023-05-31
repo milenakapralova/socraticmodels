@@ -12,7 +12,7 @@ except FileNotFoundError:
     pass
 
 # Local imports
-import scripts.image_captioning as ic
+from scripts.image_captioning import ClipManager, VocabManager, GptManager, LmManager, LmPromptGenerator, CacheManager
 from scripts.utils import set_all_seeds, get_device
 
 
@@ -40,22 +40,24 @@ class MmReasoner:
         self.sqa_dataset = [sample for sample in self.sqa_dataset if sample['image'] is not None]
         
         # Instantiate the clip manager
-        self.clip_manager = ic.ClipManager(device)
+        self.clip_manager = ClipManager(device)
 
         # Instantiate the vocab manager
-        self.vocab_manager = ic.VocabManager()
+        self.vocab_manager = VocabManager()
 
         # Instantiate the GPT manager
-        self.gpt_manager = ic.GptManager()
+        self.gpt_manager = GptManager()
+
+        self.lm_manager = LmManager()
 
         # Instantiate the prompt generator
-        self.prompt_generator = ic.LmPromptGenerator()
+        self.prompt_generator = LmPromptGenerator()
         
         # Calculate the place features
-        self.place_emb = ic.CacheManager.get_place_emb(self.clip_manager, self.vocab_manager)
+        self.place_emb = CacheManager.get_place_emb(self.clip_manager, self.vocab_manager)
 
         # Calculate the object features
-        self.object_emb = ic.CacheManager.get_object_emb(self.clip_manager, self.vocab_manager)
+        self.object_emb = CacheManager.get_object_emb(self.clip_manager, self.vocab_manager)
 
     def create_cot_prompt(self, sample):
         """
