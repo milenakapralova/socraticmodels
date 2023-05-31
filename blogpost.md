@@ -56,9 +56,6 @@ The reason for this method is the observation that FLAN-T5 produces low-quality 
 <center>
   <img src="blogpost_images/wedding.jpg" alt="Image" style="width:400px;height:300px;">
     <figcaption>Figure 1: Image for which CLIP produces too many synonyms</figcaption>
-
-
-Figure 1: Image for which CLIP produces too many synonyms
 </center>
 
 Our method (outlined in the SE Algorithm snippet below) creates prompts that are more suitable for FLAN-T5 by paying closer attention to the words that are passed onto the prompt. In this way, the goal would be to not have similar terms that might be redundant and thus confuse the model. To this end, we build a list of candidate terms that have a high cosine similarity with the image, but a low cosine similarity with the other terms in the candidate list. This is done by looping through the first 100 terms and considering the terms in succession. The first term is included as a default, as it has the highest cosine similarity and is therefore assumed to be the most relevant. The subsequent terms are then compared to previously included candidate terms and are added only if they fall below a predefined cosine similarity threshold. The list of candidate terms also has a predefined maximum number of allowed candidates, *n*. In this way, the top *n* positions are more likely to contain relevant and distinctive terms. We determined threshold for cosine similarities using Principal Component Analysis (PCA), a dimensionality reduction technique that identifies the most significant directions of variation in a dataset. This enables the representation of data with fewer dimensions while preserving its key features. We noticed that even though the ground truth captions have similarity between the corresponding image of around 0.25, using this threshold for our SE algorithm did not filter synonyms effectively and produced subpar captions. Since both images and text share embedding space in CLIP, we analyzed this space using the PCA.
@@ -92,7 +89,7 @@ As can be seen from Figure 2 below, we visualized 25 random images (in yellow) a
 
 <center>
   <img src="blogpost_images/pca.png" alt="Image" style="width:780px;height:420px;">
-    <figcaption>Figure 2: Visualisation of CLIP's embedding space</figcaption>
+    <figcaption>Figure 2: Visualisation of CLIP's embedding space.</figcaption>
 </center>
 
 
@@ -209,6 +206,8 @@ This section illustrates examples of each of the CoT & VQA tasks (zero-shot & fe
     </td>
   </tr>
 </table>
+Figure 4: Example of a zero-shot CoT task. The model is prompted to reason about the property of a spring.
+   
 
 #### 3.2.2 Few-shot CoT
 
@@ -231,7 +230,8 @@ Choices: yellow, salty. Answer: Let's think step by step...
 **Output:** The object is yellow, as it contains citrons, lemons, and limes which are all yellow fruits. It is not salty, as none of the items listed are salty. Therefore, the answer is yellow.
 
 **GT solution:** Potato chips have a salty taste. The lemon is not salty. Yellow is a color. This color is yellow. The lemon is yellow.
-
+Figure 4: Example of a few-shot CoT task. This time the model is prompted to reason about the property of a lemon, but is provided a reasoning example as well.
+  
 
 #### 3.2.3 Zero-shot VQA
 <table>
