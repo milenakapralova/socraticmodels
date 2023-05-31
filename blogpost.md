@@ -55,6 +55,8 @@ The reason for this method is the observation that FLAN-T5 produces low-quality 
 
 
 <center>
+> hey
+>
   <img src="blogpost_images/wedding.jpg" alt="Image" style="width:400px;height:300px;">
     <figcaption>Figure 1: Image for which CLIP produces too many synonyms</figcaption>
 </center>
