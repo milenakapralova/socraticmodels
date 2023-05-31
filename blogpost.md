@@ -111,10 +111,10 @@ We tuned several hyperparameters, including the temperature of the language mode
 - *Learning-based metric*. We used one learning-based metric, specifically the BERT score, which is a method exploiting the pretrained BERT embeddings. Once the final embeddings for each of the words in ground truth and generated captions are obtained, an n-squared computation is performed by calculating similarity for each of the words from ground truth to each of the words in the generated caption. Most similar word from reference to the ground truth one is found and precision and recall are calculated for each model [21].
 
 
-### 2.2 Chain-of-Thought and Visual Question Answering
+### 2.2 Chain-of-Thought Reasoning and Visual Question Answering
 
 #### 2.2.1 Model
-The pipeline for CoT & VQA tasks is illustrated in the snippet below. It partially mimics the captioning pipeline. However, we used the GPT-3.5 turbo version (i.e., ChatGPT) as the LM since the reasoning tasks are more complex than the captioning task and hence require a more powerful model. In the 1st stage, we extracted information from the image $I$ by prompting CLIP to ground the image context to a text summary $C_I$ , which was then fed as an input prompt to the LM, which finally generated the output. In the zero-shot CoT tasks, the prompt $P$ consisted of the question $Q$, choices $MC$, text context $C_T$ and image context $C_I$. We also appended the phrase ”Let’s think step by step...” ($S_{COT}$) to the prompt, which has been shown to elicit CoT reasoning [5] - the desired rationale $R$ (reasoning steps) and answer $A$. In the few-shot CoT task, the prompt $P$ was composed by first creating solved examples $E$ (question prompt + solution), and then concatenating the prompt for the zero-shot task. Example CoT tasks (zero-shot & few-shot) are shown in the result section below. For the zero-shot VQA task, the input prompt $P$ was identical to the zero-shot CoT task but the final sentence $S_{COT}$ was omitted. In this way, the desired output was the answer $A$ in the form of a single choice. In contrast to this, the few-shot VQA task appended a solved example $E$ to the initial prompt.
+The pipeline for chain-of-thought reasoning (CoTR) & visual question-answering (VQA) tasks is illustrated in the snippet below. It partially mimics the captioning pipeline; however, we used the GPT-3.5 turbo version (i.e., ChatGPT) as the LM since the reasoning tasks are more complex than the captioning task and hence require a more powerful model. In the 1st stage, we extracted information from the image $I$ by prompting CLIP to ground the image context to a text summary $C_I$ , which was then fed as an input prompt to the LM, which finally generated the output. In the zero-shot CoTR task, the prompt $P$ consists of the question $Q$, choices $MC$, text context $C_T$ and image context $C_I$ . We also appended the phrase ”Let’s think step by step...” ($S_{COT}$) to the prompt, which has been shown to elicit CoT reasoning [5], and the desired output was the rationale $R$ (reasoning steps) and answer $A$. In the few-shot CoTR task, we composed the prompt $P$ by first creating solved examples $E$ (question prompt + solution), and then concatenating the prompt for the zero-shot task. For the zero-shot VQA task, the input prompt $P$ was identical to the zero-shot CoT task but the final sentence $S_{COT}$ was omitted, while the desired output was the answer $A$ (single choice). In the few-shot VQA task we also appended a solved example $E$ to the initial prompt. Example CoTR tasks (zero-shot & few-shot) are shown in the result section below.
 
 
 **Algorithm: Reasoning with Socratic models**
@@ -131,14 +131,14 @@ The pipeline for CoT & VQA tasks is illustrated in the snippet below. It partial
 > **Few-shot VQA**
 > - *Input*: $Q + C_T + I + E \to$ $VLM$ $\to P = Q + C_T + C_I + E \to$ $LM$ $\to$ *Output*: $A$
 
-Model pipeline for reasoning tasks. $Q$: question, $I$: image, $A$: answer, $C_T$: text context, $C_I$: image context, $R$: rationale, $P$: prompt, $E$: solved example, and $S_{COT}$: *"Let's think step by step..."*
+<small> Model pipeline for reasoning tasks. $Q$: question, $I$: image, $A$: answer, $C_T$: text context, $C_I$: image context, $R$: rationale, $P$: prompt, $E$: solved example, and $S_{COT}$: *"Let's think step by step..."* </small>
 
 
 #### 2.2.2 Dataset
-We used the ScienceQA [4] dataset which contains multiple-choice science questions containing text and images, along with solutions and explanations, designed for reasoning tasks such as CoT & VQA. We took the validation split and filtered out samples with (i) no images and (ii) images where the visual context is unnecessary to answer the question. An example question is for example ”What is the capital of Texas?”. Finally, we drew 50 random samples each for the CoT & VQA tasks. The small size of the test set was motivated primarily by the cost of using the proprietary GPT-3 API, but we hoped our experiments would still reveal some telling trends and insights.
+We used the ScienceQA [4] dataset which contains multiple-choice science questions containing text and images, along with solutions and explanations, designed for reasoning tasks such as CoT & VQA. We took the validation split and filtered out samples with (i) no images and (ii) images where the visual context is unnecessary to answer the question. An example question is for example, *”What is the capital of Texas?”*. Finally, we drew 50 random samples each for the CoTR & VQA tasks. The small size of the test set was motivated primarily by the cost of using the proprietary GPT-3 API, but we hope our experiments would still reveal some telling trends and insights.
 
 #### 2.2.3 Evaluation
-We evaluated the CoT tasks using the following metrics: BLEU [22], Rouge [26], METEOR [23], and the BERT score [27] between the generated responses (rationales) and ground-truth solutions. For the VQA tasks, we simply computed the accuracy between generated answers and ground-truths.
+We evaluated the CoTR tasks using the following metrics: BLEU [22], Rouge [26], METEOR [23], and the BERT score [27] between the generated responses (rationales) and ground-truth solutions. For the VQA tasks, we simply computed the accuracy between generated answers and ground-truths.
 
 
 ## 3 Results
@@ -171,23 +171,24 @@ It can be seen from the Table 1 above that the non-Socratic models perform signi
 
 ### 3.2 Chain-of-Thought and Visual Question Answering
 
-This section illustrates examples of each of the CoT & VQA tasks (zero-shot & few-shot). The results of evaluation are summarized in the Table 2 below. We achieve decent zero-shot performance on the CoT task (BLEU-4=9.12, BERT=86.41), and this spikes drastically in the 1-shot setting (BLEU-4=42.03, BERT=90.97). In the VQA task, the zero-shot accuracy is already high (66.72%) and jumps to 72.91% in the 1-shot case. We refrain from comparing with existing benchmarks as our sample size is too small to make meaningful comparisons.
+This section illustrates examples of each of the CoTR & VQA tasks (zero-shot & few-shot). The results of evaluation are summarized in the table below. We achieved decent zero-shot performance on the CoTR task (BLEU-4=9.12, BERT=86.41), and this spikes drastically in the 1-shot setting (BLEU-4=42.03, BERT=90.97). In the VQA task, the zero-shot accuracy is already high (66.72%) and jumps to 72.91% in the 1-shot case. We refrain from comparing with existing benchmarks as our sample size is too small to make meaningful comparisons.
 
 <div align="center">
 
 | Task |   Method   | BLEU-4 | ROUGE-L | METEOR | BERT  |  Acc  |
 |:----:|:----------:|:------:|:-------:|:------:|:-----:|:-----:|
-| CoT  | zero-shot  |  9.12  |  22.0   | 26.75  | 86.41 |   -   |
-| CoT  | few-shot   | 42.03  |  47.97  | 50.43  | 90.97 |   -   |
+| CoTR  | zero-shot  |  9.12  |  22.0   | 26.75  | 86.41 |   -   |
+| CoTR  | few-shot   | 42.03  |  47.97  | 50.43  | 90.97 |   -   |
 | VQA  | zero-shot  |   -    |    -    |   -    |   -   | 66.72 |
 | VQA  | few-shot   |   -    |    -    |   -    |   -   | 72.91 |
 
-> Table 2: Quantitative results on ScienceQA.
 </div>
+
+> Table 2: Quantitative results on ScienceQA for CoTR & VQA tasks
 
 <small>
 
-#### 3.2.1 Zero-shot CoT
+#### 3.2.1 Zero-shot CoTR
 <!-- <div align="center"> -->
   <!-- <img src="blogpost_images/spring.png" alt="Image" style="width:200px;align:center"> -->
 <!-- </div> -->
@@ -212,10 +213,10 @@ This section illustrates examples of each of the CoT & VQA tasks (zero-shot & fe
   </tr>
 </table>
 
-> Figure 4: Example of a zero-shot CoT task. The model is prompted to reason about the property of a spring.
+> Figure 4: Example of a zero-shot CoTR task. The model is prompted to reason about the property of a spring.
    
 
-#### 3.2.2 Few-shot CoT
+#### 3.2.2 Few-shot CoTR
 
 Example sample             | Target sample
 :-------------------------:|:-------------------------:
@@ -237,8 +238,7 @@ Choices: yellow, salty. Answer: Let's think step by step...
 
 **GT solution:** Potato chips have a salty taste. The lemon is not salty. Yellow is a color. This color is yellow. The lemon is yellow.
 
-   
-> Figure 5: Example of a few-shot CoT task. This time the model is prompted to reason about the property of a lemon, but is provided a reasoning example as well.
+> Figure 5: Example of a few-shot CoTR task. This time the model is prompted to reason about the property of a lemon, using a solved example for reference.
   
 
 #### 3.2.3 Zero-shot VQA
@@ -253,12 +253,13 @@ Choices: yellow, salty. Answer: Let's think step by step...
   </tr>
 </table>
 
-> Figure 6:
-   
+> Figure 6: Example of a zero-shot VQA task. The model is prompted to identify the highlighted geographic area.
+
 #### 3.2.3 Few-shot VQA
 Example sample             | Target sample
 :-------------------------:|:-------------------------:
 ![africa](blogpost_images/africa.png) | ![south_america](blogpost_images/south_america.png)
+
 
 **Example prompt:** This image was taken in a rainforest. It contains a African, geographic area, asclepiad, sphere, map. Question: Which continent is highlighted? 
 Choices: 0 Asia, 1 North America, 2 Africa, 3 South America Answer: 2
@@ -270,8 +271,9 @@ Choices: 0 South America, 1 Antarctica, 2 North America. Answer:
 **Final prompt** = example prompt + target prompt
 
 **Output:** 0 (South America) | **GT answer:** 0
-   
-> Figure 7:
+
+> Figure 7: Example of a few-shot VQA task. This model is prompted to identify the highlighted geographic area, using a solved example for reference.
+
 </small>
 
 ## 4 Discussion
@@ -279,19 +281,20 @@ Choices: 0 South America, 1 Antarctica, 2 North America. Answer:
 ### 4.1 Image captioning
 The performance of the models on image caption generation was somewhat expected, with the best-performing models being those that were directly trained on image-captioning: GIT, BLIP and BLIP-2. In the case of all three SMs, the performance was similar and slightly better for the FLAN-T5 baseline model, although the large uncertainty in the scores makes it unlikely that those differences are meaningful. That being said, we did not observe any quantitative improvement in the image captioning task for the improved model compared to the baseline model, even though the qualitative results suggested otherwise. This could be attributed to the distribution shift between the images used for demonstrations and the MS COCO images used for quantitative evaluation: while the images used for demonstration might have been more semantically varied in their content - e.g. astronaut and beer, monkey and gun - the images on MS COCO, capturing day-to-day scenes, were less varied, which could prevent the improved model from leveraging its ability to caption images with semantically varied objects or concepts.
 
-Overall, we can see that the SM using the open-source FLAN-T5 can perform at least as well as the SM which employed the proprietary GPT-3. However, further analyses using more data should be conducted before any conclusions are taken.
+Overall, we can see that the SM using the open-source FLAN-T5 can perform at least as well as the SM which employed the proprietary GPT-3. However, further analyses using more data should be conducted before any conclusions are made.
 
 ### 4.2 Chain-of-thought and visual question answering.
 
-The results for the two reasoning tasks reveal some intriguing insights. Confirming our hypothesis, the SM framework is well suited to such tasks, possibly because the exchange of information across modalities leads to emergent properties like reasoning through cross-modal discourse and knowledge-sharing. This is in accordance with the findings of the authors on reasoning tasks such as question-answering from egocentric video perception. We highlight two key insights. First, SMs exhibit strong zero-shot multimodal reasoning abilities, judging by their performance on the zero-shot CoT & VQA tasks, thereby corroborating the author’s claims. Second, the reasoning capabilities improve in a few-shot setting. This is particularly evident in the CoT reasoning task where 1-shot prompting leads to a drastic jump in performance across all metrics. Our methodology serves as a framework and a proof-of-concept and invites further exploration of SMs in this domain. We believe that combining the Socratic framework of cross-modal intercourse with reasoning abilities like chain-of-thought could lead to the development of artificial agents with more robust and general intelligence.
+The results for the 2 reasoning tasks reveal some intriguing insights. Confirming our hypothesis, the SM framework is well suited to such tasks, possibly because the exchange of information across modalities leads to emergent properties like reasoning through cross-modal discourse and knowledge-sharing. This is in accordance with the findings of the authors on reasoning tasks such as question-answering from egocentric video perception. We highlight two key insights. First, SMs exhibit strong zero-shot multimodal reasoning abilities, judging by their performance on the zero-shot CoTR & VQA tasks, thereby corroborating the author’s claims. Second, the reasoning capabilities improve in a few-shot setting. This is particularly evident in the CoT reasoning task where just 1-shot prompting leads to a drastic jump in performance across all metrics. This could be because in the few-shot CoTR task, the LM benefits from knowing the template of a model solution in generating subsequent solutions, whereas in the VQA task the template isn't particularly important and performance depends mostly on the current context (and the LM). Our methodology serves as a framework and a proof-of-concept and invites further exploration of SMs in this domain. We believe that combining the Socratic framework of cross-modal intercourse with reasoning abilities like chain-of-thought could lead to the development of artificial agents with more robust and general intelligence.
 
 ### 4.3 Limitations and future research
 
 #### 4.3.1 Limitations
-A key limitation in all our experiments was the sample size for evaluation. We used a random sample of 50 images from MS-COCO for the image captioning tasks, and 50 samples of the ScienceQA dataset for the reasoning tasks. This was primarily due to (i) computational constraints and (ii) costs of using the proprietary GPT-3 model for the reasoning tasks. This limits our ability to make broad generalizations and benchmark comparisons. Nonetheless, our results still reveal informative trends. Another drawback is that we only experimented with two LMs (GPT-3 and FLAN-T5). A more comprehensive experimentation with various SoTA (preferably open-source) LMs such as FLAN-UL2 should be pursued. Finally, the dataset of choice might have been unsuitable for testing the differences in performance between the baseline and the improved model. Future replication efforts should include a dataset with images containing more semantically diverse objects or concepts.
+A key limitation in all our experiments was the sample size for evaluation. We used a random sample of 50 images from MS-COCO for the image captioning tasks, and 50 samples of the ScienceQA dataset for the reasoning tasks. This was primarily due to (i) computational constraints and (ii) costs of using the proprietary GPT-3 model for the reasoning tasks. This limits our ability to make broad generalizations and benchmark comparisons. Nonetheless, our results still reveal informative trends. Another drawback is that we only experimented with two LMs (GPT-3 and FLAN-T5). A more comprehensive experimentation with various SoTA (preferably open-source) LMs should be pursued. Finally, the dataset of choice might have been unsuitable for testing the differences in performance between the baseline and the improved model. Future replication efforts should include a dataset with images containing more semantically diverse objects or concepts.
 
 #### 4.3.2 Future work
 An important benefit of the SM framework comes in the form of its modularity, which allows certain models to be easily exchanged for more capable alternatives. In our case, we have noticed that CLIP was often a bottleneck in the pipeline since it often struggled with finding relevant features in the images. As such, future research should analyze whether different VLM can handle the image captioning task better. For instance, VLMs from the Flamingo suite [28] could potentially replace CLIP and lead to increased performance. This is because Flamingo models were trained on arbitrarily interleaved text and images, endowing them with in-context few-shot learning capabilities on a range of image and video tasks such as captioning, where they outperform the state-of-the-art. An alternative could come in the form of FROMAGe [29], a method for grounding LMs to the visual domain by freezing the LM and finetuning the input and output layers to enable cross-modality interaction, showcasing strong zero-shot capabilities on grounded tasks such as image captioning and contextual image-to-text retrieval.
+Yet another promising avenue for future research is a thorough evaluation of SMs on reasoning tasks (like CoTR) on benchmark datasets, to investigate whether the Socratic framework outperforms existing benhcmarks.
 
 ## 5 Conclusion
 Through this project, we have managed to democratize the SM framework for the image captioning task and bridged the gap between SMs using open-source LMs and SMs employing proprietary LMs. We have further extended the capabilities of SMs in multimodal reasoning tasks. We hope our work will serve as a useful prototype and proof-of-concept for the general scientific community to develop more open-source models and further research in the areas of multimodal learning and reasoning.
