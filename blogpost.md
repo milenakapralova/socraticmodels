@@ -104,7 +104,7 @@ We tuned several hyperparameters, including the temperature of the language mode
 
 
 #### 2.1.5 Evaluation metrics
-- *Rule-based metrics*. We used the rule-based metrics reported in the Original Socratic paper, specifically BLEU-4 [22], METEOR [23], CIDEr [24], SPICE [25] and ROUGE-L [26]. These metrics measure mainly lexical overlap between ground truth and generated captions.
+- *Rule-based metrics*. We used the rule-based metrics reported in the original Socratic paper, specifically BLEU-4 [22], METEOR [23], CIDEr [24], SPICE [25] and ROUGE-L [26]. These metrics measure mainly lexical overlap between ground truth and generated captions.
 
 - *Embeding-based metric*. We used one embedding-based metric, particularly the cosine similarity score, which captures the semantic overlap between the caption and an image. To compute this overlap, we calculated the cosine similarities between each image embedding and embeddings of the captions generated with a specific model. Then we computed the means and standard deviations of these cosine similarities.
 
