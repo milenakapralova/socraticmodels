@@ -53,10 +53,8 @@ Specifically:
 
 The reason for this method is the observation that FLAN-T5 produces low-quality captions compared to GPT-3 when the VLM-informed prompt contains too many similar words referring to the same object. For example, when given the wedding image below (Figure 1), The VLM prompt contains the sentence: I think there might be a dress suit, full dress, tailcoat, tail coat, (etc.) in this photo.” and FLAN-T5 might generate this caption: ”A wedding dress is paired with a tuxedo for an elegant wedding.” This might be because even though both GPT-3 and FLAN-T5 use masking for self-supervision, GPT-3 relies on an autoregressive decoder that predicts subsequent words based on the previously generated ones (known as unidirectional language modeling) and FLAN-T5 has an encoder-decoder architecture with span-corruption: by masking specific segments of the text phrase, FLAN-T5's decoder is trained to predict the words that were hidden within these masked regions. Therefore, when summarizing text with many synonyms, a model trained with span corruption - like FLAN-T5 - may struggle, as the presence of multiple synonymous phrases can introduce ambiguity and make it harder for the model to generate concise summaries. In contrast, a model trained with unidirectional language modeling - like GPT-3 - focuses on coherence and capturing long-range dependencies, and so can produce better summaries.
 
-
+> This is a caption
 <center>
-> hey
->
   <img src="blogpost_images/wedding.jpg" alt="Image" style="width:400px;height:300px;">
     <figcaption>Figure 1: Image for which CLIP produces too many synonyms</figcaption>
 </center>
