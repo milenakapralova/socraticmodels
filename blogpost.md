@@ -150,6 +150,7 @@ We evaluated the CoT tasks using the following metrics: BLEU [22], Rouge [26], M
 
 #### 3.1.1 Qualitative demonstrations
 ![qualitative_results](blogpost_images/qualitative_results.png)
+Figure 3: Qualitative results on the image captioning task.
 
 Overall, no image captioning method seems to outperform the rest for all images. Specifically, while the original SM outputs an appropriate caption for the top left image, it seems to hallucinate for the top right, stating that ”the astronaut is waiting for a meeting”. This hallucination might be caused by the limited vocabulary given to the VLM, which does not include the moon as a viable location. In this way, the VLM seems to associate the sitting astronaut with the scenario of a ”waiting room”. Another reason for this hallucination can be that GPT-3 was fine-tuned by few-shot learning, whereas FLAN-T5 was fine-tuned by instruction tuning, which incorporates explicit prompts to guide the model's behavior, providing more control over its output. As for the bottom images, the original SM struggles to recognize the pistol and the fruits. However, it should be stated that GPT-3 is non-deterministic and might generate more appropriate captions. In contrast, the improved model has a higher chance of detecting the relevant objects in the image, generating captions that mention both the gun and the fruit, thus outperforming the original SM for the last two images.
 
