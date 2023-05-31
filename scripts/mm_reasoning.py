@@ -16,8 +16,17 @@ import scripts.image_captioning as ic
 from scripts.utils import set_all_seeds, get_device
 
 
-class MmReasoner():
+class MmReasoner:
     def __init__(self, random_seed=42):
+        """
+        The MmReasoner constructor executes the setup to perform multimodal reasoning.
+
+        It sets the randomness seed to obtain a reproducible outcome. Instantiates the ClipManager, VocabManager,
+        GptManager and LmPromptGenerator.
+
+        :param random_seed:The random seed to use to obtain reproducible results.
+        """
+
         # Set the seeds
         set_all_seeds(random_seed)
 
@@ -49,6 +58,16 @@ class MmReasoner():
         self.object_emb = ic.CacheManager.get_object_emb(self.clip_manager, self.vocab_manager)
 
     def create_cot_prompt(self, sample):
+        """
+        The create_cot_prompt method creates a Chain of Thought (CoT) prompt.
+
+        It receives a sample of the ScienceQA dataset, generates a CLIP embedding from the
+        sample image. It compares the vocabulary cosine similarity to the image, obtaining the object and place terms
+        that are most similar to the image. Finally, it uses the prompt generator to form a CoT prompt and returns it.
+
+        :param sample: The ScienceQA sample that will be used to create the CoT prompt.
+        :return: The CoT prompt as a string.
+        """
         # compose prompt
         # Generate the CLIP image embedding
         img_emb = self.clip_manager.get_img_emb(sample['image']).flatten()
@@ -65,6 +84,16 @@ class MmReasoner():
         return self.prompt_generator.create_cot_prompt(sample, sorted_places, sorted_obj_texts)
 
     def create_vqa_prompt(self, sample):
+        """
+        The create_vqa_prompt method creates a Visual Question-Answering (VQA) prompt.
+
+        It receives a sample of the ScienceQA dataset, generates a CLIP embedding from the
+        sample image. It compares the vocabulary cosine similarity to the image, obtaining the object and place terms
+        that are most similar to the image. Finally, it uses the prompt generator to form a VQA prompt and returns it.
+
+        :param sample: The ScienceQA sample that will be used to create the VQA prompt.
+        :return: The CoT prompt as a string.
+        """
         # compose prompt
         # Generate the CLIP image embedding
         img_emb = self.clip_manager.get_img_emb(sample['image']).flatten()

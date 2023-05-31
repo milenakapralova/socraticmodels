@@ -127,13 +127,6 @@ class ImageCaptionerParent:
                 self.image_manager.image_folder + d
                 for d in self.image_manager.demo_names
             ]
-        elif self.set_type == 'mm_reasoning':
-            # load scienceQA dataset and filter out samples with no image
-            self.science_qa_dataset = [
-                sample for sample in load_dataset('derek-thomas/ScienceQA', split='validation')
-                if sample['image'] is not None
-            ]
-            return
         else:
             # Randomly select images from the COCO dataset
             img_files = self.coco_manager.get_random_image_paths(n_images=n_images, set_type=set_type)
@@ -1308,7 +1301,6 @@ class GptManager:
         if 'OPENAI_API_KEY' in os.environ:
             openai.api_key = os.environ['OPENAI_API_KEY']
 
-
     def generate_response(
             self, prompt, max_tokens=64, temperature=0, stop=None, n=1
     ):
@@ -1319,6 +1311,7 @@ class GptManager:
         :param max_tokens: The maximum token desired in the response.
         :param temperature: The temperature of the language model to use.
         :param stop: Whether to perform early stopping or not.
+        :param n: How many completions to generate for each prompt.
         :return:
         """
         response = openai.Completion.create(
@@ -1333,12 +1326,15 @@ class GptManager:
         :param model: prompt to GPT-3
         :param temperature: GPT-3 model
         :param max_tokens: temperature for sampling
+        :param n: How many completions to generate for each prompt.
         :param kwargs: maximum number of tokens to generate
         :return: generated response from GPT-3
         """
-        response = openai.ChatCompletion.create(model=model, temperature=temperature, max_tokens=max_tokens, n=n, messages=[
-            {"role": "user", "content": prompt}
-        ], **kwargs)
+        response = openai.ChatCompletion.create(
+            model=model, temperature=temperature, max_tokens=max_tokens, n=n, messages=[
+                {"role": "user", "content": prompt}
+            ], **kwargs
+        )
         output = response['choices'][0]['message']['content']
         return output
 
