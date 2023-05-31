@@ -52,15 +52,14 @@ Specifically:
 
 The reason for this method is the observation that FLAN-T5 produces low-quality captions compared to GPT-3 when the VLM-informed prompt contains too many similar words referring to the same object. For example, when given the wedding image below (Figure 1), The VLM prompt contains the sentence: I think there might be a dress suit, full dress, tailcoat, tail coat, (etc.) in this photo.” and FLAN-T5 might generate this caption: ”A wedding dress is paired with a tuxedo for an elegant wedding.”
 
-<div align="center">
-   
+
 <center>
   <img src="blogpost_images/wedding.jpg" alt="Image" style="width:400px;height:300px;">
     <figcaption>Figure 1: Image for which CLIP produces too many synonyms</figcaption>
+
+
+Figure 1: Image for which CLIP produces too many synonyms
 </center>
-
-</div>
-
 
 Our method (outlined in the SE Algorithm snippet below) creates prompts that are more suitable for FLAN-T5 by paying closer attention to the words that are passed onto the prompt. In this way, the goal would be to not have similar terms that might be redundant and thus confuse the model. To this end, we build a list of candidate terms that have a high cosine similarity with the image, but a low cosine similarity with the other terms in the candidate list. This is done by looping through the first 100 terms and considering the terms in succession. The first term is included as a default, as it has the highest cosine similarity and is therefore assumed to be the most relevant. The subsequent terms are then compared to previously included candidate terms and are added only if they fall below a predefined cosine similarity threshold. The list of candidate terms also has a predefined maximum number of allowed candidates, *n*. In this way, the top *n* positions are more likely to contain relevant and distinctive terms. We determined threshold for cosine similarities using Principal Component Analysis (PCA), a dimensionality reduction technique that identifies the most significant directions of variation in a dataset. This enables the representation of data with fewer dimensions while preserving its key features. We noticed that even though the ground truth captions have similarity between the corresponding image of around 0.25, using this threshold for our SE algorithm did not filter synonyms effectively and produced subpar captions. Since both images and text share embedding space in CLIP, we analyzed this space using the PCA.
 
