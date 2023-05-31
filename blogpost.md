@@ -238,7 +238,7 @@ Choices: yellow, salty. Answer: Let's think step by step...
 **GT solution:** Potato chips have a salty taste. The lemon is not salty. Yellow is a color. This color is yellow. The lemon is yellow.
 
    
-Figure 4: Example of a few-shot CoT task. This time the model is prompted to reason about the property of a lemon, but is provided a reasoning example as well.
+> Figure 5: Example of a few-shot CoT task. This time the model is prompted to reason about the property of a lemon, but is provided a reasoning example as well.
   
 
 #### 3.2.3 Zero-shot VQA
@@ -253,6 +253,8 @@ Figure 4: Example of a few-shot CoT task. This time the model is prompted to rea
   </tr>
 </table>
 
+> Figure 6:
+   
 #### 3.2.3 Few-shot VQA
 Example sample             | Target sample
 :-------------------------:|:-------------------------:
@@ -268,7 +270,8 @@ Choices: 0 South America, 1 Antarctica, 2 North America. Answer:
 **Final prompt** = example prompt + target prompt
 
 **Output:** 0 (South America) | **GT answer:** 0
-
+   
+> Figure 7:
 </small>
 
 ## 4 Discussion
