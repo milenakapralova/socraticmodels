@@ -1,7 +1,7 @@
 # Socratic Models: Composing Zero-Shot Multimodal Reasoning with Language, Free of Charge
 
 > Ryan Amaudruz, Abhinav Bhuyan, Milena Kapralova, Bogdan Palfi, Alexandru Turcu <br>
->  Project Report, Deep Learning 2 University of Amsterdam
+>  Project Report, Deep Learning II University of Amsterdam
 
 ## Abstract
 Socratic models [1] is a modular framework in which multiple pre-trained models are composed zeroshot via multimodal informed prompting. This is done to exchange information between models and capture new multimodal capabilities, without requiring finetuning. As a proof of concept, we modify the Socratic models framework such that it is entirely open-source and attempt to achieve the same results as the original version. Additionally, we investigate the capabilities of Socratic models on multimodal reasoning tasks such as chain-of-thought reasoning and visual question-answering in zero-shot and few-shot settings.

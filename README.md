@@ -15,6 +15,9 @@ This repository provides scripts for CLIP with GPT-3, FLAN-T5, GitVision, BLIP a
 The project was organised such that the downloading, caching and organisation of files is managed by the code.
 The classes were built in a modular fashion such that they could be adapted to different use-cases.
 
+Warning: The first time an image captioning task is run, data will be downloaded and embeddings generated.
+Expect a 20 minute delay on the first run.
+
 ## Notes on files in this repository
 * `blogpost.md`: the research corresponding to experiments documented in this repository
 
