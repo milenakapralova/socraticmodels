@@ -26,7 +26,10 @@ from scripts.utils import get_device, prepare_dir, set_all_seeds, print_time_dec
 
 
 @print_time_dec
-def main(num_images=100, num_captions=10, lm_temperature=0.9, random_seed=42):
+def main(
+        num_images=100, num_captions=10, lm_temperature=0.9, random_seed=42,
+        set_type='train'
+):
 
     """
     1. Set up
@@ -74,7 +77,7 @@ def main(num_images=100, num_captions=10, lm_temperature=0.9, random_seed=42):
     """
 
     # Randomly select images from the COCO dataset
-    img_files = coco_manager.get_random_image_paths(num_images=num_images)
+    img_files = coco_manager.get_random_image_paths(num_images=num_images, set_type=set_type)
 
     # Create dictionaries to store the images features
     img_dic = {}
@@ -127,7 +130,7 @@ def main(num_images=100, num_captions=10, lm_temperature=0.9, random_seed=42):
     location_dic = {}
     for img_name, img_feat in img_feat_dic.items():
         sorted_places, places_scores = clip_manager.get_nn_text(vocab_manager.place_list, place_emb, img_feat)
-        location_dic[img_name] = sorted_places[0]
+        location_dic[img_name] = sorted_places
 
     # Classify image objects
     obj_topk = 10
@@ -156,7 +159,7 @@ def main(num_images=100, num_captions=10, lm_temperature=0.9, random_seed=42):
 
     for img_name in img_dic:
         # Create the prompt for the language model
-        prompt_dic[img_name] = pg.create_baseline_lm_prompt(
+        prompt_dic[img_name] = pg.create_socratic_original_prompt(
             img_type_dic[img_name], num_people_dic[img_name], location_dic[img_name], obj_list_dic[img_name]
         )
 

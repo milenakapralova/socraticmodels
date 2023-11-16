@@ -57,11 +57,23 @@ class CocoManager:
         for folder, url in self.dataset_to_download.items():
             self.download_unzip_delete(folder, url)
 
-    def get_random_image_paths(self, num_images):
+    def get_random_image_paths(self, num_images, set_type):
         img_list = os.listdir(self.image_dir)
         img_list.sort()
-        return np.random.choice(img_list, size=num_images).tolist()
-
+        # Data split
+        train_set = np.random.choice(img_list, size=num_images).tolist()
+        remaining_images = list(set(img_list) - set(train_set))
+        remaining_images.sort()
+        test_set = np.random.choice(
+            remaining_images,
+            size=num_images
+        ).tolist()
+        if set_type == 'train':
+            return train_set
+        elif set_type == 'test':
+            return test_set
+        else:
+            raise ValueError(f'set_type {test_set} not supported.')
 
 class ImageManager:
     def __init__(self):
@@ -117,9 +129,9 @@ class VocabManager:
         self.cache_folder = '../data/cache/'
         self.files_to_download = {
             'categories_places365.txt': "https://raw.githubusercontent.com/zhoubolei/places_devkit/master/categories_pl"
-            "aces365.txt",
+                                        "aces365.txt",
             'dictionary_and_semantic_hierarchy.txt': "https://raw.githubusercontent.com/Tencent/tencent-ml-images/maste"
-            "r/data/dictionary_and_semantic_hierarchy.txt"
+                                                     "r/data/dictionary_and_semantic_hierarchy.txt"
         }
         self.download_data()
         self.place_list = self.load_places()
@@ -516,15 +528,12 @@ class Blip2Manager:
 
 
 class LmPromptGenerator:
-    @staticmethod
-    def create_baseline_lm_prompt(img_type, ppl_result, sorted_places, object_list_str):
-        return f'''I am an intelligent image captioning bot.
-        This image is a {img_type}. There {ppl_result}.
-        I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
-        I think there might be a {object_list_str} in this {img_type}.
-        A creative short caption I can generate to describe this image is:'''
-
-    def create_baseline_lm_prompt2(self, img_type, ppl_result, sorted_places, object_list):
+    def create_socratic_original_prompt(self, img_type, ppl_result, sorted_places, object_list):
+        '''
+        This creates the prompt from the original paper introducing SM.
+        The only difference is that the sorted places are managed by a method, making
+        it convenient to change the number of places.
+        '''
         places_string = self.get_places_string(sorted_places)
         return f'''I am an intelligent image captioning bot.
         This image is a {img_type}. There {ppl_result}.
@@ -532,7 +541,11 @@ class LmPromptGenerator:
         I think there might be a {', '.join(object_list)} in this {img_type}.
         A creative short caption I can generate to describe this image is:'''
 
-    def create_baseline_lm_prompt2_likely(self, img_type, ppl_result, sorted_places, object_list):
+    def create_socratic_original_prompt_COCO(self, img_type, ppl_result, sorted_places, object_list):
+        '''
+        This creates the prompt from the original paper introducing SM.
+        The authors used this prompt to achieve better captions on the MS COCO dataset.
+        '''
         places_string = self.get_places_string(sorted_places)
         return f'''I am an intelligent image captioning bot.
         This image is a {img_type}. There {ppl_result}.
@@ -541,21 +554,19 @@ class LmPromptGenerator:
         A short, likely caption I can generate to describe this image is:'''
 
     @staticmethod
-    def create_gpt_prompt_likely(img_type, ppl_result, sorted_places, object_list_str):
-        return f'''I am an intelligent image captioning bot.
-        This image is a {img_type}. There {ppl_result}.
-        I think this photo was taken at a {sorted_places[0]}, {sorted_places[1]}, or {sorted_places[2]}.
-        I think there might be a {object_list_str} in this {img_type}.
-        A short, likely caption I can generate to describe this image is:'''
-
-    @staticmethod
-    def create_improved_lm_prompt(img_type, ppl_result, terms_to_include):
+    def create_experimental_beautiful_prompt(img_type, ppl_result, terms_to_include):
+        '''
+        This creates an experimental 'creative beautiful caption' prompt.
+        '''
         return f'''Create a creative beautiful caption from this context:
         "This image is a {img_type}. There {ppl_result}.
         The context is: {', '.join(terms_to_include)}.
         A creative short caption I can generate to describe this image is:'''
 
-    def create_improved_lm_prompt_alt1(self, img_type, ppl_result, sorted_places, object_list):
+    def create_experimental_poetic_prompt(self, img_type, ppl_result, sorted_places, object_list):
+        '''
+        This creates an experimental 'creative poetic caption' prompt.
+        '''
         places_string = self.get_places_string(sorted_places)
         return f'''I am a poetic writer that creates image captions.
         This image is a {img_type}. There {ppl_result}.

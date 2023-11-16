@@ -163,7 +163,7 @@ def main(num_images=50, num_captions=10, lm_temperature=0.9, lm_max_length=40, l
         #     img_type_dic[img_name], num_people_dic[img_name], location_dic[img_name], obj_list_dic[img_name]
         # )
 
-        prompt_dic[img_name] = pg.create_baseline_lm_prompt2(
+        prompt_dic[img_name] = pg.create_socratic_original_prompt(
             img_type_dic[img_name], num_people_dic[img_name], location_dic[img_name][:num_places],
             obj_list_dic[img_name][:num_objects]
         )
